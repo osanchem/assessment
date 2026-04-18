@@ -7,11 +7,11 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; background: #f4f6f9; color: #333; font-size: 14px; }
+  body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; background: #f0eeff; color: #333; font-size: 14px; }
 
-  .header { background: #1a3a5c; color: white; padding: 18px 30px; }
+  .header { background: linear-gradient(135deg, #1e0e5c 0%, #2d1b8a 60%, #4c1d95 100%); color: white; padding: 18px 30px; }
   .header h1 { font-size: 20px; font-weight: bold; }
-  .header p  { font-size: 12px; color: #a8c4e0; margin-top: 4px; }
+  .header p  { font-size: 12px; color: #c4b5fd; margin-top: 4px; }
 
   .container { max-width: 1150px; margin: 0 auto; padding: 20px; }
 
@@ -21,7 +21,7 @@
     background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
     padding: 10px 16px; margin-bottom: 12px; font-size: 13px;
   }
-  .subject-type-bar strong { color: #1a3a5c; white-space: nowrap; }
+  .subject-type-bar strong { color: #1e0e5c; white-space: nowrap; }
   .subject-type-bar label { cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; }
   .subject-type-bar label input { cursor: pointer; }
 
@@ -30,10 +30,10 @@
   .main-tab-btn {
     padding: 10px 26px; border: none; border-radius: 8px 8px 0 0;
     cursor: pointer; font-size: 14px; font-weight: bold;
-    background: #c8d8ea; color: #555; transition: all 0.2s;
+    background: #d4c5f9; color: #555; transition: all 0.2s;
   }
-  .main-tab-btn.active { background: white; color: #1a3a5c; box-shadow: 0 -2px 6px rgba(0,0,0,0.08); }
-  .main-tab-btn:hover:not(.active) { background: #b0c4d8; }
+  .main-tab-btn.active { background: white; color: #1e0e5c; box-shadow: 0 -2px 6px rgba(0,0,0,0.08); }
+  .main-tab-btn:hover:not(.active) { background: #b9a9f5; }
 
   .main-tab-content { display: none; background: white; border-radius: 0 8px 8px 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
   .main-tab-content.active { display: block; }
@@ -41,40 +41,40 @@
   /* 라운드 탭 */
   .round-tab-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
   .round-tab-btn {
-    padding: 6px 18px; border: 1.5px solid #bdc8d4; border-radius: 20px;
-    cursor: pointer; font-size: 13px; background: #f0f4f8; color: #555; transition: all 0.2s;
+    padding: 6px 18px; border: 1.5px solid #c4b5fd; border-radius: 20px;
+    cursor: pointer; font-size: 13px; background: #f0eeff; color: #555; transition: all 0.2s;
   }
-  .round-tab-btn.active { background: #1a3a5c; color: white; border-color: #1a3a5c; }
-  .round-tab-btn:hover:not(.active) { background: #dce8f4; }
+  .round-tab-btn.active { background: #1e0e5c; color: white; border-color: #1e0e5c; }
+  .round-tab-btn:hover:not(.active) { background: #e5e0ff; }
   .btn-add-round {
-    padding: 6px 14px; border: 1.5px dashed #1a73e8; border-radius: 20px;
-    cursor: pointer; font-size: 13px; background: white; color: #1a73e8; transition: all 0.2s;
+    padding: 6px 14px; border: 1.5px dashed #7c3aed; border-radius: 20px;
+    cursor: pointer; font-size: 13px; background: white; color: #7c3aed; transition: all 0.2s;
   }
-  .btn-add-round:hover { background: #e8f4fd; }
+  .btn-add-round:hover { background: #f0ebff; }
   .round-label { font-size: 12px; color: #888; margin-left: 4px; }
 
   /* 섹션 제목 */
   .section-title {
-    font-size: 16px; font-weight: bold; color: #1a3a5c;
-    margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #1a3a5c;
+    font-size: 16px; font-weight: bold; color: #1e0e5c;
+    margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #1e0e5c;
     display: flex; align-items: center; gap: 10px;
   }
-  .badge { background: #1a3a5c; color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .badge { background: #1e0e5c; color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
 
   /* 테이블 */
   .input-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
   .input-table th {
-    background: #1a3a5c; color: white; padding: 9px 8px;
+    background: #1e0e5c; color: white; padding: 9px 8px;
     text-align: center; font-size: 13px; white-space: nowrap;
   }
-  .input-table th.sub-header { background: #2a5a8c; }
-  .input-table td { padding: 7px 8px; border: 1px solid #dde3ea; text-align: center; vertical-align: middle; }
-  .input-table tr:nth-child(even) td { background: #f8fafc; }
-  .input-table tr:hover td { background: #eef4fb; }
-  .type-cell { font-weight: bold; background: #e8f0f8 !important; width: 58px; }
-  .level-cell { color: #555; background: #f0f4f8 !important; width: 52px; }
-  .total-row td { background: #1a3a5c !important; color: white !important; font-weight: bold; }
-  .avg-row td { background: #2a5a8c !important; color: white !important; font-style: italic; }
+  .input-table th.sub-header { background: #2d1b8a; }
+  .input-table td { padding: 7px 8px; border: 1px solid #ddd6fe; text-align: center; vertical-align: middle; }
+  .input-table tr:nth-child(even) td { background: #faf9ff; }
+  .input-table tr:hover td { background: #ede9fe; }
+  .type-cell { font-weight: bold; background: #ede9fe !important; width: 58px; }
+  .level-cell { color: #555; background: #f0eeff !important; width: 52px; }
+  .total-row td { background: #1e0e5c !important; color: white !important; font-weight: bold; }
+  .avg-row td { background: #2d1b8a !important; color: white !important; font-style: italic; }
 
   .level-easy   { color: #2e7d32; font-weight: bold; }
   .level-medium { color: #e65100; font-weight: bold; }
@@ -82,17 +82,17 @@
 
   /* 입력 */
   .score-input {
-    width: 68px; padding: 5px 6px; border: 1px solid #bdc8d4;
+    width: 68px; padding: 5px 6px; border: 1px solid #c4b5fd;
     border-radius: 4px; text-align: right; font-size: 13px; transition: border-color 0.2s;
   }
-  .score-input:focus { outline: none; border-color: #1a3a5c; background: #f0f6ff; }
+  .score-input:focus { outline: none; border-color: #1e0e5c; background: #f5f0ff; }
   .rate-input  { width: 58px; }
   .rate-select {
-    width: 64px; padding: 4px 2px; border: 1px solid #bdc8d4;
+    width: 64px; padding: 4px 2px; border: 1px solid #c4b5fd;
     border-radius: 4px; font-size: 12px; cursor: pointer; background: white;
     transition: border-color 0.2s;
   }
-  .rate-select:focus { outline: none; border-color: #1a3a5c; background: #f0f6ff; }
+  .rate-select:focus { outline: none; border-color: #1e0e5c; background: #f5f0ff; }
   .weight-input { width: 80px; }
 
   /* 정답률 역전 경고 */
@@ -104,17 +104,24 @@
   }
   .rate-warn-box .warn5-section { color: #e65100; margin-top: 4px; }
 
+  /* 급간차이 20점 이상 경고 */
+  .gap-warn-box {
+    background: #fff3e0; border-left: 4px solid #ff6f00; border-radius: 4px;
+    padding: 9px 14px; margin: 10px 0 4px; font-size: 12px; color: #e65100; line-height: 1.7;
+  }
+  .gap-warn-box strong { color: #bf360c; }
+
   /* JSON 저장/불러오기 */
   .data-io-bar {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    background: #f0f4f8; border: 1px solid #bdc8d4; border-radius: 8px;
+    background: #f0eeff; border: 1px solid #c4b5fd; border-radius: 8px;
     padding: 8px 16px; margin-bottom: 12px; font-size: 13px;
   }
-  .data-io-bar strong { color: #1a3a5c; white-space: nowrap; }
+  .data-io-bar strong { color: #1e0e5c; white-space: nowrap; }
   .data-io-hint { font-size: 11px; color: #888; }
-  .btn-json-save { background: #37474f; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
-  .btn-json-save:hover { background: #546e7a; }
-  .btn-json-load { background: white; color: #37474f; border: 1.5px solid #37474f; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .btn-json-save { background: #312e81; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .btn-json-save:hover { background: #4338ca; }
+  .btn-json-load { background: white; color: #312e81; border: 1.5px solid #312e81; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
   .btn-json-load:hover { background: #eceff1; }
 
   /* 결과 카드 */
@@ -135,9 +142,9 @@
   /* 라운드 비교 */
   .round-compare { margin-top: 16px; }
   .compare-table { width: 100%; border-collapse: collapse; }
-  .compare-table th { background: #37474f; color: white; padding: 8px 10px; text-align: center; font-size: 13px; }
+  .compare-table th { background: #312e81; color: white; padding: 8px 10px; text-align: center; font-size: 13px; }
   .compare-table td { padding: 8px 10px; border: 1px solid #ddd; text-align: center; font-size: 13px; }
-  .compare-table .avg-row td { background: #e8f4fd; font-weight: bold; color: #1a3a5c; }
+  .compare-table .avg-row td { background: #f0ebff; font-weight: bold; color: #1e0e5c; }
   .compare-table .round-row:nth-child(odd) td { background: #fafafa; }
 
   /* 시각화 바 */
@@ -150,23 +157,23 @@
   .seg-c { background: #f57f17; }
   .seg-d { background: #c62828; }
   .seg-e { background: #6a1b9a; }
-  .seg-i { background: #37474f; }
+  .seg-i { background: #312e81; }
   .viz-markers { position: relative; height: 18px; margin-top: 2px; }
   .viz-marker  { position: absolute; transform: translateX(-50%); font-size: 10px; color: #555; }
 
   /* 가중치 */
-  .weight-row   { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; padding: 16px; background: #f0f4f8; border-radius: 8px; }
+  .weight-row   { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; padding: 16px; background: #f0eeff; border-radius: 8px; }
   .weight-item  { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .weight-item label { font-size: 13px; font-weight: bold; color: #1a3a5c; }
+  .weight-item label { font-size: 13px; font-weight: bold; color: #1e0e5c; }
   .weight-sum   { font-size: 13px; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
   .weight-ok    { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
   .weight-ng    { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
 
   /* 버튼 */
-  .btn-calc  { background: #1a3a5c; color: white; border: none; padding: 10px 26px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-  .btn-calc:hover  { background: #2a5a8c; }
-  .btn-print { background: #455a64; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
-  .btn-print:hover { background: #607d8b; }
+  .btn-calc  { background: #1e0e5c; color: white; border: none; padding: 10px 26px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+  .btn-calc:hover  { background: #2d1b8a; }
+  .btn-print { background: #3730a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .btn-print:hover { background: #4338ca; }
   .btn-excel { background: #1b5e20; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
   .btn-excel:hover { background: #2e7d32; }
   .btn-reset { background: #fff; color: #c62828; border: 1px solid #c62828; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
@@ -177,7 +184,7 @@
   .btn-row   { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 
   /* 안내 박스 */
-  .info-box { background: #e8f4fd; border-left: 4px solid #1a73e8; padding: 12px 16px; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #1a3a5c; line-height: 1.7; }
+  .info-box { background: #f0ebff; border-left: 4px solid #7c3aed; padding: 12px 16px; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #1e0e5c; line-height: 1.7; }
   .round-info { background: #fff9e6; border-left: 4px solid #f9a825; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; color: #555; line-height: 1.6; }
   .tip-box { background: #e8f5e9; border-left: 4px solid #43a047; padding: 8px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; color: #2e7d32; line-height: 1.6; }
 
@@ -199,7 +206,7 @@
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
   }
   .modal-header {
-    position: sticky; top: 0; background: #1a3a5c; color: white;
+    position: sticky; top: 0; background: #1e0e5c; color: white;
     padding: 14px 20px; border-radius: 10px 10px 0 0;
     display: flex; align-items: center; justify-content: space-between;
     font-size: 16px; font-weight: bold; z-index: 1;
@@ -211,24 +218,24 @@
   .modal-body { padding: 20px 24px; font-size: 13px; line-height: 1.8; color: #333; }
   .manual-section { margin-bottom: 22px; }
   .manual-section h3 {
-    font-size: 14px; font-weight: bold; color: #1a3a5c;
-    border-bottom: 2px solid #1a3a5c; padding-bottom: 5px; margin-bottom: 10px;
+    font-size: 14px; font-weight: bold; color: #1e0e5c;
+    border-bottom: 2px solid #1e0e5c; padding-bottom: 5px; margin-bottom: 10px;
   }
-  .manual-section h4 { font-size: 13px; font-weight: bold; color: #2a5a8c; margin: 10px 0 4px; }
+  .manual-section h4 { font-size: 13px; font-weight: bold; color: #2d1b8a; margin: 10px 0 4px; }
   .manual-section ul { padding-left: 18px; }
   .manual-section li { margin-bottom: 4px; }
   .manual-tag {
-    display: inline-block; background: #1a3a5c; color: white;
+    display: inline-block; background: #1e0e5c; color: white;
     font-size: 11px; padding: 1px 7px; border-radius: 10px; margin-right: 4px; vertical-align: middle;
   }
   .manual-tag.green { background: #2e7d32; }
   .manual-tag.orange { background: #e65100; }
   .manual-tag.red { background: #c62828; }
   .btn-manual {
-    background: #1a3a5c; color: white; border: none; padding: 6px 14px;
+    background: #1e0e5c; color: white; border: none; padding: 6px 14px;
     border-radius: 5px; cursor: pointer; font-size: 13px;
   }
-  .btn-manual:hover { background: #2a5a8c; }
+  .btn-manual:hover { background: #2d1b8a; }
 
   @media print {
     .main-tabs, .round-tab-bar, .btn-row, .perf-add-row, .subject-type-bar { display: none; }
@@ -412,7 +419,7 @@
   <!-- ===== 수행평가 ===== -->
   <div id="tab-perf" class="main-tab-content">
     <div class="section-title">수행평가 추정분할점수 <span class="badge">수행평가</span></div>
-    <div class="info-box">수행평가 영역을 추가하고 <b>배점합</b>과 <b>예상 정답률(%)</b>을 입력하세요.</div>
+    <div class="info-box">수행평가 영역을 추가하고 <b>영역명</b>과 <b>배점합</b>을 입력한 후, 각 경계별로 <b>성취수준별 예상 득점(점)</b>을 직접 입력하세요.</div>
     <div id="rounds-perf"></div>
     <div id="result-perf" class="result-section"></div>
     <div class="btn-row">
@@ -458,7 +465,7 @@
 </div><!-- /container -->
 
 <div style="text-align:center; padding:18px 0 24px; font-size:12px; color:#999;">
-  오류 제보: <a href="mailto:osanchem@osan.hs.kr" style="color:#1a73e8; text-decoration:none;">osanchem@osan.hs.kr</a>
+  오류 제보: <a href="mailto:osanchem@osan.hs.kr" style="color:#7c3aed; text-decoration:none;">osanchem@osan.hs.kr</a>
 </div>
 
 <script>
@@ -666,8 +673,28 @@ function getVal(id, bi, rowIdx) {
 function showRateWarnBox(assessId, rIdx, errors) {
   const tableDiv = document.getElementById(`round-table-${assessId}`);
   if (!tableDiv) return;
+
+  const bounds = getBoundaries();
+  const id = `${assessId}-r${rIdx}`;
+  const gapWarnings = [];
+
+  if (assessId !== 'perf') {
+    const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서술형 쉬움','서술형 보통','서술형 어려움'];
+    for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+      for (let bi = 0; bi < bounds.length - 1; bi++) {
+        const r0 = getVal(id, bi,     rowIdx);
+        const r1 = getVal(id, bi + 1, rowIdx);
+        if (r0 === null || r1 === null) continue;
+        const gap = r0 - r1;
+        if (gap >= 20) {
+          gapWarnings.push(`• [${rowLabels[rowIdx]}] ${bounds[bi]}(${r0}%) ↔ ${bounds[bi+1]}(${r1}%) : 정답률 차이 <strong>${gap}%p</strong>`);
+        }
+      }
+    }
+  }
+
   let warnEl = tableDiv.querySelector('.rate-warn-box');
-  if (errors.length === 0) { if (warnEl) warnEl.remove(); return; }
+  if (errors.length === 0 && gapWarnings.length === 0) { if (warnEl) warnEl.remove(); return; }
   if (!warnEl) {
     warnEl = document.createElement('div');
     warnEl.className = 'rate-warn-box';
@@ -682,12 +709,16 @@ function showRateWarnBox(assessId, rIdx, errors) {
   const hasRevErr = boundary.length || diffic.length;
   let html = '';
   if (hasRevErr) {
-    html += '⚠️ <b>정답률 역전 감지</b><br>';
+    const revTitle = assessId === 'perf' ? '예상 득점 역전 감지' : '정답률 역전 감지';
+    html += `⚠️ <b>${revTitle}</b><br>`;
     if (boundary.length) html += `<u>경계 역전</u> (A/B ≥ B/C ≥ … ≥ E/I)<br>${boundary.join('<br>')}<br>`;
     if (diffic.length)   html += `<u>난이도 역전</u> (쉬움 ≥ 보통 ≥ 어려움)<br>${diffic.join('<br>')}`;
   }
   if (step5.length) {
     html += `<div class="warn5-section">⚠ <b>급간 오류</b> (A~D: 5% 단위 · E/I: 1% 단위)<br>${step5.join('<br>')}</div>`;
+  }
+  if (gapWarnings.length > 0) {
+    html += `<div class="warn5-section" style="color:#c62828;">⚠ <b>수준별 급간차이 20점 이상</b> — 인접 경계점수 차이가 너무 큽니다.<br>${gapWarnings.join('<br>')}</div>`;
   }
   warnEl.innerHTML = html;
 }
@@ -883,7 +914,7 @@ function renderPerfRoundTable(rIdx) {
   <table class="input-table"><thead>
     <tr>
       <th rowspan="2">영역명</th><th rowspan="2">배점합</th>
-      <th colspan="${bLen}" class="sub-header">경계별 예상 정답률 (%)</th>
+      <th colspan="${bLen}" class="sub-header">성취수준별 예상 득점 (점)</th>
       <th rowspan="2"></th>
     </tr>
     <tr>${bounds.map(b=>`<th class="sub-header">${b}</th>`).join('')}</tr>
@@ -904,7 +935,7 @@ function appendPerfBodyRow(rIdx, rowIdx, name='', sc='') {
   let html = `<td><input type="text" class="score-input" style="width:88px" id="${id}-nm-${rowIdx}" value="${name}" placeholder="영역명" oninput="liveCalc('perf')"></td>`;
   html += `<td><input type="number" class="score-input" id="${id}-sc-${rowIdx}" value="${sc}" min="0" placeholder="0" oninput="liveCalc('perf')"></td>`;
   bounds.forEach((b, bi) => {
-    html += `<td><input type="number" class="score-input rate-input" id="${id}-ra-${bi}-${rowIdx}" min="0" max="100" placeholder="0" oninput="liveCalc('perf')"></td>`;
+    html += `<td><input type="number" class="score-input rate-input" id="${id}-ra-${bi}-${rowIdx}" min="0" step="0.1" placeholder="점" oninput="liveCalc('perf')"></td>`;
   });
   html += `<td><button class="btn-del" onclick="delPerfRow(this, ${rIdx})">삭제</button></td>`;
   tr.innerHTML = html;
@@ -941,7 +972,7 @@ function calcRoundFromSaved(assessId, rIdx) {
       const sc = parseFloat(row.sc) || 0;
       total += sc;
       (row.rates || []).forEach((rate, bi) => {
-        if (bi < bLen) sums[bi] += sc * (parseFloat(rate) || 0) / 100;
+        if (bi < bLen) sums[bi] += parseFloat(rate) || 0;
       });
     });
   } else {
@@ -981,7 +1012,7 @@ function calcRound(assessId, rIdx) {
       bounds.forEach((b, bi) => {
         const raEl = tr.querySelector(`input[id^="${id}-ra-${bi}-"]`);
         const ra = parseFloat(raEl?.value) || 0;
-        sums[bi] += sc * ra / 100;
+        sums[bi] += ra;
       });
     });
   } else {
@@ -1149,6 +1180,7 @@ function renderResultCards(assessId, res, containerId, showRounds, allErrors) {
   });
   html += '</div>';
   html += renderVizBar(total, scores);
+  html += buildGapWarnHtml(bounds, scores);
 
   if (showRounds && rounds.length >= 2) {
     html += `<div class="round-compare">
@@ -1187,7 +1219,20 @@ function renderSemesterResult(res) {
   });
   html += '</div>';
   html += renderVizBar(total, scores);
+  html += buildGapWarnHtml(bounds, scores);
   container.innerHTML = html;
+}
+
+function buildGapWarnHtml(bounds, scores) {
+  const warnings = [];
+  for (let i = 0; i < scores.length - 1; i++) {
+    const gap = scores[i] - scores[i + 1];
+    if (gap >= 20) {
+      warnings.push(`• <strong>${bounds[i]}</strong> 경계(${scores[i]}점) ↔ <strong>${bounds[i+1]}</strong> 경계(${scores[i+1]}점) : 급간차이 <strong>${gap}점</strong>`);
+    }
+  }
+  if (warnings.length === 0) return '';
+  return `<div class="gap-warn-box">⚠️ <strong>급간차이 20점 이상 경고</strong> — 인접 경계점수 간 차이가 너무 큽니다. 입력값을 검토하세요.<br>${warnings.join('<br>')}</div>`;
 }
 
 function renderVizBar(total, scores) {
