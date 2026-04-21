@@ -181,6 +181,13 @@
   .btn-del-round  { background: #fce4ec; color: #c62828; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 4px; }
   .btn-round-dl   { background: transparent; color: inherit; border: none; padding: 0 3px; cursor: pointer; font-size: 11px; opacity: 0.65; vertical-align: middle; }
   .btn-round-dl:hover { opacity: 1; }
+  .btn-round-copy {
+    background: #f59e0b; color: white; border: none;
+    padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    font-size: 12px; font-weight: bold; margin-left: 4px;
+    vertical-align: middle; transition: background 0.2s;
+  }
+  .btn-round-copy:hover { background: #d97706; }
   .btn-row   { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 
   /* 안내 박스 */
@@ -813,6 +820,26 @@ function addRound(assessId) {
   switchRound(assessId, rIdx);
 }
 
+function copyRound(assessId, rIdx) {
+  // 현재 라운드 데이터를 state에 저장한 뒤 복사
+  saveRoundData(assessId, state[assessId].currentRound);
+  const s = state[assessId];
+  const newIdx = s.rounds.length;
+  s.rounds.push({ idx: newIdx });
+
+  // 원본 라운드 데이터 깊은 복사
+  if (s.roundData[rIdx]) {
+    s.roundData[newIdx] = JSON.parse(JSON.stringify(s.roundData[rIdx]));
+  }
+  // 수행평가 행 개수도 복사
+  if (assessId === 'perf' && s.perfRowCounts[rIdx] !== undefined) {
+    s.perfRowCounts[newIdx] = s.perfRowCounts[rIdx];
+  }
+
+  renderRoundTabs(assessId);
+  switchRound(assessId, newIdx);
+}
+
 function removeRound(assessId, rIdx) {
   const s = state[assessId];
   if (s.rounds.length <= 1) { alert('최소 1개 라운드는 유지해야 합니다.'); return; }
@@ -842,6 +869,7 @@ function renderRoundTabs(assessId) {
   s.rounds.forEach((r, i) => {
     const active = (i === s.currentRound) ? 'active' : '';
     html += `<button class="round-tab-btn ${active}" onclick="switchRound('${assessId}', ${i})">${i+1}라운드`;
+    html += `<button class="btn-round-copy" onclick="copyRound('${assessId}', ${i}); event.stopPropagation();" title="${i+1}라운드 복사">📋 복사</button>`;
     html += `<button class="btn-round-dl" onclick="downloadRound('${assessId}', ${i}); event.stopPropagation();" title="${i+1}라운드 엑셀 저장">📥</button>`;
     if (s.rounds.length > 1) html += `<button class="btn-del-round" onclick="removeRound('${assessId}', ${i}); event.stopPropagation();">×</button>`;
     html += `</button>`;
