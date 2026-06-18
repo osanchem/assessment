@@ -1979,6 +1979,237 @@
     border-color: var(--hp-fog);
   }
 
+  /* Usage manual and clearer boxed layout */
+  :root {
+    --box-line: #cbd5e1;
+    --box-line-strong: #94a3b8;
+    --box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    --box-shadow-soft: 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+
+  body {
+    background: #f4f6f9;
+  }
+
+  .app-header,
+  .top-nav {
+    border-bottom: 2px solid var(--box-line);
+  }
+
+  .app-header h1 {
+    font-size: 56px;
+  }
+
+  .panel,
+  .toolbar,
+  .metric,
+  .result-card,
+  .summary-item,
+  .level-guide-item,
+  .guide-dialog,
+  .subject-type-bar,
+  .persistence-warning,
+  .notice,
+  .table-wrap {
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-soft);
+  }
+
+  .panel,
+  .toolbar,
+  .guide-dialog {
+    box-shadow: var(--box-shadow);
+  }
+
+  .panel-head {
+    border-bottom: 1.5px solid var(--box-line);
+    background: #f8fafc;
+  }
+
+  #target-level-guide,
+  #setup-page .setup-shell > .panel:nth-child(2),
+  .subject-type-bar,
+  .persistence-warning,
+  .notice,
+  .warn-box,
+  .warn-box.show {
+    background: #fff;
+    border-color: var(--box-line);
+  }
+
+  .notice,
+  .persistence-warning {
+    background: #eef6ff;
+  }
+
+  .top-nav-btn,
+  .page-step-pill {
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+  }
+
+  .top-nav-btn.active,
+  .page-step-pill.active {
+    border-color: var(--hp-blue);
+    background: #eff6ff;
+    color: var(--hp-ink);
+  }
+
+  .page-step-pill.active .step {
+    background: #fff;
+    color: var(--hp-ink);
+    border-color: var(--box-line-strong);
+  }
+
+  .top-nav-btn.active::after {
+    display: none;
+  }
+
+  .btn,
+  input,
+  select,
+  .pill,
+  .tag,
+  .level-badge,
+  .step {
+    border-radius: 8px;
+  }
+
+  .layout,
+  .setup-shell,
+  .grid-2,
+  .target-guide-grid {
+    gap: 16px;
+  }
+
+  .table-wrap {
+    overflow: auto;
+  }
+
+  th,
+  td {
+    border-color: var(--box-line);
+  }
+
+  tbody tr:hover td,
+  tbody tr:hover td.sticky-left {
+    background: #f8fafc;
+  }
+
+  #usage-manual,
+  #target-level-guide {
+    scroll-margin-top: 88px;
+  }
+
+  #usage-manual {
+    margin-bottom: 16px;
+  }
+
+  .usage-manual-body {
+    display: grid;
+    gap: 14px;
+  }
+
+  .usage-manual-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .usage-step-card {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+    align-items: start;
+    min-height: 142px;
+    padding: 14px;
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .usage-step-num {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1.5px solid var(--box-line-strong);
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: var(--hp-ink);
+    font-weight: 700;
+  }
+
+  .usage-step-title {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--hp-ink);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .usage-step-desc {
+    display: block;
+    color: var(--hp-charcoal);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .usage-manual-note {
+    display: grid;
+    gap: 6px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: var(--hp-charcoal);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .usage-manual-note strong {
+    color: var(--hp-ink);
+  }
+
+  .teacher-round-panel {
+    margin-bottom: 16px;
+  }
+
+  .teacher-round-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .teacher-round-controls .inline-field select {
+    min-width: 140px;
+  }
+
+  .teacher-round-current {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 4px 9px;
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--hp-charcoal);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .teacher-round-table .active-row td {
+    background: #eff6ff;
+  }
+
+  .round-score-list {
+    color: var(--hp-charcoal);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
   @media (max-width: 980px) {
     .app-header {
       padding: 44px 20px 24px;
@@ -1991,6 +2222,209 @@
     .app-header .sub {
       font-size: 16px;
     }
+
+    .app-header h1 {
+      font-size: 40px;
+    }
+
+    .usage-manual-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .usage-manual-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .usage-step-card {
+      min-height: auto;
+    }
+  }
+
+  /* Shared simple tool UI */
+  :root {
+    --ui-navy: #0f172a;
+    --ui-blue: #2563eb;
+    --ui-teal: #0f766e;
+    --ui-violet: #7c3aed;
+    --ui-amber: #d97706;
+    --ui-rose: #e11d48;
+    --ui-soft-blue: #eff6ff;
+    --ui-soft-teal: #ecfdf5;
+    --ui-soft-violet: #f5f3ff;
+    --ui-soft-amber: #fffbeb;
+    --ui-soft-rose: #fff1f2;
+  }
+
+  body {
+    background: #f8fafc;
+  }
+
+  .app-header {
+    background: var(--ui-navy);
+    border-bottom: 0;
+    color: #fff;
+    padding: 34px 28px 22px;
+  }
+
+  .app-header h1 {
+    max-width: 1440px;
+    margin: 0 auto;
+    color: #fff;
+    font-size: clamp(32px, 3.7vw, 52px);
+    line-height: 1.08;
+    font-weight: 700;
+  }
+
+  .app-header .sub {
+    max-width: 1440px;
+    margin: 8px auto 0;
+    color: rgba(255,255,255,0.82);
+    font-size: 15px;
+  }
+
+  .update-date {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 9px;
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 999px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .top-nav {
+    border-bottom: 1.5px solid var(--box-line);
+  }
+
+  .top-nav-btn,
+  .page-step-pill,
+  .btn {
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+
+  .top-nav-btn:hover,
+  .page-step-pill:hover,
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .top-nav-btn.active,
+  .page-step-pill.active {
+    background: var(--ui-soft-blue);
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .page-step-pill.active .step,
+  .step {
+    background: var(--ui-soft-blue);
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .panel {
+    border-top: 5px solid var(--ui-blue);
+  }
+
+  #usage-manual {
+    border-top-color: var(--ui-violet);
+  }
+
+  #target-level-guide,
+  .guide-dialog {
+    border-top-color: var(--ui-teal);
+  }
+
+  .teacher-round-panel {
+    border-top-color: var(--ui-amber);
+  }
+
+  .panel-head {
+    background: #fff;
+  }
+
+  .panel-title,
+  .manual-section h3,
+  .usage-step-title {
+    color: var(--ui-navy);
+  }
+
+  .usage-step-num {
+    background: var(--ui-soft-violet);
+    border-color: #ddd6fe;
+    color: var(--ui-violet);
+  }
+
+  .usage-step-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .usage-step-card:hover,
+  .metric:hover,
+  .summary-item:hover,
+  .result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+  }
+
+  .notice,
+  .persistence-warning {
+    background: var(--ui-soft-blue);
+    border-left: 5px solid var(--ui-blue);
+    color: #1e3a8a;
+  }
+
+  .subject-type-bar,
+  .usage-manual-note {
+    background: var(--ui-soft-teal);
+    border-color: #a7f3d0;
+  }
+
+  th {
+    background: var(--ui-navy);
+    color: #fff;
+  }
+
+  tbody tr:hover td,
+  tbody tr:hover td.sticky-left {
+    background: #f1f5f9;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--ui-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+    outline: 0;
+  }
+
+  .level-a,
+  .seg-a {
+    background: var(--ui-blue);
+  }
+
+  .level-b,
+  .seg-b {
+    background: var(--ui-teal);
+  }
+
+  .level-c,
+  .seg-c {
+    background: var(--ui-amber);
+  }
+
+  .level-d,
+  .seg-d {
+    background: var(--ui-rose);
+  }
+
+  .level-e,
+  .seg-e {
+    background: var(--ui-violet);
   }
 
   @media print {
@@ -2005,13 +2439,14 @@
 <body>
 <header class="app-header">
   <h1>목표 성취수준 기반 분할점수 시뮬레이터</h1>
-  <div class="sub">문항 목표 성취수준과 일부 예상 정답률을 연결해 성취수준 경계 점수를 추정합니다.</div>
+  <div class="sub">문항 목표 성취수준과 일부 예상 정답률을 연결해 성취수준 경계 점수를 추정합니다. <span class="update-date">업데이트: 2026.06.19.</span></div>
 </header>
 
 <nav class="top-nav" aria-label="상단 내비게이션">
   <div class="top-nav-inner">
     <span class="top-nav-label">이동</span>
     <button class="top-nav-btn active" id="nav-setup" type="button">문항 입력</button>
+    <button class="top-nav-btn" id="nav-manual" type="button">사용법 매뉴얼</button>
     <button class="top-nav-btn" id="nav-rates" type="button">정답률 입력</button>
     <button class="top-nav-btn" id="nav-results" type="button">결과 확인</button>
     <button class="top-nav-btn" id="nav-target-guide" type="button">목표 성취수준 안내</button>
@@ -2024,6 +2459,76 @@
     <span class="page-step-pill"><span class="step">2</span> 정답률 입력</span>
     <span class="page-step-pill"><span class="step">3</span> 결과 확인</span>
   </div>
+
+  <section class="panel usage-manual" id="usage-manual" aria-label="사용법 매뉴얼">
+    <div class="panel-head">
+      <div class="panel-title"><span class="step">?</span> 사용법 매뉴얼</div>
+    </div>
+    <div class="panel-body usage-manual-body">
+      <div class="usage-manual-grid">
+        <div class="usage-step-card">
+          <span class="usage-step-num">1</span>
+          <span>
+            <strong class="usage-step-title">문항 정보 입력</strong>
+            <span class="usage-step-desc">문항번호, 문항구분, 배점, 난이도, 목표 성취수준을 문항별로 입력합니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">2</span>
+          <span>
+            <strong class="usage-step-title">목표 성취수준 확인</strong>
+            <span class="usage-step-desc">목표 성취수준은 해당 수준 학생의 2/3 이상이 맞힐 것으로 기대되는 문항 수준입니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">3</span>
+          <span>
+            <strong class="usage-step-title">정답률 입력</strong>
+            <span class="usage-step-desc">공통과목은 ①~⑤ 순서 표시를 따라 기준값을 입력하고, 필요한 칸만 직접 수정합니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">4</span>
+          <span>
+            <strong class="usage-step-title">자동 추정 검토</strong>
+            <span class="usage-step-desc">입력값을 기준으로 채워진 자동 추정 정답률이 교사 판단과 맞는지 확인합니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">5</span>
+          <span>
+            <strong class="usage-step-title">결과 확인</strong>
+            <span class="usage-step-desc">경계 점수, 기여도 상세, 학기말 합산 점수를 확인하고 급간 차이를 검토합니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">6</span>
+          <span>
+            <strong class="usage-step-title">JSON 저장</strong>
+            <span class="usage-step-desc">브라우저를 닫기 전에 JSON 저장으로 입력값을 보관하고 다음 작업 때 다시 불러옵니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">7</span>
+          <span>
+            <strong class="usage-step-title">여러 교사 취합</strong>
+            <span class="usage-step-desc">여러 JSON 파일을 불러와 평균, 중앙값, 범위를 비교합니다.</span>
+          </span>
+        </div>
+        <div class="usage-step-card">
+          <span class="usage-step-num">8</span>
+          <span>
+            <strong class="usage-step-title">인쇄·공유</strong>
+            <span class="usage-step-desc">검토가 끝나면 인쇄 또는 저장 파일로 회의·협의 자료를 남깁니다.</span>
+          </span>
+        </div>
+      </div>
+      <div class="usage-manual-note">
+        <span><strong>입력 순서 가이드</strong> 버튼은 정답률 입력 화면에서 다시 열 수 있습니다.</span>
+        <span><strong>JSON 저장</strong>은 입력값 백업용입니다. 계산을 이어서 하거나 교사별 결과를 취합할 때 사용하세요.</span>
+      </div>
+    </div>
+  </section>
 
   <section class="setup-shell">
     <div class="panel" id="target-level-guide">
@@ -2155,6 +2660,51 @@
     </label>
   </div>
 
+  <div class="panel teacher-round-panel" aria-label="교사와 라운드 관리">
+    <div class="panel-head">
+      <div class="panel-title"><span class="step">T</span> 교사·라운드 관리</div>
+      <span class="teacher-round-current" id="teacher-round-current">교사 1 · 1라운드</span>
+    </div>
+    <div class="panel-body stack">
+      <div class="notice">
+        한 화면에서 교사별 라운드를 전환하며 정답률을 입력할 수 있습니다. 저장할 때는 모든 교사·라운드가 JSON에 함께 들어가고, 취합 시에는 교사별 라운드 대표값을 먼저 계산한 뒤 교사 간 평균·중앙값을 비교합니다.
+      </div>
+      <div class="teacher-round-controls">
+        <label class="inline-field">교사
+          <select id="teacher-select"></select>
+        </label>
+        <button class="btn secondary" id="btn-add-teacher">교사 추가</button>
+        <button class="btn warn" id="btn-delete-teacher">교사 삭제</button>
+        <label class="inline-field">라운드
+          <select id="round-select"></select>
+        </label>
+        <button class="btn secondary" id="btn-add-round">라운드 추가</button>
+        <button class="btn secondary" id="btn-copy-round">현재 라운드 복사</button>
+        <button class="btn warn" id="btn-delete-round">라운드 삭제</button>
+        <label class="inline-field">교사 대표값
+          <select id="teacher-round-method">
+            <option value="median">라운드 중앙값</option>
+            <option value="average">라운드 평균</option>
+          </select>
+        </label>
+        <button class="btn secondary" id="btn-save-round">현재 라운드 저장</button>
+      </div>
+      <div class="table-wrap">
+        <table class="teacher-round-table">
+          <thead>
+            <tr>
+              <th>교사</th>
+              <th>라운드 수</th>
+              <th>대표값 방식</th>
+              <th class="left">교사 대표 추정 분할점수</th>
+            </tr>
+          </thead>
+          <tbody id="teacher-round-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="layout">
     <section class="stack">
       <div class="panel rate-panel">
@@ -2279,6 +2829,7 @@
           </div>
           <div class="aggregate-controls">
             <button class="btn secondary" id="btn-load-aggregate">여러 JSON 불러오기</button>
+            <button class="btn secondary" id="btn-aggregate-workspace">화면 교사·라운드 취합</button>
             <label class="inline-field">적용값
               <select id="aggregation-method">
                 <option value="median">중앙값</option>
@@ -2424,6 +2975,10 @@ let state = {
   categoryAutoFilledAll: false,
   isCommon: true,
   teacherName: "",
+  teacherRounds: [],
+  activeTeacherId: "",
+  activeRoundId: "",
+  roundRepresentativeMethod: "median",
   aggregation: {
     entries: [],
     warnings: [],
@@ -2771,6 +3326,210 @@ function readJSONFile(file) {
     reader.onerror = () => reject(new Error(`${file.name}: 파일을 읽을 수 없습니다.`));
     reader.readAsText(file, "utf-8");
   });
+}
+
+function clonePlain(value, fallback) {
+  if (value === undefined || value === null) {
+    if (fallback === undefined || fallback === null) return fallback === undefined ? null : fallback;
+    return clonePlain(fallback);
+  }
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (error) {
+    if (fallback === undefined || fallback === null) return fallback === undefined ? null : fallback;
+    return clonePlain(fallback);
+  }
+}
+
+function emptyAssessmentWeights() {
+  return { mid: 40, fin: 40, perf: 20 };
+}
+
+function emptyAssessmentScores() {
+  return { mid: {}, fin: {}, perf: {} };
+}
+
+function roundSnapshotFromState(label = "", id = "") {
+  const isAggregateFinal = state.finalResultLabel === "여러 교사 취합 최종";
+  return {
+    id: id || uid(),
+    label: label || "1라운드",
+    rates: clonePlain(state.rates, {}),
+    categoryRates: clonePlain(state.categoryRates, {}),
+    categoryManual: clonePlain(state.categoryManual, {}),
+    categoryAutoFilledAll: !!state.categoryAutoFilledAll,
+    finalBoundaries: isAggregateFinal ? null : clonePlain(state.finalBoundaries, null),
+    finalResultLabel: isAggregateFinal ? "" : state.finalResultLabel || "",
+    assessmentWeights: clonePlain(state.assessmentWeights, emptyAssessmentWeights()),
+    assessmentScores: clonePlain(state.assessmentScores, emptyAssessmentScores())
+  };
+}
+
+function emptyRound(label = "1라운드") {
+  return {
+    id: uid(),
+    label,
+    rates: {},
+    categoryRates: {},
+    categoryManual: {},
+    categoryAutoFilledAll: false,
+    finalBoundaries: null,
+    finalResultLabel: "",
+    assessmentWeights: emptyAssessmentWeights(),
+    assessmentScores: emptyAssessmentScores()
+  };
+}
+
+function normalizeRound(round = {}, index = 0) {
+  return {
+    id: String(round.id || uid()),
+    label: String(round.label || `${index + 1}라운드`),
+    rates: round.rates && typeof round.rates === "object" ? clonePlain(round.rates, {}) : {},
+    categoryRates: round.categoryRates && typeof round.categoryRates === "object" ? clonePlain(round.categoryRates, {}) : {},
+    categoryManual: round.categoryManual && typeof round.categoryManual === "object" ? clonePlain(round.categoryManual, {}) : {},
+    categoryAutoFilledAll: typeof round.categoryAutoFilledAll === "boolean" ? round.categoryAutoFilledAll : false,
+    finalBoundaries: Array.isArray(round.finalBoundaries) ? clonePlain(round.finalBoundaries, []) : null,
+    finalResultLabel: String(round.finalResultLabel || "").trim(),
+    assessmentWeights: normalizeAssessmentWeights(round.assessmentWeights),
+    assessmentScores: normalizeAssessmentScores(round.assessmentScores)
+  };
+}
+
+function normalizeTeacherRoundSet(teacherRounds, fallbackName = "") {
+  const teachers = Array.isArray(teacherRounds) ? teacherRounds : [];
+  return teachers.map((teacher, teacherIndex) => {
+    const rounds = Array.isArray(teacher.rounds) && teacher.rounds.length
+      ? teacher.rounds.map(normalizeRound)
+      : [emptyRound("1라운드")];
+    return {
+      id: String(teacher.id || uid()),
+      name: String(teacher.name || fallbackName || `교사 ${teacherIndex + 1}`).trim() || `교사 ${teacherIndex + 1}`,
+      rounds
+    };
+  });
+}
+
+function ensureTeacherRounds() {
+  if (!Array.isArray(state.teacherRounds)) state.teacherRounds = [];
+  if (!state.teacherRounds.length) {
+    const name = state.teacherName || "교사 1";
+    state.teacherRounds.push({
+      id: uid(),
+      name,
+      rounds: [roundSnapshotFromState("1라운드")]
+    });
+  }
+
+  let teacher = state.teacherRounds.find(item => item.id === state.activeTeacherId);
+  if (!teacher) {
+    teacher = state.teacherRounds[0];
+    state.activeTeacherId = teacher.id;
+  }
+  if (!Array.isArray(teacher.rounds) || !teacher.rounds.length) teacher.rounds = [emptyRound("1라운드")];
+
+  let round = teacher.rounds.find(item => item.id === state.activeRoundId);
+  if (!round) {
+    round = teacher.rounds[0];
+    state.activeRoundId = round.id;
+  }
+  if (!state.teacherName && teacher.name) state.teacherName = teacher.name;
+  return { teacher, round };
+}
+
+function activeTeacherRound() {
+  return ensureTeacherRounds();
+}
+
+function saveActiveRound() {
+  const { teacher, round } = activeTeacherRound();
+  teacher.name = state.teacherName || teacher.name || "이름 없음";
+  const snapshot = roundSnapshotFromState(round.label, round.id);
+  Object.assign(round, snapshot);
+}
+
+function loadActiveRoundState() {
+  const { teacher, round } = activeTeacherRound();
+  state.teacherName = teacher.name || "";
+  state.rates = clonePlain(round.rates, {});
+  state.categoryRates = clonePlain(round.categoryRates, {});
+  state.categoryManual = clonePlain(round.categoryManual, {});
+  state.categoryAutoFilledAll = !!round.categoryAutoFilledAll;
+  state.finalBoundaries = clonePlain(round.finalBoundaries, null);
+  state.finalResultLabel = round.finalResultLabel || "";
+  state.assessmentWeights = normalizeAssessmentWeights(round.assessmentWeights);
+  state.assessmentScores = normalizeAssessmentScores(round.assessmentScores);
+}
+
+function switchTeacherRound(teacherId, roundId) {
+  saveActiveRound();
+  const nextTeacher = state.teacherRounds.find(teacher => teacher.id === teacherId);
+  if (!nextTeacher) return;
+  state.activeTeacherId = nextTeacher.id;
+  const nextRound = nextTeacher.rounds.find(round => round.id === roundId) || nextTeacher.rounds[0];
+  state.activeRoundId = nextRound.id;
+  loadActiveRoundState();
+  renderAll();
+}
+
+function addTeacherRoundTeacher() {
+  saveActiveRound();
+  const teacher = {
+    id: uid(),
+    name: `교사 ${state.teacherRounds.length + 1}`,
+    rounds: [emptyRound("1라운드")]
+  };
+  state.teacherRounds.push(teacher);
+  state.activeTeacherId = teacher.id;
+  state.activeRoundId = teacher.rounds[0].id;
+  loadActiveRoundState();
+  clearAggregationOnly();
+  renderAll();
+}
+
+function deleteTeacherRoundTeacher() {
+  if (!Array.isArray(state.teacherRounds) || state.teacherRounds.length <= 1) {
+    alert("교사는 1명 이상 필요합니다.");
+    return;
+  }
+  const index = state.teacherRounds.findIndex(teacher => teacher.id === state.activeTeacherId);
+  if (index < 0) return;
+  state.teacherRounds.splice(index, 1);
+  const nextTeacher = state.teacherRounds[Math.max(0, index - 1)] || state.teacherRounds[0];
+  state.activeTeacherId = nextTeacher.id;
+  state.activeRoundId = nextTeacher.rounds[0].id;
+  loadActiveRoundState();
+  clearAggregationOnly();
+  renderAll();
+}
+
+function addTeacherRoundRound(copyCurrent = false) {
+  saveActiveRound();
+  const { teacher, round } = activeTeacherRound();
+  const label = `${teacher.rounds.length + 1}라운드`;
+  const nextRound = copyCurrent
+    ? { ...clonePlain(round, emptyRound(label)), id: uid(), label }
+    : emptyRound(label);
+  teacher.rounds.push(nextRound);
+  state.activeRoundId = nextRound.id;
+  loadActiveRoundState();
+  clearAggregationOnly();
+  renderAll();
+}
+
+function deleteTeacherRoundRound() {
+  const { teacher } = activeTeacherRound();
+  if (teacher.rounds.length <= 1) {
+    alert("라운드는 1개 이상 필요합니다.");
+    return;
+  }
+  const index = teacher.rounds.findIndex(round => round.id === state.activeRoundId);
+  if (index < 0) return;
+  teacher.rounds.splice(index, 1);
+  const nextRound = teacher.rounds[Math.max(0, index - 1)] || teacher.rounds[0];
+  state.activeRoundId = nextRound.id;
+  loadActiveRoundState();
+  clearAggregationOnly();
+  renderAll();
 }
 
 function clampRate(value) {
@@ -3871,6 +4630,95 @@ function boundaryResultsForEntry(entry) {
   return calculateBoundariesForEntry(entry);
 }
 
+function combineBoundaryResultSets(resultSets, method = "median", boundaries = getBoundaries()) {
+  const mode = method === "average" ? "average" : "median";
+  return boundaries.map(boundary => {
+    const values = resultSets
+      .map(results => {
+        const found = (results || []).find(item => item.label === boundary.label);
+        return found ? parseNumber(found.score, null) : null;
+      })
+      .filter(value => Number.isFinite(value))
+      .sort((a, b) => a - b);
+
+    let score = 0;
+    if (values.length) {
+      if (mode === "average") {
+        score = values.reduce((sum, value) => sum + value, 0) / values.length;
+      } else {
+        const middle = Math.floor(values.length / 2);
+        score = values.length % 2 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
+      }
+    }
+    return { ...boundary, score, source: mode, count: values.length };
+  });
+}
+
+function boundaryResultsForRound(round, blueprint = state.blueprint, isCommon = state.isCommon) {
+  return boundaryResultsForEntry({
+    blueprint,
+    isCommon,
+    categoryRates: round.categoryRates && typeof round.categoryRates === "object" ? round.categoryRates : {},
+    categoryManual: round.categoryManual && typeof round.categoryManual === "object" ? round.categoryManual : {},
+    finalBoundaries: Array.isArray(round.finalBoundaries) ? round.finalBoundaries : null,
+    assessmentWeights: normalizeAssessmentWeights(round.assessmentWeights),
+    assessmentScores: normalizeAssessmentScores(round.assessmentScores)
+  });
+}
+
+function representativeResultsForTeacher(teacher, method = state.roundRepresentativeMethod, blueprint = state.blueprint, isCommon = state.isCommon) {
+  const rounds = Array.isArray(teacher.rounds) ? teacher.rounds : [];
+  const resultSets = rounds.map(round => boundaryResultsForRound(round, blueprint, isCommon));
+  return combineBoundaryResultSets(resultSets, method, getBoundariesForType(isCommon));
+}
+
+function aggregateEntriesFromPayload(payload, fileName, warnings) {
+  const blueprint = sanitizeBlueprintRows(payload.blueprint);
+  if (!blueprint.length) {
+    warnings.push(`${fileName}: 문항 설계가 없어 제외`);
+    return [];
+  }
+
+  const isCommon = typeof payload.isCommon === "boolean" ? payload.isCommon : true;
+  const roundMethod = payload.roundRepresentativeMethod === "average" ? "average" : "median";
+  const teacherRounds = normalizeTeacherRoundSet(payload.teacherRounds, payload.teacherName);
+
+  if (Array.isArray(payload.teacherRounds) && payload.teacherRounds.length && teacherRounds.length) {
+    return teacherRounds.map(teacher => {
+      const boundaryResults = representativeResultsForTeacher(teacher, roundMethod, blueprint, isCommon);
+      return {
+        fileName,
+        teacherName: teacher.name || teacherLabel(payload, fileName),
+        isCommon,
+        blueprint,
+        categoryRates: {},
+        categoryManual: {},
+        finalBoundaries: boundaryResults,
+        assessmentWeights: emptyAssessmentWeights(),
+        assessmentScores: emptyAssessmentScores(),
+        boundaryResults,
+        roundCount: teacher.rounds.length,
+        roundMethod
+      };
+    });
+  }
+
+  return [{
+    fileName,
+    teacherName: teacherLabel(payload, fileName),
+    isCommon,
+    blueprint,
+    categoryRates: payload.categoryRates && typeof payload.categoryRates === "object" ? payload.categoryRates : {},
+    categoryManual: payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {},
+    finalBoundaries: Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null,
+    assessmentWeights: normalizeAssessmentWeights(payload.assessmentWeights),
+    assessmentScores: normalizeAssessmentScores(payload.assessmentScores),
+    boundaryResults: [],
+    roundCount: 1,
+    roundMethod: "single"
+  }];
+}
+
 function renderResults() {
   const total = totalScore();
   const isFinal = Array.isArray(state.finalBoundaries) && state.finalBoundaries.length;
@@ -4085,6 +4933,7 @@ function aggregateStats() {
       if (!result) return null;
       return {
         teacherName: entry.teacherName,
+        roundCount: entry.roundCount || 1,
         value: parseNumber(result.score)
       };
     }).filter(Boolean);
@@ -4111,6 +4960,49 @@ function aggregateStats() {
 function renderTeacherName() {
   const input = document.getElementById("teacher-name");
   if (input && document.activeElement !== input) input.value = state.teacherName || "";
+}
+
+function renderTeacherRoundManager() {
+  saveActiveRound();
+  const { teacher, round } = activeTeacherRound();
+  const teacherSelect = document.getElementById("teacher-select");
+  const roundSelect = document.getElementById("round-select");
+  const methodSelect = document.getElementById("teacher-round-method");
+  const current = document.getElementById("teacher-round-current");
+  const body = document.getElementById("teacher-round-body");
+  if (!teacherSelect || !roundSelect || !methodSelect || !current || !body) return;
+
+  teacherSelect.innerHTML = state.teacherRounds.map(item => (
+    `<option value="${escapeAttr(item.id)}" ${item.id === teacher.id ? "selected" : ""}>${escapeHtml(item.name)}</option>`
+  )).join("");
+  roundSelect.innerHTML = teacher.rounds.map(item => (
+    `<option value="${escapeAttr(item.id)}" ${item.id === round.id ? "selected" : ""}>${escapeHtml(item.label)}</option>`
+  )).join("");
+  methodSelect.value = state.roundRepresentativeMethod === "average" ? "average" : "median";
+  current.textContent = `${teacher.name || "이름 없음"} · ${round.label || "라운드"}`;
+
+  body.innerHTML = state.teacherRounds.map(item => {
+    const results = representativeResultsForTeacher(item);
+    const scoreText = results
+      .map(result => `${result.label} ${formatNumber(result.score, 1)}`)
+      .join(" · ");
+    return `
+      <tr class="${item.id === teacher.id ? "active-row" : ""}">
+        <td>${escapeHtml(item.name)}</td>
+        <td class="num">${item.rounds.length}</td>
+        <td>${state.roundRepresentativeMethod === "average" ? "평균" : "중앙값"}</td>
+        <td class="left round-score-list">${scoreText || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+
+  teacherSelect.onchange = () => switchTeacherRound(teacherSelect.value, "");
+  roundSelect.onchange = () => switchTeacherRound(teacher.id, roundSelect.value);
+  methodSelect.onchange = () => {
+    state.roundRepresentativeMethod = methodSelect.value === "average" ? "average" : "median";
+    clearAggregationOnly();
+    renderAll();
+  };
 }
 
 function renderAggregation() {
@@ -4144,7 +5036,7 @@ function renderAggregation() {
   const teacherNames = entries.map(entry => escapeHtml(entry.teacherName)).join(", ");
   status.innerHTML = `
     <span><strong>취합 대상:</strong> ${teacherNames}</span>
-    <span><strong>취합 기준:</strong> 학기말 최종 점수가 저장된 JSON은 그 점수를, 없으면 각 교사의 현재 추정 분할점수를 경계별로 취합합니다.</span>
+    <span><strong>취합 기준:</strong> 교사별 여러 라운드는 먼저 ${state.roundRepresentativeMethod === "average" ? "평균" : "중앙값"} 대표값으로 합산하고, 그 교사 대표값들을 경계별로 비교합니다.</span>
     ${warnings.length ? `<span><strong>제외/주의:</strong> ${warnings.map(escapeHtml).join(" / ")}</span>` : ""}
   `;
 
@@ -4155,7 +5047,7 @@ function renderAggregation() {
 
   body.innerHTML = stats.map(row => {
     const values = row.values
-      .map(item => `${escapeHtml(item.teacherName)}: ${formatNumber(item.value, 1)}`)
+      .map(item => `${escapeHtml(item.teacherName)}(${item.roundCount}라운드): ${formatNumber(item.value, 1)}`)
       .join(" · ");
     return `
       <tr>
@@ -4182,6 +5074,7 @@ function renderAll() {
   autoFillCategoryRates();
   renderSetupPage();
   renderTeacherName();
+  renderTeacherRoundManager();
   renderSubjectType();
   renderBlueprint();
   renderSummary();
@@ -4217,6 +5110,7 @@ function showSetupPage() {
 
 function updateTopNav(page, focus = "") {
   const setupNav = document.getElementById("nav-setup");
+  const manualNav = document.getElementById("nav-manual");
   const rateNav = document.getElementById("nav-rates");
   const resultNav = document.getElementById("nav-results");
   const guideNav = document.getElementById("nav-target-guide");
@@ -4224,8 +5118,12 @@ function updateTopNav(page, focus = "") {
   const rateStep = document.getElementById("step-rates");
   const resultStep = document.getElementById("step-results");
   if (setupNav) {
-    setupNav.classList.toggle("active", page === "setup" && focus !== "guide");
-    setupNav.setAttribute("aria-current", page === "setup" && focus !== "guide" ? "page" : "false");
+    setupNav.classList.toggle("active", page === "setup" && focus !== "guide" && focus !== "manual");
+    setupNav.setAttribute("aria-current", page === "setup" && focus !== "guide" && focus !== "manual" ? "page" : "false");
+  }
+  if (manualNav) {
+    manualNav.classList.toggle("active", focus === "manual");
+    manualNav.setAttribute("aria-current", focus === "manual" ? "page" : "false");
   }
   if (rateNav) {
     rateNav.classList.toggle("active", page === "rates");
@@ -4242,6 +5140,16 @@ function updateTopNav(page, focus = "") {
   if (setupStep) setupStep.classList.toggle("active", page === "setup");
   if (rateStep) rateStep.classList.toggle("active", page === "rates");
   if (resultStep) resultStep.classList.toggle("active", page === "results");
+}
+
+function showUsageManual() {
+  renderAll();
+  setActivePage("setup");
+  requestAnimationFrame(() => {
+    const manual = document.getElementById("usage-manual");
+    if (manual) manual.scrollIntoView({ behavior: "smooth", block: "start" });
+    updateTopNav("setup", "manual");
+  });
 }
 
 function showTargetGuide() {
@@ -4384,12 +5292,17 @@ function fillAllCategoryRates() {
 }
 
 function exportJSON() {
+  saveActiveRound();
   const payload = {
-    version: 1,
+    version: 2,
     savedAt: new Date().toISOString(),
     teacherName: state.teacherName,
     isCommon: state.isCommon,
     blueprint: state.blueprint,
+    teacherRounds: state.teacherRounds,
+    activeTeacherId: state.activeTeacherId,
+    activeRoundId: state.activeRoundId,
+    roundRepresentativeMethod: state.roundRepresentativeMethod,
     rates: state.rates,
     categoryRates: state.categoryRates,
     categoryManual: state.categoryManual,
@@ -4414,17 +5327,32 @@ function importJSON(file) {
     try {
       const payload = JSON.parse(reader.result);
       resetAggregationData();
-      state.teacherName = String(payload.teacherName || state.teacherName || "").trim();
       state.blueprint = expandBlueprintRows(sanitizeBlueprintRows(payload.blueprint));
-      state.rates = payload.rates && typeof payload.rates === "object" ? payload.rates : {};
-      state.categoryRates = payload.categoryRates && typeof payload.categoryRates === "object" ? payload.categoryRates : {};
-      state.categoryManual = payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {};
-      state.categoryAutoFilledAll = typeof payload.categoryAutoFilledAll === "boolean" ? payload.categoryAutoFilledAll : false;
-      state.finalBoundaries = Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null;
-      state.finalResultLabel = String(payload.finalResultLabel || "").trim();
-      state.assessmentWeights = normalizeAssessmentWeights(payload.assessmentWeights);
-      state.assessmentScores = normalizeAssessmentScores(payload.assessmentScores);
       state.isCommon = typeof payload.isCommon === "boolean" ? payload.isCommon : true;
+      state.roundRepresentativeMethod = payload.roundRepresentativeMethod === "average" ? "average" : "median";
+
+      if (Array.isArray(payload.teacherRounds) && payload.teacherRounds.length) {
+        state.teacherRounds = normalizeTeacherRoundSet(payload.teacherRounds, payload.teacherName);
+        state.activeTeacherId = String(payload.activeTeacherId || "");
+        state.activeRoundId = String(payload.activeRoundId || "");
+        ensureTeacherRounds();
+        loadActiveRoundState();
+      } else {
+        state.teacherName = String(payload.teacherName || state.teacherName || "").trim();
+        state.rates = payload.rates && typeof payload.rates === "object" ? payload.rates : {};
+        state.categoryRates = payload.categoryRates && typeof payload.categoryRates === "object" ? payload.categoryRates : {};
+        state.categoryManual = payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {};
+        state.categoryAutoFilledAll = typeof payload.categoryAutoFilledAll === "boolean" ? payload.categoryAutoFilledAll : false;
+        state.finalBoundaries = Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null;
+        state.finalResultLabel = String(payload.finalResultLabel || "").trim();
+        state.assessmentWeights = normalizeAssessmentWeights(payload.assessmentWeights);
+        state.assessmentScores = normalizeAssessmentScores(payload.assessmentScores);
+        state.teacherRounds = [];
+        state.activeTeacherId = "";
+        state.activeRoundId = "";
+        ensureTeacherRounds();
+        saveActiveRound();
+      }
       renderAll();
     } catch (error) {
       alert("JSON 파일을 읽을 수 없습니다.");
@@ -4434,6 +5362,7 @@ function importJSON(file) {
 }
 
 async function importAggregateJSON(files) {
+  saveActiveRound();
   const selected = Array.from(files || []);
   if (!selected.length) return;
 
@@ -4444,23 +5373,7 @@ async function importAggregateJSON(files) {
   for (const file of selected) {
     try {
       const payload = await readJSONFile(file);
-      const blueprint = sanitizeBlueprintRows(payload.blueprint);
-      if (!blueprint.length) {
-        warnings.push(`${file.name}: 문항 설계가 없어 제외`);
-        continue;
-      }
-      parsed.push({
-        fileName: file.name,
-        teacherName: teacherLabel(payload, file.name),
-        isCommon: typeof payload.isCommon === "boolean" ? payload.isCommon : true,
-        blueprint,
-        categoryRates: payload.categoryRates && typeof payload.categoryRates === "object" ? payload.categoryRates : {},
-        categoryManual: payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {},
-        finalBoundaries: Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null,
-        assessmentWeights: normalizeAssessmentWeights(payload.assessmentWeights),
-        assessmentScores: normalizeAssessmentScores(payload.assessmentScores),
-        boundaryResults: []
-      });
+      parsed.push(...aggregateEntriesFromPayload(payload, file.name, warnings));
     } catch (error) {
       warnings.push(error.message);
     }
@@ -4524,6 +5437,53 @@ function applyAggregation() {
   }));
   state.finalResultLabel = "여러 교사 취합 최종";
   renderAll();
+}
+
+function aggregateWorkspaceTeacherRounds() {
+  if (!aggregateCategories().length) {
+    alert("먼저 문항별 기본 정보를 입력하세요.");
+    return;
+  }
+  saveActiveRound();
+  const warnings = [];
+  const entries = state.teacherRounds.map(teacher => {
+    const boundaryResults = representativeResultsForTeacher(teacher);
+    return {
+      fileName: "현재 화면",
+      teacherName: teacher.name || "이름 없음",
+      isCommon: state.isCommon,
+      blueprint: sanitizeBlueprintRows(state.blueprint),
+      categoryRates: {},
+      categoryManual: {},
+      finalBoundaries: boundaryResults,
+      assessmentWeights: emptyAssessmentWeights(),
+      assessmentScores: emptyAssessmentScores(),
+      boundaryResults,
+      roundCount: teacher.rounds.length,
+      roundMethod: state.roundRepresentativeMethod
+    };
+  });
+
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  state.aggregation = {
+    entries,
+    warnings,
+    baseline: {
+      signature: blueprintSignature(state.blueprint, state.isCommon),
+      isCommon: state.isCommon
+    }
+  };
+  renderAll();
+  showResultsPage();
+}
+
+function clearAggregationOnly() {
+  state.aggregation = { entries: [], warnings: [], baseline: null };
+  if (state.finalResultLabel === "여러 교사 취합 최종") {
+    state.finalBoundaries = null;
+    state.finalResultLabel = "";
+  }
 }
 
 function resetAggregationData() {
@@ -4601,6 +5561,7 @@ document.getElementById("btn-setup-next").addEventListener("click", showRatesPag
 document.getElementById("btn-setup-next-top").addEventListener("click", showRatesPage);
 document.getElementById("btn-setup-load").addEventListener("click", () => document.getElementById("file-input").click());
 document.getElementById("nav-setup").addEventListener("click", showSetupPage);
+document.getElementById("nav-manual").addEventListener("click", showUsageManual);
 document.getElementById("nav-rates").addEventListener("click", showRatesPage);
 document.getElementById("nav-results").addEventListener("click", showResultsPage);
 document.getElementById("nav-target-guide").addEventListener("click", showTargetGuide);
@@ -4643,8 +5604,26 @@ document.getElementById("btn-save").addEventListener("click", exportJSON);
 document.getElementById("btn-load").addEventListener("click", () => document.getElementById("file-input").click());
 document.getElementById("teacher-name").addEventListener("input", event => {
   state.teacherName = event.target.value.trim();
+  const { teacher } = activeTeacherRound();
+  teacher.name = state.teacherName || teacher.name;
+  const current = document.getElementById("teacher-round-current");
+  if (current) current.textContent = `${teacher.name || "이름 없음"} · ${activeTeacherRound().round.label || "라운드"}`;
+  const teacherSelect = document.getElementById("teacher-select");
+  if (teacherSelect && teacherSelect.selectedOptions[0]) teacherSelect.selectedOptions[0].textContent = teacher.name || "이름 없음";
+  clearAggregationOnly();
+  renderAggregation();
+});
+document.getElementById("btn-add-teacher").addEventListener("click", addTeacherRoundTeacher);
+document.getElementById("btn-delete-teacher").addEventListener("click", deleteTeacherRoundTeacher);
+document.getElementById("btn-add-round").addEventListener("click", () => addTeacherRoundRound(false));
+document.getElementById("btn-copy-round").addEventListener("click", () => addTeacherRoundRound(true));
+document.getElementById("btn-delete-round").addEventListener("click", deleteTeacherRoundRound);
+document.getElementById("btn-save-round").addEventListener("click", () => {
+  saveActiveRound();
+  renderAll();
 });
 document.getElementById("btn-load-aggregate").addEventListener("click", () => document.getElementById("aggregate-file-input").click());
+document.getElementById("btn-aggregate-workspace").addEventListener("click", aggregateWorkspaceTeacherRounds);
 document.getElementById("btn-apply-aggregate").addEventListener("click", applyAggregation);
 document.getElementById("btn-clear-aggregate").addEventListener("click", clearAggregation);
 document.getElementById("aggregation-method").addEventListener("change", renderAggregation);
@@ -4693,6 +5672,9 @@ state.rates = {};
 state.categoryRates = {};
 state.categoryManual = {};
 state.categoryAutoFilledAll = false;
+ensureTeacherRounds();
+loadActiveRoundState();
+saveActiveRound();
 renderAll();
 </script>
 </body>

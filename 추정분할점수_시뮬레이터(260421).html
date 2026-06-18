@@ -9,7 +9,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; background: #f0eeff; color: #333; font-size: 14px; }
 
-  .header { background: linear-gradient(135deg, #1e0e5c 0%, #2d1b8a 60%, #4c1d95 100%); color: white; padding: 18px 30px; }
+  .header { background: #0f172a; color: white; padding: 18px 30px; }
   .header h1 { font-size: 20px; font-weight: bold; }
   .header p  { font-size: 12px; color: #c4b5fd; margin-top: 4px; }
 
@@ -119,6 +119,7 @@
   }
   .data-io-bar strong { color: #1e0e5c; white-space: nowrap; }
   .data-io-hint { font-size: 11px; color: #888; }
+  .update-date { display: inline-block; margin-left: 10px; font-size: 12px; font-weight: 600; }
   .btn-json-save { background: #312e81; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
   .btn-json-save:hover { background: #4338ca; }
   .btn-json-load { background: white; color: #312e81; border: 1.5px solid #312e81; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
@@ -189,6 +190,7 @@
   }
   .btn-round-copy:hover { background: #d97706; }
   .btn-row   { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn-row .data-io-hint { align-self: center; line-height: 1.5; }
 
   /* 안내 박스 */
   .info-box { background: #f0ebff; border-left: 4px solid #7c3aed; padding: 12px 16px; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #1e0e5c; line-height: 1.7; }
@@ -515,10 +517,7 @@
   }
 
   .header {
-    background:
-      radial-gradient(circle at 16% 16%, rgba(255, 168, 128, 0.24), transparent 30%),
-      radial-gradient(circle at 82% 8%, rgba(107, 140, 255, 0.15), transparent 28%),
-      var(--paper);
+    background: var(--paper);
     color: var(--ink);
     border-bottom: 1px solid var(--line);
     padding: 44px 30px 24px;
@@ -1095,6 +1094,517 @@
     box-shadow: none;
   }
 
+  /* Clearer boxed layout */
+  :root {
+    --box-line: #cbd5e1;
+    --box-line-strong: #94a3b8;
+    --box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    --box-shadow-soft: 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+
+  body {
+    background: #f4f6f9;
+  }
+
+  .header {
+    border-bottom: 2px solid var(--box-line);
+  }
+
+  .subject-type-bar,
+  .data-io-bar,
+  .weight-row,
+  .main-tab-content,
+  .modal-box,
+  .result-card,
+  .card-ab,
+  .card-bc,
+  .card-cd,
+  .card-de,
+  .card-ei {
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-soft);
+  }
+
+  .main-tab-content,
+  .modal-box {
+    box-shadow: var(--box-shadow);
+  }
+
+  .main-tab-content {
+    border-top-left-radius: 0;
+  }
+
+  .modal-header {
+    border-radius: 8px 8px 0 0;
+  }
+
+  .input-table,
+  .compare-table {
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-soft);
+    overflow: hidden;
+  }
+
+  .input-table th,
+  .input-table td,
+  .compare-table th,
+  .compare-table td {
+    border-color: var(--box-line);
+  }
+
+  .info-box,
+  .round-info,
+  .tip-box,
+  .rate-warn-box,
+  .gap-warn-box {
+    border-top: 1.5px solid var(--box-line);
+    border-right: 1.5px solid var(--box-line);
+    border-bottom: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-soft);
+  }
+
+  .target-helper {
+    margin: 12px 0 14px;
+    padding: 14px;
+    background: #f8fafc;
+    border: 1.5px solid var(--box-line);
+    border-radius: 8px;
+    box-shadow: var(--box-shadow-soft);
+  }
+
+  .target-helper-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: var(--hp-ink);
+    font-weight: 700;
+  }
+
+  .target-helper-controls,
+  .target-input-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .target-input-grid {
+    margin-top: 10px;
+  }
+
+  .target-input-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid var(--box-line);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .target-input-item label {
+    font-weight: 700;
+    color: var(--hp-charcoal);
+  }
+
+  .target-cut-input {
+    width: 82px;
+    text-align: right;
+  }
+
+  .target-preview {
+    margin-top: 12px;
+  }
+
+  .target-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid var(--box-line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .target-preview th,
+  .target-preview td {
+    border: 1px solid var(--box-line);
+    padding: 7px 8px;
+    text-align: center;
+  }
+
+  .target-preview .left {
+    text-align: left;
+  }
+
+  .target-preview .gap-ok {
+    color: #166534;
+    font-weight: 700;
+  }
+
+  .target-preview .gap-warn {
+    color: #b45309;
+    font-weight: 700;
+  }
+
+  /* Subtle color and motion layer */
+  :root {
+    --ui-navy: #0f172a;
+    --ui-blue: #2563eb;
+    --ui-teal: #0f766e;
+    --ui-amber: #d97706;
+    --ui-rose: #e11d48;
+    --ui-violet: #7c3aed;
+    --ui-sky-soft: #eff6ff;
+    --ui-teal-soft: #ecfdf5;
+    --ui-amber-soft: #fffbeb;
+    --ui-rose-soft: #fff1f2;
+    --ui-violet-soft: #f5f3ff;
+  }
+
+  body {
+    background: #f8fafc;
+  }
+
+  .header {
+    background: var(--ui-navy);
+    border-bottom: 0;
+    color: #fff;
+  }
+
+  .header h1,
+  .header p {
+    color: #fff;
+  }
+
+  .header p {
+    opacity: 0.82;
+  }
+
+  .update-date {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+    color: #fff;
+    padding: 3px 10px;
+  }
+
+  .subject-type-bar {
+    background: var(--ui-sky-soft);
+    border-color: #bfdbfe;
+  }
+
+  .data-io-bar {
+    background: var(--ui-violet-soft);
+    border-color: #ddd6fe;
+  }
+
+  .main-tab-content {
+    border-top: 5px solid var(--ui-blue);
+  }
+
+  #tab-mid.main-tab-content {
+    border-top-color: var(--ui-blue);
+  }
+
+  #tab-fin.main-tab-content {
+    border-top-color: var(--ui-teal);
+  }
+
+  #tab-perf.main-tab-content {
+    border-top-color: var(--ui-amber);
+  }
+
+  #tab-semester.main-tab-content {
+    border-top-color: var(--ui-violet);
+  }
+
+  .main-tab-btn {
+    border-color: #cbd5e1;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+
+  .main-tab-btn:hover:not(.active),
+  .round-tab-btn:hover:not(.active),
+  .btn-json-load:hover,
+  .btn-add-round:hover,
+  .btn-reset:hover {
+    transform: translateY(-1px);
+    background: #f8fafc;
+    border-color: var(--ui-blue);
+  }
+
+  .main-tab-btn.active {
+    background: var(--ui-navy);
+    border-color: var(--ui-navy);
+    color: #fff;
+  }
+
+  .round-tab-btn.active {
+    background: var(--ui-teal);
+    border-color: var(--ui-teal);
+    color: #fff;
+  }
+
+  .btn-calc {
+    background: var(--ui-blue);
+    border-color: var(--ui-blue);
+  }
+
+  .btn-calc:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+  }
+
+  .btn-excel,
+  .btn-json-save {
+    background: var(--ui-teal);
+    border-color: var(--ui-teal);
+  }
+
+  .btn-excel:hover,
+  .btn-json-save:hover {
+    background: #115e59;
+    border-color: #115e59;
+    transform: translateY(-1px);
+  }
+
+  .btn-reset,
+  .btn-del,
+  .btn-del-round {
+    color: var(--ui-rose);
+    border-color: #fecdd3;
+  }
+
+  .btn-reset:hover,
+  .btn-del:hover,
+  .btn-del-round:hover {
+    background: var(--ui-rose-soft);
+    border-color: var(--ui-rose);
+  }
+
+  .btn-round-copy {
+    background: var(--ui-amber);
+    border-color: var(--ui-amber);
+    color: #fff;
+  }
+
+  .section-title {
+    border-bottom-color: #cbd5e1;
+  }
+
+  .badge,
+  .manual-tag {
+    background: var(--ui-sky-soft);
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .manual-tag.green {
+    background: var(--ui-teal-soft);
+    border-color: #a7f3d0;
+    color: var(--ui-teal);
+  }
+
+  .manual-tag.orange {
+    background: var(--ui-amber-soft);
+    border-color: #fde68a;
+    color: var(--ui-amber);
+  }
+
+  .manual-tag.red {
+    background: var(--ui-rose-soft);
+    border-color: #fecdd3;
+    color: var(--ui-rose);
+  }
+
+  .info-box {
+    background: var(--ui-sky-soft);
+    border-left: 5px solid var(--ui-blue);
+  }
+
+  .round-info {
+    background: var(--ui-amber-soft);
+    border-left: 5px solid var(--ui-amber);
+  }
+
+  .tip-box {
+    background: var(--ui-teal-soft);
+    border-left: 5px solid var(--ui-teal);
+  }
+
+  .target-helper {
+    background: linear-gradient(180deg, #fff 0%, var(--ui-violet-soft) 100%);
+    border-color: #ddd6fe;
+  }
+
+  .input-table th,
+  .input-table th.sub-header,
+  .compare-table th,
+  .target-preview th {
+    background: var(--ui-navy);
+    color: #fff;
+  }
+
+  .input-table tbody tr:nth-child(1) .type-cell {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+  }
+
+  .input-table tbody tr:nth-child(4) .type-cell {
+    background: #ccfbf1 !important;
+    color: var(--ui-teal) !important;
+  }
+
+  .level-easy {
+    color: var(--ui-teal);
+  }
+
+  .level-medium {
+    color: var(--ui-amber);
+  }
+
+  .level-hard {
+    color: var(--ui-rose);
+  }
+
+  .input-table tr:hover td,
+  .compare-table tbody tr:hover td,
+  .target-preview tbody tr:hover td {
+    background: #f1f5f9;
+  }
+
+  .score-input,
+  .rate-select {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+
+  .score-input.is-filled,
+  .rate-select.is-filled {
+    background: #f8fafc;
+    border-color: #93c5fd;
+  }
+
+  .score-input:focus,
+  .rate-select:focus {
+    border-color: var(--ui-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  }
+
+  .rate-error {
+    border-color: var(--ui-rose) !important;
+    background: var(--ui-rose-soft) !important;
+  }
+
+  .rate-warn5 {
+    border-color: var(--ui-amber) !important;
+    background: var(--ui-amber-soft) !important;
+  }
+
+  .card-ab {
+    background: var(--ui-sky-soft);
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .card-bc {
+    background: var(--ui-teal-soft);
+    border-color: #a7f3d0;
+    color: var(--ui-teal);
+  }
+
+  .card-cd {
+    background: var(--ui-amber-soft);
+    border-color: #fde68a;
+    color: var(--ui-amber);
+  }
+
+  .card-de {
+    background: var(--ui-rose-soft);
+    border-color: #fecdd3;
+    color: var(--ui-rose);
+  }
+
+  .card-ei {
+    background: var(--ui-violet-soft);
+    border-color: #ddd6fe;
+    color: var(--ui-violet);
+  }
+
+  .result-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+  }
+
+  .seg-a { background: var(--ui-blue); }
+  .seg-b { background: var(--ui-teal); }
+  .seg-c { background: var(--ui-amber); }
+  .seg-d { background: var(--ui-rose); }
+  .seg-e { background: var(--ui-violet); }
+  .seg-i { background: var(--ui-navy); }
+
+  .viz-bar-track {
+    background: #e2e8f0;
+  }
+
+  .weight-ok {
+    background: var(--ui-teal-soft);
+    border-color: #a7f3d0;
+    color: var(--ui-teal);
+  }
+
+  .weight-ng {
+    background: var(--ui-rose-soft);
+    border-color: #fecdd3;
+    color: var(--ui-rose);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .main-tab-content.active {
+      animation: panelFadeIn 0.2s ease-out;
+    }
+
+    .result-card {
+      animation: cardLiftIn 0.24s ease-out both;
+    }
+
+    .result-card:nth-child(2) { animation-delay: 0.03s; }
+    .result-card:nth-child(3) { animation-delay: 0.06s; }
+    .result-card:nth-child(4) { animation-delay: 0.09s; }
+    .result-card:nth-child(5) { animation-delay: 0.12s; }
+
+    .viz-seg {
+      transform-origin: left center;
+      animation: segmentFill 0.38s ease-out both;
+    }
+  }
+
+  @keyframes panelFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes cardLiftIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes segmentFill {
+    from { opacity: 0.65; transform: scaleX(0.04); }
+    to { opacity: 1; transform: scaleX(1); }
+  }
+
   @media (max-width: 820px) {
     .header {
       padding: 44px 20px 24px;
@@ -1121,7 +1631,7 @@
 
 <div class="header">
   <h1>성취평가제 추정분할점수 시뮬레이터</h1>
-  <p>지필(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산</p>
+  <p>지필(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산 <span class="update-date">업데이트: 2026.06.19.</span></p>
 </div>
 
 <div class="container">
@@ -1131,6 +1641,7 @@
     <strong>데이터:</strong>
     <button class="btn-json-save" onclick="exportJSON()">JSON 저장</button>
     <button class="btn-json-load" onclick="importJSON()">JSON 불러오기</button>
+    <button class="btn-json-load" onclick="downloadHtmlFile()">HTML 다운로드</button>
     <span class="data-io-hint">※ 현재 입력 내용을 파일로 저장하거나, 이전에 저장한 JSON 파일을 불러와 복원합니다</span>
     <button class="btn-manual" onclick="document.getElementById('manual-modal').classList.add('open')" style="margin-left:auto;">매뉴얼</button>
   </div>
@@ -1169,7 +1680,7 @@
           <h3>② 지필평가(중간·기말) 입력</h3>
           <h4>배점합 입력</h4>
           <ul>
-            <li>선택형(쉬움·보통·어려움), 서술형(쉬움·보통·어려움) 6개 범주의 배점 합계를 입력합니다.</li>
+            <li>선택형(쉬움·보통·어려움), 서답형(쉬움·보통·어려움) 6개 범주의 배점 합계를 입력합니다.</li>
           </ul>
           <h4>예상 정답률 입력</h4>
           <ul>
@@ -1271,6 +1782,8 @@
     <div id="rounds-mid"></div>
     <div id="result-mid" class="result-section"></div>
     <div class="btn-row">
+      <button class="btn-json-load" type="button" onclick="importNeisMidBoundaries()" aria-describedby="mid-neis-file-help" title="나이스 > 교과담임 > 분할점수 > 학기말 추정분할점수산출 > 과목별출력에서 내려받은 엑셀 파일을 선택합니다.">나이스 분할점수 불러오기</button>
+      <span class="data-io-hint" id="mid-neis-file-help">버튼 설명: 나이스 &gt; 교과담임 &gt; 분할점수 &gt; 학기말 추정분할점수산출 &gt; 과목별출력에서 내려받은 엑셀 파일을 선택합니다.</span>
       <button class="btn-calc" onclick="calcAssessment('mid')">계산하기</button>
       <button class="btn-excel" onclick="downloadAssessment('mid')">엑셀 저장</button>
       <button class="btn-reset" onclick="resetAssessment('mid')">초기화</button>
@@ -1284,6 +1797,21 @@
       <span style="color:#e65100;">주의: 예상 정답률은 <b>A~D 경계 5% 단위</b> (5, 10, …, 100), <b>E/I 경계 1% 단위</b>로 입력하세요</span>
     </div>
     <div class="round-info"><b>나이스(NEIS) 권장: 2라운드 이상 실시</b> — 협의 후 재추정하여 최종 분할점수를 결정합니다.</div>
+    <div class="target-helper" aria-label="기말고사 목표컷 추천">
+      <div class="target-helper-title">
+        <span>기말고사 목표컷 기준 정답률 추천</span>
+        <span class="data-io-hint">목표 분할점수에 맞도록 현재 기말고사 배점합 기준의 예상 정답률을 제안합니다.</span>
+      </div>
+      <div class="target-helper-controls">
+        <button class="btn-json-load" type="button" onclick="loadMidBoundariesToFinalTargets()">중간고사 분할점수 불러오기</button>
+        <button class="btn-json-save" type="button" onclick="previewFinalTargetRates()">추천 정답률 미리보기</button>
+        <button class="btn-calc" type="button" onclick="applyFinalTargetRates()">기말고사에 적용</button>
+      </div>
+      <div class="target-input-grid" id="fin-target-inputs"></div>
+      <div class="target-preview" id="fin-target-preview">
+        <div class="data-io-hint">목표컷을 입력하거나 중간고사 분할점수를 불러온 뒤 미리보기를 누르세요.</div>
+      </div>
+    </div>
     <div id="rounds-fin"></div>
     <div id="result-fin" class="result-section"></div>
     <div class="btn-row">
@@ -1351,15 +1879,26 @@
 // ============================================================
 const BOUNDARIES = ['A/B', 'B/C', 'C/D', 'D/E', 'E/I'];
 const CARD_CLS   = ['card-ab','card-bc','card-cd','card-de','card-ei'];
+const APP_UPDATED_DATE = '2026.06.19.';
 
 const WRITTEN_ROWS = [
   {type:'선택형', level:'쉬움',   cls:'level-easy'},
   {type:'선택형', level:'보통',   cls:'level-medium'},
   {type:'선택형', level:'어려움', cls:'level-hard'},
-  {type:'서술형', level:'쉬움',   cls:'level-easy'},
-  {type:'서술형', level:'보통',   cls:'level-medium'},
-  {type:'서술형', level:'어려움', cls:'level-hard'},
+  {type:'서답형', level:'쉬움',   cls:'level-easy'},
+  {type:'서답형', level:'보통',   cls:'level-medium'},
+  {type:'서답형', level:'어려움', cls:'level-hard'},
 ];
+
+const FIN_TARGET_DEFAULT_RATES = [
+  [90, 80, 65, 85, 75, 60],
+  [75, 65, 50, 70, 60, 45],
+  [60, 50, 35, 55, 45, 30],
+  [45, 35, 20, 40, 30, 15],
+  [30, 20, 10, 25, 15, 5],
+];
+
+let finTargetPreviewData = null;
 
 // 전역 과목 유형 (true: 공통과목 E/I 포함, false: 선택과목 E/I 없음)
 let isCommon = true;
@@ -1480,7 +2019,7 @@ function highlightRates(assessId, rIdx) {
   }
 
   // ── 지필평가: 수평 + 수직 체크 + 5%급간 체크 ──
-  const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서술형 쉬움','서술형 보통','서술형 어려움'];
+  const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서답형 쉬움','서답형 보통','서답형 어려움'];
   // errFlags[rowIdx][bi]: true이면 해당 칸을 빨갛게 표시
   const errFlags  = Array.from({length: 6}, () => new Array(bLen).fill(false));
   const warn5Flags = Array.from({length: 6}, () => new Array(bLen).fill(false));
@@ -1498,7 +2037,7 @@ function highlightRates(assessId, rIdx) {
   }
 
   // 2) 수직: 같은 열에서 보통·어려움이 상위 난이도보다 크면 역전
-  // 선택형 그룹 [0=쉬움, 1=보통, 2=어려움], 서술형 그룹 [3=쉬움, 4=보통, 5=어려움]
+  // 선택형 그룹 [0=쉬움, 1=보통, 2=어려움], 서답형 그룹 [3=쉬움, 4=보통, 5=어려움]
   [[0,1,2],[3,4,5]].forEach(group => {
     for (let bi = 0; bi < bLen; bi++) {
       for (let k = 1; k < group.length; k++) {
@@ -1556,7 +2095,7 @@ function showRateWarnBox(assessId, rIdx, errors) {
   const gapWarnings = [];
 
   if (assessId !== 'perf') {
-    const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서술형 쉬움','서술형 보통','서술형 어려움'];
+    const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서답형 쉬움','서답형 보통','서답형 어려움'];
     for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
       for (let bi = 0; bi < bounds.length - 1; bi++) {
         const r0 = getVal(id, bi,     rowIdx);
@@ -1672,6 +2211,365 @@ function setSubjectType(type) {
     renderRoundTabs(id);
     document.getElementById(`result-${id}`).innerHTML = '';
   });
+  renderFinalTargetInputs();
+}
+
+function renderFinalTargetInputs() {
+  const wrap = document.getElementById('fin-target-inputs');
+  if (!wrap) return;
+  const bounds = getBoundaries();
+  wrap.innerHTML = bounds.map((boundary, bi) => `
+    <span class="target-input-item">
+      <label for="fin-target-${bi}">${boundary}</label>
+      <input class="score-input target-cut-input" id="fin-target-${bi}" type="number" min="0" max="100" step="0.1" placeholder="목표점수">
+    </span>
+  `).join('');
+  finTargetPreviewData = null;
+  const preview = document.getElementById('fin-target-preview');
+  if (preview) preview.innerHTML = '<div class="data-io-hint">목표컷을 입력하거나 중간고사 분할점수를 불러온 뒤 미리보기를 누르세요.</div>';
+}
+
+function getAssessmentResult(assessId) {
+  saveRoundData(assessId, state[assessId].currentRound);
+  const res = calcAllRounds(assessId);
+  state[assessId].results = res;
+  return res;
+}
+
+function loadMidBoundariesToFinalTargets() {
+  const res = state.mid.results || getAssessmentResult('mid');
+  if (!res || !res.scores || !res.scores.length) {
+    alert('먼저 중간고사 점수를 입력하고 계산하세요.');
+    return;
+  }
+  renderFinalTargetInputs();
+  getBoundaries().forEach((boundary, bi) => {
+    setV(`fin-target-${bi}`, res.scores[bi] ?? '');
+  });
+  const preview = document.getElementById('fin-target-preview');
+  if (preview) preview.innerHTML = '<div class="data-io-hint">중간고사 분할점수를 목표컷으로 불러왔습니다. 추천 정답률 미리보기를 누르세요.</div>';
+}
+
+function normalizeNeisText(value) {
+  return String(value ?? '').replace(/\s+/g, '').replace(/[()（）]/g, '').toUpperCase();
+}
+
+function neisBoundaryIndex(value) {
+  const text = normalizeNeisText(value).replace(/[\\]/g, '/');
+  if (!text) return null;
+  if (text.includes('A/B') || text.includes('A-B') || text === 'AB') return 0;
+  if (text.includes('B/C') || text.includes('B-C') || text === 'BC') return 1;
+  if (text.includes('C/D') || text.includes('C-D') || text === 'CD') return 2;
+  if (text.includes('D/E') || text.includes('D-E') || text === 'DE') return 3;
+  if (text.includes('E/I') || text.includes('E-I') || text.includes('이수/미이수') ||
+      (text.includes('E') && (text.includes('미도달') || text.includes('미이수') || text.includes('미달')))) return 4;
+  return null;
+}
+
+function parseNeisScore(value) {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  const match = String(value).replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+  if (!match) return null;
+  const parsed = parseFloat(match[0]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function rowTextForNeis(rows, start, end) {
+  const parts = [];
+  for (let r = Math.max(0, start); r <= Math.min(rows.length - 1, end); r++) {
+    parts.push(rows[r].map(v => String(v ?? '')).join(' '));
+  }
+  return parts.join(' ');
+}
+
+function findNeisBoundaryScores(rows) {
+  const needed = getBoundaries().length;
+  let best = null;
+
+  rows.forEach((row, headerRowIdx) => {
+    const colMap = {};
+    row.forEach((cell, colIdx) => {
+      const bi = neisBoundaryIndex(cell);
+      if (bi !== null && bi < needed && colMap[bi] === undefined) colMap[bi] = colIdx;
+    });
+
+    if (Object.keys(colMap).length < Math.min(4, needed)) return;
+
+    for (let dataRowIdx = headerRowIdx + 1; dataRowIdx <= Math.min(rows.length - 1, headerRowIdx + 12); dataRowIdx++) {
+      const values = Array(needed).fill(null);
+      Object.entries(colMap).forEach(([biText, colIdx]) => {
+        const bi = parseInt(biText, 10);
+        const value = parseNeisScore(rows[dataRowIdx][colIdx]);
+        if (value !== null && value >= 0 && value <= 100) values[bi] = Math.round(value * 100) / 100;
+      });
+
+      const foundCount = values.filter(value => value !== null).length;
+      if (foundCount < Math.min(4, needed)) continue;
+
+      const nearbyText = rowTextForNeis(rows, dataRowIdx - 1, dataRowIdx + 1);
+      const headerText = rowTextForNeis(rows, headerRowIdx, headerRowIdx);
+      let rank = foundCount * 20 - (dataRowIdx - headerRowIdx);
+      if (nearbyText.includes('중간고사') || nearbyText.includes('중간')) rank += 100;
+      if (nearbyText.includes('정기시험')) rank += 15;
+      if (headerText.includes('성취수준') || headerText.includes('분할점수')) rank += 10;
+
+      if (!best || rank > best.rank) best = { values, rank };
+    }
+  });
+
+  return best ? best.values : null;
+}
+
+function currentWrittenScoreTotal(assessId) {
+  saveRoundData(assessId, state[assessId].currentRound);
+  const saved = state[assessId].roundData[state[assessId].currentRound];
+  if (!saved || saved.type !== 'written') return 0;
+  return Math.round(saved.scores.reduce((sum, value) => sum + (parseFloat(value) || 0), 0) * 10) / 10;
+}
+
+function applyNeisMidBoundaries(scores) {
+  const bounds = getBoundaries();
+  const missing = bounds.filter((boundary, bi) => scores[bi] === null || scores[bi] === undefined);
+  if (missing.length) {
+    alert(`나이스 파일에서 ${missing.join(', ')} 분할점수를 찾지 못했습니다.`);
+    return;
+  }
+
+  const roundedScores = scores.slice(0, bounds.length).map(value => Math.round(value * 10) / 10);
+  const enteredTotal = currentWrittenScoreTotal('mid');
+  const maxScore = Math.max(...roundedScores);
+  const total = Math.round(Math.max(enteredTotal || 100, maxScore) * 10) / 10;
+
+  state.mid.results = {
+    source: 'NEIS',
+    total,
+    scores: roundedScores,
+    rounds: [{ rIdx: 0, total, scores: roundedScores }]
+  };
+  renderResultCards('mid', state.mid.results, 'result-mid', false);
+}
+
+function importNeisMidBoundaries() {
+  if (!xlsCheckLib()) return;
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.xlsx,.xls';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'array' });
+        let scores = null;
+
+        wb.SheetNames.some(sheetName => {
+          const ws = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+          scores = findNeisBoundaryScores(rows);
+          return !!scores;
+        });
+
+        if (!scores) {
+          alert('나이스 파일에서 분할점수 표를 찾지 못했습니다.\nA/B, B/C, C/D, D/E, E/미도달 헤더가 있는 파일인지 확인하세요.');
+          return;
+        }
+
+        applyNeisMidBoundaries(scores);
+        alert('나이스 중간고사 분할점수를 불러왔습니다.');
+      } catch (err) {
+        alert('나이스 파일 읽기 오류: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+  input.click();
+}
+
+function finCurrentRoundId() {
+  return `fin-r${state.fin.currentRound}`;
+}
+
+function finScoreValues() {
+  const id = finCurrentRoundId();
+  return WRITTEN_ROWS.map((row, rowIdx) => parseFloat(document.getElementById(`${id}-sc-${rowIdx}`)?.value) || 0);
+}
+
+function currentFinRate(bi, rowIdx) {
+  const id = finCurrentRoundId();
+  const raw = document.getElementById(`${id}-ra-${bi}-${rowIdx}`)?.value;
+  const value = parseFloat(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
+function rateUnitForBoundary(bi) {
+  return bi === 4 ? 1 : 5;
+}
+
+function roundRateForBoundary(value, bi) {
+  const unit = rateUnitForBoundary(bi);
+  return Math.max(0, Math.min(100, Math.round(value / unit) * unit));
+}
+
+function enforceVerticalRateOrder(rates) {
+  [[0, 1, 2], [3, 4, 5]].forEach(([easy, medium, hard]) => {
+    rates[medium] = Math.min(rates[medium], rates[easy]);
+    rates[hard] = Math.min(rates[hard], rates[medium]);
+  });
+  return rates;
+}
+
+function canChangeRate(rates, rowIdx, nextValue) {
+  if (nextValue < 0 || nextValue > 100) return false;
+  const typeStart = rowIdx < 3 ? 0 : 3;
+  const local = rowIdx - typeStart;
+  const easy = rates[typeStart];
+  const medium = rates[typeStart + 1];
+  const hard = rates[typeStart + 2];
+  if (local === 0) return nextValue >= medium;
+  if (local === 1) return easy >= nextValue && nextValue >= hard;
+  return medium >= nextValue;
+}
+
+function boundaryScoreFromRates(scores, rates) {
+  return scores.reduce((sum, score, rowIdx) => sum + score * rates[rowIdx] / 100, 0);
+}
+
+function baseRatesForBoundary(bi) {
+  const defaults = FIN_TARGET_DEFAULT_RATES[bi] || FIN_TARGET_DEFAULT_RATES[FIN_TARGET_DEFAULT_RATES.length - 1];
+  return WRITTEN_ROWS.map((row, rowIdx) => {
+    const current = currentFinRate(bi, rowIdx);
+    return current === null ? defaults[rowIdx] : current;
+  });
+}
+
+function adjustRatesTowardTarget(scores, rates, target, bi) {
+  const unit = rateUnitForBoundary(bi);
+  let current = boundaryScoreFromRates(scores, rates);
+  for (let guard = 0; guard < 300; guard++) {
+    const diff = target - current;
+    if (Math.abs(diff) < 0.05) break;
+    const direction = diff > 0 ? 1 : -1;
+    let best = null;
+    for (let rowIdx = 0; rowIdx < rates.length; rowIdx++) {
+      if (scores[rowIdx] <= 0) continue;
+      const nextValue = rates[rowIdx] + direction * unit;
+      if (!canChangeRate(rates, rowIdx, nextValue)) continue;
+      const nextScore = current + scores[rowIdx] * direction * unit / 100;
+      const nextGap = Math.abs(target - nextScore);
+      const currentGap = Math.abs(target - current);
+      if (nextGap > currentGap + 0.0001) continue;
+      if (!best || nextGap < best.gap) best = { rowIdx, nextValue, nextScore, gap: nextGap };
+    }
+    if (!best) break;
+    rates[best.rowIdx] = best.nextValue;
+    current = best.nextScore;
+  }
+  return rates;
+}
+
+function recommendRatesForBoundary(scores, target, bi) {
+  const total = scores.reduce((sum, score) => sum + score, 0);
+  let rates = baseRatesForBoundary(bi).map(value => roundRateForBoundary(value, bi));
+  rates = enforceVerticalRateOrder(rates);
+  const baseScore = boundaryScoreFromRates(scores, rates);
+  if (total > 0) {
+    const delta = (target - baseScore) * 100 / total;
+    rates = rates.map(value => roundRateForBoundary(value + delta, bi));
+    rates = enforceVerticalRateOrder(rates);
+    rates = adjustRatesTowardTarget(scores, rates, target, bi);
+  }
+  return rates;
+}
+
+function enforceHorizontalPreviewOrder(matrix) {
+  for (let rowIdx = 0; rowIdx < matrix.length; rowIdx++) {
+    for (let bi = 1; bi < matrix[rowIdx].length; bi++) {
+      if (matrix[rowIdx][bi] === null || matrix[rowIdx][bi - 1] === null) continue;
+      if (matrix[rowIdx][bi] > matrix[rowIdx][bi - 1]) {
+        matrix[rowIdx][bi] = matrix[rowIdx][bi - 1];
+      }
+    }
+  }
+}
+
+function buildFinalTargetPreview() {
+  saveRoundData('fin', state.fin.currentRound);
+  const scores = finScoreValues();
+  const total = scores.reduce((sum, value) => sum + value, 0);
+  if (total <= 0) {
+    alert('먼저 기말고사 배점합을 입력하세요.');
+    return null;
+  }
+
+  const bounds = getBoundaries();
+  const matrix = WRITTEN_ROWS.map(() => Array(bounds.length).fill(null));
+  const targets = bounds.map((boundary, bi) => {
+    const value = parseFloat(document.getElementById(`fin-target-${bi}`)?.value);
+    return Number.isFinite(value) ? value : null;
+  });
+
+  if (!targets.some(value => value !== null)) {
+    alert('목표 분할점수를 1개 이상 입력하세요.');
+    return null;
+  }
+
+  targets.forEach((target, bi) => {
+    if (target === null) return;
+    const rates = recommendRatesForBoundary(scores, target, bi);
+    rates.forEach((rate, rowIdx) => matrix[rowIdx][bi] = rate);
+  });
+  enforceHorizontalPreviewOrder(matrix);
+
+  const actuals = targets.map((target, bi) => {
+    if (target === null) return null;
+    const rates = matrix.map(row => row[bi]);
+    return boundaryScoreFromRates(scores, rates);
+  });
+
+  return { bounds, scores, targets, matrix, actuals };
+}
+
+function previewFinalTargetRates() {
+  const data = buildFinalTargetPreview();
+  if (!data) return;
+  finTargetPreviewData = data;
+  const preview = document.getElementById('fin-target-preview');
+  const activeBoundaries = data.bounds
+    .map((boundary, bi) => ({ boundary, bi, target: data.targets[bi], actual: data.actuals[bi] }))
+    .filter(item => item.target !== null);
+
+  let html = `<table><thead><tr><th>유형</th><th>난이도</th>${activeBoundaries.map(item => `<th>${item.boundary}</th>`).join('')}</tr></thead><tbody>`;
+  WRITTEN_ROWS.forEach((row, rowIdx) => {
+    html += `<tr><td>${row.type}</td><td>${row.level}</td>${activeBoundaries.map(item => `<td>${data.matrix[rowIdx][item.bi]}%</td>`).join('')}</tr>`;
+  });
+  html += `<tr><th colspan="2">목표 / 추천 결과</th>${activeBoundaries.map(item => {
+    const gap = item.actual - item.target;
+    const cls = Math.abs(gap) <= 0.2 ? 'gap-ok' : 'gap-warn';
+    return `<th><span class="${cls}">${Math.round(item.actual * 10) / 10}점</span><br><span class="data-io-hint">목표 ${item.target}점 · 차이 ${Math.round(gap * 10) / 10}</span></th>`;
+  }).join('')}</tr>`;
+  html += '</tbody></table>';
+  preview.innerHTML = html;
+}
+
+function applyFinalTargetRates() {
+  previewFinalTargetRates();
+  if (!finTargetPreviewData) return;
+  const id = finCurrentRoundId();
+  const bounds = getBoundaries();
+  for (let rowIdx = 0; rowIdx < WRITTEN_ROWS.length; rowIdx++) {
+    for (let bi = 0; bi < bounds.length; bi++) {
+      const value = finTargetPreviewData.matrix[rowIdx][bi];
+      if (value === null || value === undefined) continue;
+      setV(`${id}-ra-${bi}-${rowIdx}`, value);
+      if (bi < 4) updateRowConstraints(id, bi, rowIdx, 'fin');
+    }
+  }
+  liveCalc('fin');
+  calcAssessment('fin');
 }
 
 // ============================================================
@@ -1724,6 +2622,7 @@ function removeRound(assessId, rIdx) {
 function switchRound(assessId, rIdx) {
   // 현재 라운드 데이터를 state에 저장한 뒤 전환
   saveRoundData(assessId, state[assessId].currentRound);
+  if (assessId === 'fin') finTargetPreviewData = null;
   state[assessId].currentRound = rIdx;
   renderRoundTabs(assessId);
   renderRoundTable(assessId, rIdx);
@@ -2050,7 +2949,7 @@ function renderResultCards(assessId, res, containerId, showRounds, allErrors) {
     document.getElementById(containerId).innerHTML = '<p style="color:#888; padding:10px;">데이터를 입력한 후 계산하세요.</p>';
     return;
   }
-  const { total, scores, rounds } = res;
+  const { total, scores, rounds = [] } = res;
   const bounds = getBoundaries();
   const container = document.getElementById(containerId);
 
@@ -2074,7 +2973,11 @@ function renderResultCards(assessId, res, containerId, showRounds, allErrors) {
     }
     html += `<div class="rate-warn-box">${warn}</div>`;
   }
-  html += `<div class="result-title">추정분할점수 결과 (${rounds.length}개 라운드 평균, 총점 기준: ${total}점)</div>`;
+  if (res.source === 'NEIS') {
+    html += `<div class="result-title">나이스 분할점수 결과 (총점 기준: ${total}점)</div>`;
+  } else {
+    html += `<div class="result-title">추정분할점수 결과 (${rounds.length}개 라운드 평균, 총점 기준: ${total}점)</div>`;
+  }
   html += '<div class="result-cards">';
   bounds.forEach((b, bi) => {
     html += `<div class="result-card ${CARD_CLS[bi]}">
@@ -2195,7 +3098,7 @@ function xlsWrittenRoundRows(assessId, rIdx, title) {
   const scoreHdrs = bounds.map(b => `${b} 분할점수`);
   const rowMeta   = [
     ['선택형','쉬움'],['선택형','보통'],['선택형','어려움'],
-    ['서술형','쉬움'],['서술형','보통'],['서술형','어려움'],
+    ['서답형','쉬움'],['서답형','보통'],['서답형','어려움'],
   ];
 
   const rows = [];
@@ -2382,6 +3285,36 @@ function exportToExcel() {
   XLSX.writeFile(wb, xlsFileName(['추정분할점수_전체', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
 }
 
+async function downloadHtmlFile() {
+  let html = '';
+
+  try {
+    if (location.protocol !== 'file:') {
+      const res = await fetch(location.href, { cache: 'no-store' });
+      if (res.ok) html = await res.text();
+    }
+  } catch (err) {
+    html = '';
+  }
+
+  if (!html) {
+    const cloned = document.documentElement.cloneNode(true);
+    cloned.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
+    html = '<!DOCTYPE html>\n' + cloned.outerHTML;
+  }
+
+  const dateKey = APP_UPDATED_DATE.replace(/\D/g, '');
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `추정분할점수_시뮬레이터_${dateKey}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // ============================================================
 // JSON 저장 / 불러오기
 // ============================================================
@@ -2494,24 +3427,40 @@ function initAssessment(assessId) {
   renderRoundTabs(assessId);
 }
 
+function syncFieldState(el) {
+  if (!el || !el.matches || !el.matches('.score-input, .rate-select')) return;
+  el.classList.toggle('is-filled', el.value !== '');
+}
+
+function refreshInputStates(root = document) {
+  root.querySelectorAll('.score-input, .rate-select').forEach(syncFieldState);
+}
+
+document.addEventListener('input', e => syncFieldState(e.target));
+document.addEventListener('change', e => syncFieldState(e.target));
+
 function setV(id, val) {
   const el = document.getElementById(id);
-  if (el) el.value = val;
+  if (el) {
+    el.value = val;
+    syncFieldState(el);
+  }
 }
 
 (function init() {
   ['mid', 'fin', 'perf'].forEach(id => initAssessment(id));
   checkWeightSum();
+  renderFinalTargetInputs();
 
   // -------------------------------------------------------
-  // 중간고사 1라운드 — 배점합 전체 + 정답률은 선택형 쉬움·서술형 쉬움만 예시
+  // 중간고사 1라운드 — 배점합 전체 + 정답률은 선택형 쉬움·서답형 쉬움만 예시
   // 정답률은 5% 급간(5의 배수)으로 입력해야 합니다.
   // -------------------------------------------------------
   // 배점합만 (전 행)
   [21, 34.5, 16.5, 12, 10, 6].forEach((sc, ri) => setV(`mid-r0-sc-${ri}`, sc));
   // 선택형 쉬움(row0) 정답률 예시: A/B=90, B/C=75, C/D=60, D/E=45, E/I=30
   [90, 75, 60, 45, 30].forEach((v, bi) => setV(`mid-r0-ra-${bi}-0`, v));
-  // 서술형 쉬움(row3) 정답률 예시: A/B=85, B/C=70, C/D=55, D/E=40, E/I=25
+  // 서답형 쉬움(row3) 정답률 예시: A/B=85, B/C=70, C/D=55, D/E=40, E/I=25
   [85, 70, 55, 40, 25].forEach((v, bi) => setV(`mid-r0-ra-${bi}-3`, v));
   updateAllConstraints('mid', 0);   // select 선택지 제약 초기 적용
 
@@ -2531,6 +3480,7 @@ function setV(id, val) {
   addPerfRow(0);
   setV('perf-r0-nm-1', '보고서');
   setV('perf-r0-sc-1', 5);
+  refreshInputStates();
 })();
 </script>
 </body>
