@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>성취평가제 추정분할점수 시뮬레이터</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; background: #f0eeff; color: #333; font-size: 14px; }
+
+  .header { background: linear-gradient(135deg, #1e0e5c 0%, #2d1b8a 60%, #4c1d95 100%); color: white; padding: 18px 30px; }
+  .header h1 { font-size: 20px; font-weight: bold; }
+  .header p  { font-size: 12px; color: #c4b5fd; margin-top: 4px; }
+
+  .container { max-width: 1150px; margin: 0 auto; padding: 20px; }
+
+  /* 과목 유형 토글 */
+  .subject-type-bar {
+    display: flex; align-items: center; gap: 20px;
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+    padding: 10px 16px; margin-bottom: 12px; font-size: 13px;
+  }
+  .subject-type-bar strong { color: #1e0e5c; white-space: nowrap; }
+  .subject-type-bar label { cursor: pointer; color: #555; display: flex; align-items: center; gap: 5px; }
+  .subject-type-bar label input { cursor: pointer; }
+
+  /* 메인 탭 */
+  .main-tabs { display: flex; gap: 4px; margin-bottom: 0; }
+  .main-tab-btn {
+    padding: 10px 26px; border: none; border-radius: 8px 8px 0 0;
+    cursor: pointer; font-size: 14px; font-weight: bold;
+    background: #d4c5f9; color: #555; transition: all 0.2s;
+  }
+  .main-tab-btn.active { background: white; color: #1e0e5c; box-shadow: 0 -2px 6px rgba(0,0,0,0.08); }
+  .main-tab-btn:hover:not(.active) { background: #b9a9f5; }
+
+  .main-tab-content { display: none; background: white; border-radius: 0 8px 8px 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .main-tab-content.active { display: block; }
+
+  /* 라운드 탭 */
+  .round-tab-bar { display: flex; gap: 6px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .round-tab-btn {
+    padding: 6px 18px; border: 1.5px solid #c4b5fd; border-radius: 20px;
+    cursor: pointer; font-size: 13px; background: #f0eeff; color: #555; transition: all 0.2s;
+  }
+  .round-tab-btn.active { background: #1e0e5c; color: white; border-color: #1e0e5c; }
+  .round-tab-btn:hover:not(.active) { background: #e5e0ff; }
+  .btn-add-round {
+    padding: 6px 14px; border: 1.5px dashed #7c3aed; border-radius: 20px;
+    cursor: pointer; font-size: 13px; background: white; color: #7c3aed; transition: all 0.2s;
+  }
+  .btn-add-round:hover { background: #f0ebff; }
+  .round-label { font-size: 12px; color: #888; margin-left: 4px; }
+
+  /* 섹션 제목 */
+  .section-title {
+    font-size: 16px; font-weight: bold; color: #1e0e5c;
+    margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #1e0e5c;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .badge { background: #1e0e5c; color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+
+  /* 테이블 */
+  .input-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .input-table th {
+    background: #1e0e5c; color: white; padding: 9px 8px;
+    text-align: center; font-size: 13px; white-space: nowrap;
+  }
+  .input-table th.sub-header { background: #2d1b8a; }
+  .input-table td { padding: 7px 8px; border: 1px solid #ddd6fe; text-align: center; vertical-align: middle; }
+  .input-table tr:nth-child(even) td { background: #faf9ff; }
+  .input-table tr:hover td { background: #ede9fe; }
+  .type-cell { font-weight: bold; background: #ede9fe !important; width: 58px; }
+  .level-cell { color: #555; background: #f0eeff !important; width: 52px; }
+  .total-row td { background: #1e0e5c !important; color: white !important; font-weight: bold; }
+  .avg-row td { background: #2d1b8a !important; color: white !important; font-style: italic; }
+
+  .level-easy   { color: #2e7d32; font-weight: bold; }
+  .level-medium { color: #e65100; font-weight: bold; }
+  .level-hard   { color: #c62828; font-weight: bold; }
+
+  /* 입력 */
+  .score-input {
+    width: 68px; padding: 5px 6px; border: 1px solid #c4b5fd;
+    border-radius: 4px; text-align: right; font-size: 13px; transition: border-color 0.2s;
+  }
+  .score-input:focus { outline: none; border-color: #1e0e5c; background: #f5f0ff; }
+  .rate-input  { width: 58px; }
+  .rate-select {
+    width: 64px; padding: 4px 2px; border: 1px solid #c4b5fd;
+    border-radius: 4px; font-size: 12px; cursor: pointer; background: white;
+    transition: border-color 0.2s;
+  }
+  .rate-select:focus { outline: none; border-color: #1e0e5c; background: #f5f0ff; }
+  .weight-input { width: 80px; }
+
+  /* 정답률 역전 경고 */
+  .rate-error  { border-color: #c62828 !important; background: #fff0f0 !important; }
+  .rate-warn5  { border-color: #e65100 !important; background: #fff8e1 !important; }
+  .rate-warn-box {
+    background: #fce4ec; border-left: 4px solid #c62828; border-radius: 4px;
+    padding: 9px 14px; margin: 6px 0 10px; font-size: 12px; color: #c62828; line-height: 1.6;
+  }
+  .rate-warn-box .warn5-section { color: #e65100; margin-top: 4px; }
+
+  /* 급간차이 20점 이상 경고 */
+  .gap-warn-box {
+    background: #fff3e0; border-left: 4px solid #ff6f00; border-radius: 4px;
+    padding: 9px 14px; margin: 10px 0 4px; font-size: 12px; color: #e65100; line-height: 1.7;
+  }
+  .gap-warn-box strong { color: #bf360c; }
+
+  /* JSON 저장/불러오기 */
+  .data-io-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #f0eeff; border: 1px solid #c4b5fd; border-radius: 8px;
+    padding: 8px 16px; margin-bottom: 12px; font-size: 13px;
+  }
+  .data-io-bar strong { color: #1e0e5c; white-space: nowrap; }
+  .data-io-hint { font-size: 11px; color: #888; }
+  .btn-json-save { background: #312e81; color: white; border: none; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .btn-json-save:hover { background: #4338ca; }
+  .btn-json-load { background: white; color: #312e81; border: 1.5px solid #312e81; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .btn-json-load:hover { background: #eceff1; }
+
+  /* 결과 카드 */
+  .result-section { margin-top: 16px; }
+  .result-title   { font-size: 14px; font-weight: bold; color: #444; margin-bottom: 10px; }
+  .result-cards   { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .result-card    { flex: 1; min-width: 130px; border-radius: 8px; padding: 14px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .result-card .boundary { font-size: 12px; font-weight: bold; margin-bottom: 6px; }
+  .result-card .score    { font-size: 26px; font-weight: bold; }
+  .result-card .score span { font-size: 13px; }
+
+  .card-ab { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+  .card-bc { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .card-cd { background: #fff9e6; border: 1px solid #ffe082; color: #e65100; }
+  .card-de { background: #fce4ec; border: 1px solid #f48fb1; color: #880e4f; }
+  .card-ei { background: #f3e5f5; border: 1px solid #ce93d8; color: #4a148c; }
+
+  /* 라운드 비교 */
+  .round-compare { margin-top: 16px; }
+  .compare-table { width: 100%; border-collapse: collapse; }
+  .compare-table th { background: #312e81; color: white; padding: 8px 10px; text-align: center; font-size: 13px; }
+  .compare-table td { padding: 8px 10px; border: 1px solid #ddd; text-align: center; font-size: 13px; }
+  .compare-table .avg-row td { background: #f0ebff; font-weight: bold; color: #1e0e5c; }
+  .compare-table .round-row:nth-child(odd) td { background: #fafafa; }
+
+  /* 시각화 바 */
+  .viz-bar-wrapper { margin-top: 14px; }
+  .viz-bar-label  { font-size: 12px; color: #666; margin-bottom: 5px; }
+  .viz-bar-track  { position: relative; height: 38px; background: #eee; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
+  .viz-seg { position: absolute; top: 0; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white; transition: all 0.3s; }
+  .seg-a { background: #1565c0; }
+  .seg-b { background: #2e7d32; }
+  .seg-c { background: #f57f17; }
+  .seg-d { background: #c62828; }
+  .seg-e { background: #6a1b9a; }
+  .seg-i { background: #312e81; }
+  .viz-markers { position: relative; height: 18px; margin-top: 2px; }
+  .viz-marker  { position: absolute; transform: translateX(-50%); font-size: 10px; color: #555; }
+
+  /* 가중치 */
+  .weight-row   { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; padding: 16px; background: #f0eeff; border-radius: 8px; }
+  .weight-item  { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .weight-item label { font-size: 13px; font-weight: bold; color: #1e0e5c; }
+  .weight-sum   { font-size: 13px; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
+  .weight-ok    { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+  .weight-ng    { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
+
+  /* 버튼 */
+  .btn-calc  { background: #1e0e5c; color: white; border: none; padding: 10px 26px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+  .btn-calc:hover  { background: #2d1b8a; }
+  .btn-print { background: #3730a3; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .btn-print:hover { background: #4338ca; }
+  .btn-excel { background: #1b5e20; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .btn-excel:hover { background: #2e7d32; }
+  .btn-reset { background: #fff; color: #c62828; border: 1px solid #c62828; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .btn-reset:hover { background: #fce4ec; }
+  .btn-del-round  { background: #fce4ec; color: #c62828; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 4px; }
+  .btn-round-dl   { background: transparent; color: inherit; border: none; padding: 0 3px; cursor: pointer; font-size: 11px; opacity: 0.65; vertical-align: middle; }
+  .btn-round-dl:hover { opacity: 1; }
+  .btn-round-copy {
+    background: #f59e0b; color: white; border: none;
+    padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    font-size: 12px; font-weight: bold; margin-left: 4px;
+    vertical-align: middle; transition: background 0.2s;
+  }
+  .btn-round-copy:hover { background: #d97706; }
+  .btn-row   { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+  /* 안내 박스 */
+  .info-box { background: #f0ebff; border-left: 4px solid #7c3aed; padding: 12px 16px; border-radius: 4px; margin-bottom: 14px; font-size: 13px; color: #1e0e5c; line-height: 1.7; }
+  .round-info { background: #fff9e6; border-left: 4px solid #f9a825; padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; color: #555; line-height: 1.6; }
+  .tip-box { background: #e8f5e9; border-left: 4px solid #43a047; padding: 8px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 12px; color: #2e7d32; line-height: 1.6; }
+
+  /* 수행평가 추가 */
+  .perf-add-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .btn-add { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; padding: 6px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+  .btn-del { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+  /* 매뉴얼 모달 */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 1000;
+    align-items: flex-start; justify-content: center; padding: 40px 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: white; border-radius: 10px; width: 100%; max-width: 720px;
+    max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+  .modal-header {
+    position: sticky; top: 0; background: #1e0e5c; color: white;
+    padding: 14px 20px; border-radius: 10px 10px 0 0;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 16px; font-weight: bold; z-index: 1;
+  }
+  .modal-close {
+    background: none; border: none; color: white; font-size: 22px;
+    cursor: pointer; line-height: 1; padding: 0 4px;
+  }
+  .modal-body { padding: 20px 24px; font-size: 13px; line-height: 1.8; color: #333; }
+  .manual-section { margin-bottom: 22px; }
+  .manual-section h3 {
+    font-size: 14px; font-weight: bold; color: #1e0e5c;
+    border-bottom: 2px solid #1e0e5c; padding-bottom: 5px; margin-bottom: 10px;
+  }
+  .manual-section h4 { font-size: 13px; font-weight: bold; color: #2d1b8a; margin: 10px 0 4px; }
+  .manual-section ul { padding-left: 18px; }
+  .manual-section li { margin-bottom: 4px; }
+  .manual-tag {
+    display: inline-block; background: #1e0e5c; color: white;
+    font-size: 11px; padding: 1px 7px; border-radius: 10px; margin-right: 4px; vertical-align: middle;
+  }
+  .manual-tag.green { background: #2e7d32; }
+  .manual-tag.orange { background: #e65100; }
+  .manual-tag.red { background: #c62828; }
+  .btn-manual {
+    background: #1e0e5c; color: white; border: none; padding: 6px 14px;
+    border-radius: 5px; cursor: pointer; font-size: 13px;
+  }
+  .btn-manual:hover { background: #2d1b8a; }
+
+  /* Figma-inspired editorial refresh */
+  :root {
+    --ink: #000;
+    --line: #dedede;
+    --soft: #f7f7f7;
+    --block-lime: #d9ff73;
+    --block-lilac: #d8ccff;
+    --block-cream: #fff1bf;
+    --block-mint: #c8f5df;
+    --block-coral: #ff9f8a;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-family: Inter, "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+    font-weight: 330;
+  }
+
+  .header {
+    background: #fff;
+    color: #000;
+    padding: 38px 30px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .header h1 {
+    font-size: 44px;
+    line-height: 1.04;
+    font-weight: 340;
+    letter-spacing: 0;
+  }
+
+  .header p {
+    color: #000;
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: 330;
+  }
+
+  .container {
+    max-width: 1280px;
+    padding: 24px;
+  }
+
+  .subject-type-bar,
+  .data-io-bar,
+  .weight-row {
+    background: var(--block-cream);
+    border: 0;
+    border-radius: 24px;
+    color: #000;
+    padding: 16px 18px;
+  }
+
+  .subject-type-bar strong,
+  .data-io-bar strong,
+  .weight-item label,
+  .section-title {
+    color: #000;
+  }
+
+  .main-tabs,
+  .round-tab-bar {
+    gap: 8px;
+  }
+
+  .main-tab-btn,
+  .round-tab-btn,
+  .btn-add-round,
+  .btn-json-save,
+  .btn-json-load,
+  .btn-calc,
+  .btn-print,
+  .btn-excel,
+  .btn-reset,
+  .btn-del-round,
+  .btn-round-copy,
+  .btn-add,
+  .btn-del,
+  .btn-manual {
+    min-height: 38px;
+    border-radius: 999px;
+    padding: 8px 18px;
+    border: 1px solid transparent;
+    font-weight: 480;
+  }
+
+  .main-tab-btn,
+  .round-tab-btn,
+  .btn-json-load,
+  .btn-reset,
+  .btn-add-round,
+  .btn-add,
+  .btn-del {
+    background: #fff;
+    color: #000;
+    border-color: var(--line);
+  }
+
+  .main-tab-btn.active,
+  .round-tab-btn.active,
+  .btn-json-save,
+  .btn-calc,
+  .btn-print,
+  .btn-excel,
+  .btn-manual {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+    box-shadow: none;
+  }
+
+  .main-tab-content {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: none;
+    padding: 24px;
+  }
+
+  #tab-mid.main-tab-content,
+  #tab-fin.main-tab-content {
+    background: var(--block-lime);
+  }
+
+  #tab-perf.main-tab-content {
+    background: var(--block-mint);
+  }
+
+  #tab-semester.main-tab-content {
+    background: var(--block-lilac);
+  }
+
+  .section-title {
+    border-bottom: 1px solid #000;
+    font-size: 22px;
+    font-weight: 540;
+  }
+
+  .badge,
+  .manual-tag {
+    background: #000;
+    color: #fff;
+    border-radius: 999px;
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+  }
+
+  .input-table,
+  .compare-table {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .input-table th,
+  .input-table th.sub-header,
+  .compare-table th {
+    background: #f7f7f7;
+    color: #000;
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .input-table td,
+  .compare-table td {
+    border-color: var(--line);
+  }
+
+  .input-table tr:nth-child(even) td,
+  .input-table tr:hover td,
+  .compare-table .round-row:nth-child(odd) td {
+    background: #fafafa;
+  }
+
+  .type-cell,
+  .level-cell,
+  .compare-table .avg-row td {
+    background: #f7f7f7 !important;
+    color: #000 !important;
+  }
+
+  .total-row td,
+  .avg-row td {
+    background: #000 !important;
+    color: #fff !important;
+  }
+
+  .score-input,
+  .rate-select {
+    border-color: var(--line);
+    border-radius: 8px;
+    color: #000;
+  }
+
+  .score-input:focus,
+  .rate-select:focus {
+    outline: 2px solid #000;
+    border-color: #000;
+    background: #fff;
+  }
+
+  .info-box,
+  .round-info,
+  .tip-box,
+  .rate-warn-box,
+  .gap-warn-box {
+    border: 0;
+    border-radius: 14px;
+    color: #000;
+  }
+
+  .info-box { background: #fff; }
+  .round-info { background: var(--block-cream); }
+  .tip-box { background: var(--block-mint); }
+  .rate-warn-box,
+  .gap-warn-box { background: var(--block-coral); }
+
+  .result-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: none;
+    background: #fff;
+    color: #000;
+  }
+
+  .card-ab,
+  .card-bc,
+  .card-cd,
+  .card-de,
+  .card-ei {
+    background: #fff;
+    border-color: var(--line);
+    color: #000;
+  }
+
+  .modal-box {
+    border-radius: 24px;
+    box-shadow: none;
+  }
+
+  .modal-header {
+    background: #000;
+    color: #fff;
+    border-radius: 24px 24px 0 0;
+  }
+
+  /* Lovable-inspired warm refresh */
+  :root {
+    --ink: #1c1c1c;
+    --muted: #5f5f5d;
+    --line: #eceae4;
+    --paper: #f7f4ed;
+    --soft: rgba(28, 28, 28, 0.03);
+    --focus-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;
+    --inset-button: rgba(255,255,255,0.2) 0 0.5px 0 0 inset, rgba(0,0,0,0.2) 0 0 0 0.5px inset, rgba(0,0,0,0.05) 0 1px 2px 0;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Camera Plain Variable", ui-sans-serif, system-ui, "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-weight: 400;
+  }
+
+  .header {
+    background:
+      radial-gradient(circle at 16% 16%, rgba(255, 168, 128, 0.24), transparent 30%),
+      radial-gradient(circle at 82% 8%, rgba(107, 140, 255, 0.15), transparent 28%),
+      var(--paper);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    padding: 44px 30px 24px;
+  }
+
+  .header h1 {
+    color: var(--ink);
+    font-size: 52px;
+    line-height: 1.06;
+    font-weight: 600;
+    letter-spacing: -1.3px;
+  }
+
+  .header p {
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.38;
+    font-weight: 400;
+  }
+
+  .container {
+    max-width: 1200px;
+    padding: 24px;
+  }
+
+  .subject-type-bar,
+  .data-io-bar,
+  .weight-row,
+  .info-box,
+  .round-info,
+  .tip-box,
+  .rate-warn-box,
+  .gap-warn-box {
+    background: rgba(28, 28, 28, 0.03);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    color: rgba(28, 28, 28, 0.83);
+  }
+
+  .subject-type-bar strong,
+  .data-io-bar strong,
+  .weight-item label,
+  .section-title,
+  .manual-section h3,
+  .manual-section h4 {
+    color: var(--ink);
+  }
+
+  .main-tab-btn,
+  .round-tab-btn,
+  .btn-add-round,
+  .btn-json-save,
+  .btn-json-load,
+  .btn-calc,
+  .btn-print,
+  .btn-excel,
+  .btn-reset,
+  .btn-del-round,
+  .btn-round-copy,
+  .btn-add,
+  .btn-del,
+  .btn-manual {
+    min-height: 38px;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    font-weight: 400;
+  }
+
+  .round-tab-btn,
+  .btn-add-round {
+    border-radius: 9999px;
+  }
+
+  .main-tab-btn,
+  .round-tab-btn,
+  .btn-json-load,
+  .btn-reset,
+  .btn-add-round,
+  .btn-add,
+  .btn-del {
+    background: transparent;
+    color: var(--ink);
+    border-color: rgba(28, 28, 28, 0.4);
+  }
+
+  .main-tab-btn.active,
+  .round-tab-btn.active,
+  .btn-json-save,
+  .btn-calc,
+  .btn-print,
+  .btn-excel,
+  .btn-manual {
+    background: var(--ink);
+    color: #fcfbf8;
+    border-color: var(--ink);
+    box-shadow: var(--inset-button);
+  }
+
+  .main-tab-content,
+  #tab-mid.main-tab-content,
+  #tab-fin.main-tab-content,
+  #tab-perf.main-tab-content,
+  #tab-semester.main-tab-content {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .section-title {
+    border-bottom: 1px solid var(--line);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+  }
+
+  .badge,
+  .manual-tag {
+    background: rgba(28, 28, 28, 0.04);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 9999px;
+    font-family: inherit;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .input-table,
+  .compare-table {
+    background: var(--paper);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .input-table th,
+  .input-table th.sub-header,
+  .compare-table th {
+    background: rgba(28, 28, 28, 0.03);
+    color: rgba(28, 28, 28, 0.83);
+    font-family: inherit;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .input-table td,
+  .compare-table td {
+    border-color: var(--line);
+    color: var(--ink);
+  }
+
+  .input-table tr:nth-child(even) td,
+  .input-table tr:hover td,
+  .compare-table .round-row:nth-child(odd) td {
+    background: rgba(28, 28, 28, 0.03);
+  }
+
+  .type-cell,
+  .level-cell,
+  .compare-table .avg-row td {
+    background: rgba(28, 28, 28, 0.03) !important;
+    color: var(--ink) !important;
+  }
+
+  .total-row td,
+  .avg-row td {
+    background: var(--ink) !important;
+    color: #fcfbf8 !important;
+  }
+
+  .score-input,
+  .rate-select {
+    background: var(--paper);
+    border-color: var(--line);
+    border-radius: 6px;
+    color: var(--ink);
+  }
+
+  .score-input:focus,
+  .rate-select:focus,
+  .btn-calc:focus-visible,
+  .btn-print:focus-visible,
+  .btn-excel:focus-visible,
+  .btn-json-save:focus-visible {
+    outline: 0;
+    border-color: rgba(28, 28, 28, 0.4);
+    box-shadow: var(--focus-shadow);
+    background: var(--paper);
+  }
+
+  .result-card,
+  .card-ab,
+  .card-bc,
+  .card-cd,
+  .card-de,
+  .card-ei {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: none;
+    color: var(--ink);
+  }
+
+  .modal-box {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .modal-header {
+    background: var(--ink);
+    color: #fcfbf8;
+    border-radius: 16px 16px 0 0;
+    box-shadow: var(--inset-button);
+  }
+
+  @media (max-width: 820px) {
+    .header h1 {
+      font-size: 36px;
+    }
+
+    .header p {
+      font-size: 16px;
+    }
+  }
+
+  /* HP-inspired restrained catalog refresh */
+  :root {
+    --hp-blue: #024ad8;
+    --hp-ink: #1a1a1a;
+    --hp-charcoal: #3d3d3d;
+    --hp-graphite: #636363;
+    --hp-canvas: #ffffff;
+    --hp-cloud: #f7f7f7;
+    --hp-fog: #e8e8e8;
+    --hp-steel: #c2c2c2;
+    --ink: var(--hp-ink);
+    --muted: var(--hp-graphite);
+    --line: var(--hp-fog);
+    --paper: var(--hp-canvas);
+    --soft: var(--hp-cloud);
+    --focus-shadow: 0 0 0 1px var(--hp-ink);
+    --inset-button: none;
+  }
+
+  body {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+    font-family: "Manrope", "Inter", Arial, "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .header {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+    border-bottom: 1px solid var(--hp-fog);
+    padding: 56px 32px 28px;
+  }
+
+  .header h1 {
+    max-width: 1366px;
+    margin: 0 auto 12px;
+    color: var(--hp-ink);
+    font-size: clamp(36px, 4.7vw, 64px);
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .header p {
+    max-width: 1366px;
+    margin: 0 auto;
+    color: var(--hp-charcoal);
+    font-size: 18px;
+    line-height: 1.33;
+  }
+
+  .container {
+    max-width: 1366px;
+    padding: 24px 32px 64px;
+  }
+
+  .subject-type-bar,
+  .data-io-bar,
+  .weight-row,
+  .info-box,
+  .round-info,
+  .tip-box,
+  .rate-warn-box,
+  .gap-warn-box {
+    background: var(--hp-cloud);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    color: var(--hp-charcoal);
+  }
+
+  .info-box,
+  .round-info,
+  .tip-box,
+  .rate-warn-box,
+  .gap-warn-box {
+    border-left: 1px solid var(--hp-fog);
+  }
+
+  .subject-type-bar strong,
+  .data-io-bar strong,
+  .weight-item label,
+  .section-title,
+  .manual-section h3,
+  .manual-section h4,
+  .result-title {
+    color: var(--hp-ink);
+  }
+
+  .main-tabs,
+  .round-tab-bar {
+    gap: 8px;
+  }
+
+  .main-tab-btn,
+  .round-tab-btn,
+  .btn-add-round,
+  .btn-json-save,
+  .btn-json-load,
+  .btn-calc,
+  .btn-print,
+  .btn-excel,
+  .btn-reset,
+  .btn-del-round,
+  .btn-round-copy,
+  .btn-add,
+  .btn-del,
+  .btn-manual {
+    min-height: 44px;
+    border-radius: 4px;
+    padding: 10px 20px;
+    border: 1px solid var(--hp-ink);
+    box-shadow: none;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .main-tab-btn,
+  .round-tab-btn,
+  .btn-json-load,
+  .btn-reset,
+  .btn-add-round,
+  .btn-add,
+  .btn-del,
+  .btn-del-round,
+  .btn-round-copy {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+  }
+
+  .main-tab-btn.active,
+  .round-tab-btn.active,
+  .btn-json-save,
+  .btn-print,
+  .btn-excel,
+  .btn-manual {
+    background: var(--hp-ink);
+    color: #fff;
+    border-color: var(--hp-ink);
+  }
+
+  .btn-calc {
+    background: var(--hp-blue);
+    color: #fff;
+    border-color: var(--hp-blue);
+  }
+
+  .btn-del-round,
+  .btn-round-copy,
+  .btn-del {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .main-tab-content,
+  #tab-mid.main-tab-content,
+  #tab-fin.main-tab-content,
+  #tab-perf.main-tab-content,
+  #tab-semester.main-tab-content {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(26, 26, 26, 0.06);
+  }
+
+  .section-title {
+    border-bottom: 1px solid var(--hp-fog);
+    font-size: 22px;
+    line-height: 1.17;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .badge,
+  .manual-tag {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    color: var(--hp-ink);
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .manual-tag.green,
+  .manual-tag.orange,
+  .manual-tag.red {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+  }
+
+  .input-table,
+  .compare-table {
+    background: var(--hp-canvas);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .input-table th,
+  .input-table th.sub-header,
+  .compare-table th {
+    background: var(--hp-cloud);
+    color: var(--hp-charcoal);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .input-table td,
+  .compare-table td {
+    border-color: var(--hp-fog);
+    color: var(--hp-ink);
+  }
+
+  .input-table tr:nth-child(even) td,
+  .input-table tr:hover td,
+  .compare-table .round-row:nth-child(odd) td {
+    background: var(--hp-cloud);
+  }
+
+  .type-cell,
+  .level-cell,
+  .compare-table .avg-row td {
+    background: var(--hp-cloud) !important;
+    color: var(--hp-ink) !important;
+  }
+
+  .level-easy,
+  .level-medium,
+  .level-hard {
+    color: var(--hp-ink);
+    font-weight: 600;
+  }
+
+  .total-row td,
+  .avg-row td {
+    background: var(--hp-ink) !important;
+    color: #fff !important;
+  }
+
+  .score-input,
+  .rate-select {
+    min-height: 36px;
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-steel);
+    border-radius: 4px;
+    color: var(--hp-ink);
+  }
+
+  input[type="radio"],
+  input[type="checkbox"] {
+    accent-color: var(--hp-ink);
+  }
+
+  .score-input:focus,
+  .rate-select:focus,
+  .btn-calc:focus-visible,
+  .btn-print:focus-visible,
+  .btn-excel:focus-visible,
+  .btn-json-save:focus-visible {
+    outline: 0;
+    border-color: var(--hp-ink);
+    box-shadow: var(--focus-shadow);
+    background: var(--hp-canvas);
+  }
+
+  .rate-error {
+    border-color: #b3262b !important;
+    background: #fff !important;
+  }
+
+  .rate-warn5 {
+    border-color: var(--hp-ink) !important;
+    background: var(--hp-cloud) !important;
+  }
+
+  .rate-warn-box .warn5-section,
+  .gap-warn-box strong {
+    color: var(--hp-ink);
+  }
+
+  .container > div[style*="background:#fff8e1"] {
+    background: var(--hp-cloud) !important;
+    border: 1px solid var(--hp-fog) !important;
+    border-left: 1px solid var(--hp-fog) !important;
+    border-radius: 16px !important;
+    color: var(--hp-charcoal) !important;
+  }
+
+  [style*="color:#e65100"],
+  [style*="color:#c62828"],
+  [style*="color:#78350f"] {
+    color: var(--hp-ink) !important;
+  }
+
+  .weight-ok,
+  .weight-ng {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+    border: 1px solid var(--hp-fog);
+  }
+
+  .result-card,
+  .card-ab,
+  .card-bc,
+  .card-cd,
+  .card-de,
+  .card-ei {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(26, 26, 26, 0.06);
+    color: var(--hp-ink);
+  }
+
+  .seg-a,
+  .seg-b,
+  .seg-c,
+  .seg-d,
+  .seg-e,
+  .seg-i {
+    background: var(--hp-ink);
+  }
+
+  .viz-bar-track {
+    background: var(--hp-cloud);
+    border-color: var(--hp-fog);
+    border-radius: 4px;
+  }
+
+  .modal-box {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(26, 26, 26, 0.12);
+  }
+
+  .modal-header {
+    background: var(--hp-ink);
+    color: #fff;
+    border-radius: 16px 16px 0 0;
+    box-shadow: none;
+  }
+
+  @media (max-width: 820px) {
+    .header {
+      padding: 44px 20px 24px;
+    }
+
+    .container {
+      padding: 20px 16px 48px;
+    }
+
+    .header p {
+      font-size: 16px;
+    }
+  }
+
+  @media print {
+    .main-tabs, .round-tab-bar, .btn-row, .perf-add-row, .subject-type-bar { display: none; }
+    .main-tab-content { display: block !important; box-shadow: none; margin-bottom: 20px; }
+    body { background: white; }
+    .header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>성취평가제 추정분할점수 시뮬레이터</h1>
+  <p>지필(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산</p>
+</div>
+
+<div class="container">
+
+  <!-- JSON 저장/불러오기 -->
+  <div class="data-io-bar">
+    <strong>데이터:</strong>
+    <button class="btn-json-save" onclick="exportJSON()">JSON 저장</button>
+    <button class="btn-json-load" onclick="importJSON()">JSON 불러오기</button>
+    <span class="data-io-hint">※ 현재 입력 내용을 파일로 저장하거나, 이전에 저장한 JSON 파일을 불러와 복원합니다</span>
+    <button class="btn-manual" onclick="document.getElementById('manual-modal').classList.add('open')" style="margin-left:auto;">매뉴얼</button>
+  </div>
+
+  <!-- 공지사항 -->
+  <div style="background:#fff8e1; border-left:4px solid #f59e0b; border-radius:6px; padding:10px 16px; margin-bottom:12px; font-size:13px; color:#78350f;">
+    입력하신 데이터는 브라우저를 닫으면 사라집니다. 백업·복구가 필요하시면 상단의 <strong>JSON 저장</strong> 기능을 이용해 주세요.
+  </div>
+
+  <!-- 매뉴얼 모달 -->
+  <div id="manual-modal" class="modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
+    <div class="modal-box">
+      <div class="modal-header">
+        추정분할점수 시뮬레이터 사용 매뉴얼
+        <button class="modal-close" onclick="document.getElementById('manual-modal').classList.remove('open')">×</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="manual-section">
+          <h3>개요</h3>
+          <p>이 시뮬레이터는 성취평가제 추정분할점수를 산출합니다.<br>
+          각 문항 범주(배점합)에 대해 성취수준 경계별 <b>예상 정답률</b>을 입력하면,<br>
+          <b>분할점수 = Σ(배점합 × 예상정답률 / 100)</b> 공식으로 자동 계산됩니다.</p>
+        </div>
+
+        <div class="manual-section">
+          <h3>① 과목 유형 선택</h3>
+          <ul>
+            <li><b>공통과목</b>: A/B · B/C · C/D · D/E · <b>E/I</b> — 5개 경계 (고교학점제 이수·미이수 포함)</li>
+            <li><b>선택과목</b>: A/B · B/C · C/D · D/E — 4개 경계 (E/I 없음)</li>
+          </ul>
+          <p style="margin-top:6px; color:#c62828;">주의: 유형 변경 시 입력 데이터와 계산 결과가 초기화됩니다.</p>
+        </div>
+
+        <div class="manual-section">
+          <h3>② 지필평가(중간·기말) 입력</h3>
+          <h4>배점합 입력</h4>
+          <ul>
+            <li>선택형(쉬움·보통·어려움), 서술형(쉬움·보통·어려움) 6개 범주의 배점 합계를 입력합니다.</li>
+          </ul>
+          <h4>예상 정답률 입력</h4>
+          <ul>
+            <li><span class="manual-tag">A/B ~ D/E</span> 드롭다운에서 <b>5% 단위</b>(5, 10, …, 100)로 선택합니다.</li>
+            <li><span class="manual-tag orange">E/I</span> 공통과목 이수·미이수 경계는 <b>1% 단위 정수</b>로 직접 입력합니다.</li>
+            <li>뒤쪽 경계(B/C, C/D, D/E)의 선택지는 앞 경계 값 이하로 <b>자동 제한</b>됩니다.</li>
+          </ul>
+          <h4>오류 표시</h4>
+          <ul>
+            <li><span class="manual-tag">주의 표시</span> 경계 역전 또는 난이도 역전 — 해당 칸을 수정하세요.</li>
+            <li><span class="manual-tag">급간 표시</span> 5% 급간 오류(E/I 칸에 소수 입력 등).</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>③ 라운드 운영</h3>
+          <ul>
+            <li>나이스(NEIS) 권장: <b>2라운드 이상</b> 실시합니다.</li>
+            <li>교사별로 각 라운드에 입력값을 넣으면 개인별 추정 분할점수를 확인할 수 있습니다.</li>
+            <li><b>+ 라운드 추가</b> 버튼으로 라운드를 늘리고, 라운드 탭을 클릭해 전환합니다.</li>
+            <li>각 라운드의 저장 버튼으로 해당 라운드만 엑셀로 저장할 수 있습니다.</li>
+            <li>모든 라운드의 <b>평균값</b>이 최종 추정분할점수가 됩니다.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>④ 수행평가 입력</h3>
+          <ul>
+            <li><b>+ 영역 추가</b>로 수행평가 영역을 추가하고 영역명과 배점합을 입력합니다.</li>
+            <li>정답률은 5% 단위 제한 없이 자유롭게 입력합니다.</li>
+            <li>경계 역전(앞 경계보다 높은 값)만 오류로 표시됩니다.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>⑤ 학기말 합산</h3>
+          <ul>
+            <li>중간고사·기말고사·수행평가 각각의 <b>반영 가중치(%)</b>를 입력합니다.</li>
+            <li>합계가 <b>100%</b>가 되어야 최종 계산이 가능합니다.</li>
+            <li>학기말 분할점수 = 중간 × 가중치 + 기말 × 가중치 + 수행 × 가중치</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>⑥ 데이터 저장 · 복원</h3>
+          <h4>JSON 저장 / JSON 불러오기</h4>
+          <ul>
+            <li>현재까지 입력한 모든 라운드 데이터를 <b>.json 파일</b>로 저장합니다.</li>
+            <li>저장한 파일을 불러오면 이전 입력 상태가 완전히 복원됩니다.</li>
+            <li>협의 전·후 데이터를 별도 파일로 관리하는 데 유용합니다.</li>
+          </ul>
+          <h4>엑셀 저장</h4>
+          <ul>
+            <li>각 탭의 <b>엑셀 저장</b> 버튼으로 해당 평가의 전체 라운드를 엑셀로 내보냅니다.</li>
+            <li>학기말 합산 탭의 <b>엑셀 다운로드</b>로 전체 시트를 한 번에 저장합니다.</li>
+          </ul>
+        </div>
+
+        <div class="manual-section">
+          <h3>⑦ 결과 확인</h3>
+          <ul>
+            <li><b>계산하기</b> 버튼을 누르면 라운드별·평균 분할점수가 카드와 표로 표시됩니다.</li>
+            <li>시각화 바로 성취수준별 점수 구간을 한눈에 확인할 수 있습니다.</li>
+            <li>2개 이상 라운드가 있으면 라운드별 비교 표도 함께 표시됩니다.</li>
+          </ul>
+        </div>
+
+        <div style="text-align:right; margin-top:10px;">
+          <button class="btn-manual" onclick="document.getElementById('manual-modal').classList.remove('open')">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 과목 유형 선택 (전역) -->
+  <div class="subject-type-bar">
+    <strong>과목 유형:</strong>
+    <label><input type="radio" name="subject-type" value="common" checked onchange="setSubjectType('common')"> 공통과목 &nbsp;(A/B · B/C · C/D · D/E · E/I — 5개 경계)</label>
+    <label><input type="radio" name="subject-type" value="select" onchange="setSubjectType('select')"> 선택과목 &nbsp;(A/B · B/C · C/D · D/E — 4개 경계, E/I 없음)</label>
+  </div>
+
+  <div class="main-tabs">
+    <button class="main-tab-btn active" onclick="showMainTab('mid', this)">중간고사</button>
+    <button class="main-tab-btn" onclick="showMainTab('fin', this)">기말고사</button>
+    <button class="main-tab-btn" onclick="showMainTab('perf', this)">수행평가</button>
+    <button class="main-tab-btn" onclick="showMainTab('semester', this)">학기말 합산</button>
+  </div>
+
+  <!-- ===== 중간고사 ===== -->
+  <div id="tab-mid" class="main-tab-content active">
+    <div class="section-title">중간고사 추정분할점수 <span class="badge">지필평가</span></div>
+    <div class="info-box">
+      각 범주의 <b>배점합</b>과 성취수준 경계별 <b>예상 정답률(%)</b>을 입력하세요.<br>
+      분할점수 = Σ(배점합 × 예상정답률/100) | <b>E/I</b> = 이수·미이수 기준(고교학점제, 공통과목)<br>
+      <span style="color:#e65100;">주의: 예상 정답률은 <b>A~D 경계 5% 단위</b> (5, 10, …, 100), <b>E/I 경계 1% 단위</b>로 입력하세요</span>
+    </div>
+    <div class="round-info"><b>나이스(NEIS) 권장: 2라운드 이상 실시</b></div>
+    <div class="tip-box"><b>Tip:</b> 각 라운드별로 <b>교사별 입력값을 넣으면</b> 분할점수가 추정될 수 있습니다.</div>
+    <div id="rounds-mid"></div>
+    <div id="result-mid" class="result-section"></div>
+    <div class="btn-row">
+      <button class="btn-calc" onclick="calcAssessment('mid')">계산하기</button>
+      <button class="btn-excel" onclick="downloadAssessment('mid')">엑셀 저장</button>
+      <button class="btn-reset" onclick="resetAssessment('mid')">초기화</button>
+    </div>
+  </div>
+
+  <!-- ===== 기말고사 ===== -->
+  <div id="tab-fin" class="main-tab-content">
+    <div class="section-title">기말고사 추정분할점수 <span class="badge">지필평가</span></div>
+    <div class="info-box">각 범주의 <b>배점합</b>과 성취수준 경계별 <b>예상 정답률(%)</b>을 입력하세요.<br>
+      <span style="color:#e65100;">주의: 예상 정답률은 <b>A~D 경계 5% 단위</b> (5, 10, …, 100), <b>E/I 경계 1% 단위</b>로 입력하세요</span>
+    </div>
+    <div class="round-info"><b>나이스(NEIS) 권장: 2라운드 이상 실시</b> — 협의 후 재추정하여 최종 분할점수를 결정합니다.</div>
+    <div id="rounds-fin"></div>
+    <div id="result-fin" class="result-section"></div>
+    <div class="btn-row">
+      <button class="btn-calc" onclick="calcAssessment('fin')">계산하기</button>
+      <button class="btn-excel" onclick="downloadAssessment('fin')">엑셀 저장</button>
+      <button class="btn-reset" onclick="resetAssessment('fin')">초기화</button>
+    </div>
+  </div>
+
+  <!-- ===== 수행평가 ===== -->
+  <div id="tab-perf" class="main-tab-content">
+    <div class="section-title">수행평가 추정분할점수 <span class="badge">수행평가</span></div>
+    <div class="info-box">수행평가 영역을 추가하고 <b>영역명</b>과 <b>배점합</b>을 입력한 후, 각 경계별로 <b>성취수준별 예상 득점(점)</b>을 직접 입력하세요.</div>
+    <div id="rounds-perf"></div>
+    <div id="result-perf" class="result-section"></div>
+    <div class="btn-row">
+      <button class="btn-calc" onclick="calcPerfAssessment()">계산하기</button>
+      <button class="btn-excel" onclick="downloadAssessment('perf')">엑셀 저장</button>
+      <button class="btn-reset" onclick="resetPerfAssessment()">초기화</button>
+    </div>
+  </div>
+
+  <!-- ===== 학기말 합산 ===== -->
+  <div id="tab-semester" class="main-tab-content">
+    <div class="section-title">학기말 최종 추정분할점수 <span class="badge">합산</span></div>
+    <div class="info-box">
+      각 평가의 <b>반영 가중치(%)</b>를 입력하세요. 합계가 100%가 되어야 합니다.<br>
+      학기말 분할점수 = 중간 × 가중치 + 기말 × 가중치 + 수행 × 가중치
+    </div>
+    <div class="weight-row">
+      <div class="weight-item">
+        <label>중간고사 (%)</label>
+        <input type="number" class="score-input weight-input" id="w-mid" value="40" min="0" max="100" oninput="checkWeightSum()">
+      </div>
+      <div class="weight-item">
+        <label>기말고사 (%)</label>
+        <input type="number" class="score-input weight-input" id="w-fin" value="40" min="0" max="100" oninput="checkWeightSum()">
+      </div>
+      <div class="weight-item">
+        <label>수행평가 (%)</label>
+        <input type="number" class="score-input weight-input" id="w-perf" value="20" min="0" max="100" oninput="checkWeightSum()">
+      </div>
+      <div class="weight-item">
+        <label>합계</label>
+        <div class="weight-sum weight-ok" id="weight-sum-display">100%</div>
+      </div>
+    </div>
+    <div id="result-semester" class="result-section"></div>
+    <div class="btn-row">
+      <button class="btn-calc" onclick="calcSemester()">최종 계산하기</button>
+      <button class="btn-excel" onclick="exportToExcel()">엑셀 다운로드</button>
+      <button class="btn-print" onclick="window.print()">인쇄</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div style="text-align:center; padding:18px 0 24px; font-size:12px; color:#999;">
+  오류 제보: <a href="mailto:jinhak082@gmail.com" style="color:#7c3aed; text-decoration:none;">jinhak082@gmail.com</a>
+</div>
+
+<script>
+// ============================================================
+// 상수
+// ============================================================
+const BOUNDARIES = ['A/B', 'B/C', 'C/D', 'D/E', 'E/I'];
+const CARD_CLS   = ['card-ab','card-bc','card-cd','card-de','card-ei'];
+
+const WRITTEN_ROWS = [
+  {type:'선택형', level:'쉬움',   cls:'level-easy'},
+  {type:'선택형', level:'보통',   cls:'level-medium'},
+  {type:'선택형', level:'어려움', cls:'level-hard'},
+  {type:'서술형', level:'쉬움',   cls:'level-easy'},
+  {type:'서술형', level:'보통',   cls:'level-medium'},
+  {type:'서술형', level:'어려움', cls:'level-hard'},
+];
+
+// 전역 과목 유형 (true: 공통과목 E/I 포함, false: 선택과목 E/I 없음)
+let isCommon = true;
+
+function getBoundaries() {
+  return isCommon ? BOUNDARIES : BOUNDARIES.slice(0, 4);
+}
+
+// 평가별 라운드 관리
+const state = {
+  mid:  { rounds: [], currentRound: 0, results: null, roundData: {} },
+  fin:  { rounds: [], currentRound: 0, results: null, roundData: {} },
+  perf: { rounds: [], currentRound: 0, results: null, perfRowCounts: [], roundData: {} },
+};
+
+// ============================================================
+// 라운드 데이터 저장/복원 (DOM ↔ state)
+// 라운드 전환 시 현재 입력값을 state에 저장해 두고,
+// 다시 해당 라운드로 돌아올 때 DOM에 복원합니다.
+// ============================================================
+function saveRoundData(assessId, rIdx) {
+  const id = `${assessId}-r${rIdx}`;
+  const bounds = getBoundaries();
+
+  if (assessId === 'perf') {
+    const tbody = document.getElementById(`perf-body-${rIdx}`);
+    if (!tbody) return;
+    const rows = [];
+    tbody.querySelectorAll('tr').forEach((tr, rowIdx) => {
+      const nmEl = tr.querySelector(`input[id="${id}-nm-${rowIdx}"]`);
+      const scEl = tr.querySelector(`input[id="${id}-sc-${rowIdx}"]`);
+      rows.push({
+        name:  nmEl ? nmEl.value : '',
+        sc:    scEl ? scEl.value : '',
+        rates: bounds.map((b, bi) => {
+          const el = tr.querySelector(`input[id="${id}-ra-${bi}-${rowIdx}"]`);
+          return el ? el.value : '';
+        })
+      });
+    });
+    state[assessId].roundData[rIdx] = { type: 'perf', rows };
+  } else {
+    const scores = [], rates = [];
+    for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+      const scEl = document.getElementById(`${id}-sc-${rowIdx}`);
+      scores.push(scEl ? scEl.value : '');
+      rates.push(bounds.map((b, bi) => {
+        const el = document.getElementById(`${id}-ra-${bi}-${rowIdx}`);
+        return el ? el.value : '';
+      }));
+    }
+    state[assessId].roundData[rIdx] = { type: 'written', scores, rates };
+  }
+}
+
+function restoreRoundData(assessId, rIdx) {
+  const saved = state[assessId].roundData[rIdx];
+  if (!saved) return;
+  const id = `${assessId}-r${rIdx}`;
+  const bounds = getBoundaries();
+
+  if (saved.type === 'perf') {
+    saved.rows.forEach((row, rowIdx) => {
+      setV(`${id}-nm-${rowIdx}`, row.name);
+      setV(`${id}-sc-${rowIdx}`, row.sc);
+      row.rates.forEach((rate, bi) => { if (bi < bounds.length) setV(`${id}-ra-${bi}-${rowIdx}`, rate); });
+    });
+  } else {
+    saved.scores.forEach((sc, rowIdx) => {
+      setV(`${id}-sc-${rowIdx}`, sc);
+      (saved.rates[rowIdx] || []).forEach((rate, bi) => { if (bi < bounds.length) setV(`${id}-ra-${bi}-${rowIdx}`, rate); });
+    });
+  }
+}
+
+// ============================================================
+// 정답률 역전 검사 & 하이라이트
+// [수평] 같은 행: A/B ≥ B/C ≥ C/D ≥ D/E ≥ E/I (경계 역전)
+// [수직] 같은 열, 같은 유형: 쉬움 ≥ 보통 ≥ 어려움 (난이도 역전)
+// ============================================================
+function highlightRates(assessId, rIdx) {
+  const id = `${assessId}-r${rIdx}`;
+  const bounds = getBoundaries();
+  const bLen = bounds.length;
+  const errors = [];  // { row, boundary, kind:'경계역전'|'난이도역전' }
+
+  // 급간 체크 헬퍼: A/B~D/E(bi 0-3)는 5% 단위, E/I(bi 4)는 1% 단위(정수)
+  function stepError(v, bi) {
+    if (v === null) return false;
+    if (bi < 4) return v % 5 !== 0;        // A/B·B/C·C/D·D/E: 5의 배수
+    return !Number.isInteger(v);            // E/I: 정수(1% 단위)
+  }
+  function stepLabel(bi) {
+    return bi < 4 ? '5% 급간 아님 (5의 배수로 입력)' : '1% 급간 아님 (정수로 입력)';
+  }
+
+  // ── 수행평가: 수평 역전 체크만 (급간 제한 없음) ──
+  if (assessId === 'perf') {
+    const tbody = document.getElementById(`perf-body-${rIdx}`);
+    if (!tbody) return errors;
+    tbody.querySelectorAll('tr').forEach((tr, rowIdx) => {
+      const nameEl = tr.querySelector(`input[id^="${id}-nm-"]`);
+      const label = (nameEl && nameEl.value) ? nameEl.value : `영역 ${rowIdx + 1}`;
+      const vals = bounds.map((b, bi) => {
+        const el = tr.querySelector(`input[id="${id}-ra-${bi}-${rowIdx}"]`);
+        return el ? (el.value !== '' ? parseFloat(el.value) : null) : null;
+      });
+      bounds.forEach((b, bi) => {
+        const el = tr.querySelector(`input[id="${id}-ra-${bi}-${rowIdx}"]`);
+        if (!el) return;
+        const isRevErr = vals[bi] !== null && bi > 0 && vals[bi-1] !== null && vals[bi] > vals[bi-1];
+        el.classList.toggle('rate-error', isRevErr);
+        el.classList.remove('rate-warn5');
+        if (isRevErr) errors.push({ row: label, boundary: b, kind: '경계역전' });
+      });
+    });
+    return errors;
+  }
+
+  // ── 지필평가: 수평 + 수직 체크 + 5%급간 체크 ──
+  const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서술형 쉬움','서술형 보통','서술형 어려움'];
+  // errFlags[rowIdx][bi]: true이면 해당 칸을 빨갛게 표시
+  const errFlags  = Array.from({length: 6}, () => new Array(bLen).fill(false));
+  const warn5Flags = Array.from({length: 6}, () => new Array(bLen).fill(false));
+
+  // 1) 수평: 같은 행에서 bi-1 열 값보다 bi 열 값이 크면 역전
+  for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+    for (let bi = 1; bi < bLen; bi++) {
+      const v    = getVal(id, bi,   rowIdx);
+      const vPrv = getVal(id, bi-1, rowIdx);
+      if (v !== null && vPrv !== null && v > vPrv) {
+        errFlags[rowIdx][bi] = true;
+        errors.push({ row: rowLabels[rowIdx], boundary: bounds[bi], kind: '경계역전' });
+      }
+    }
+  }
+
+  // 2) 수직: 같은 열에서 보통·어려움이 상위 난이도보다 크면 역전
+  // 선택형 그룹 [0=쉬움, 1=보통, 2=어려움], 서술형 그룹 [3=쉬움, 4=보통, 5=어려움]
+  [[0,1,2],[3,4,5]].forEach(group => {
+    for (let bi = 0; bi < bLen; bi++) {
+      for (let k = 1; k < group.length; k++) {
+        const rowIdx    = group[k];      // 보통(1,4) 또는 어려움(2,5)
+        const rowIdxPrv = group[k-1];    // 쉬움(0,3) 또는 보통(1,4)
+        const v    = getVal(id, bi, rowIdx);
+        const vPrv = getVal(id, bi, rowIdxPrv);
+        if (v !== null && vPrv !== null && v > vPrv) {
+          errFlags[rowIdx][bi] = true;
+          errors.push({ row: rowLabels[rowIdx], boundary: bounds[bi], kind: '난이도역전' });
+        }
+      }
+    }
+  });
+
+  // 3) 급간 체크: A/B~D/E는 5% 단위, E/I는 1% 단위(정수)
+  for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+    for (let bi = 0; bi < bLen; bi++) {
+      const v = getVal(id, bi, rowIdx);
+      if (stepError(v, bi)) {
+        warn5Flags[rowIdx][bi] = true;
+        errors.push({ row: rowLabels[rowIdx], boundary: bounds[bi], kind: '5%급간오류', detail: stepLabel(bi) });
+      }
+    }
+  }
+
+  // 스타일 적용
+  for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+    for (let bi = 0; bi < bLen; bi++) {
+      const el = document.getElementById(`${id}-ra-${bi}-${rowIdx}`);
+      if (el) {
+        el.classList.toggle('rate-error', errFlags[rowIdx][bi]);
+        el.classList.toggle('rate-warn5',  !errFlags[rowIdx][bi] && warn5Flags[rowIdx][bi]);
+      }
+    }
+  }
+  return errors;
+}
+
+// 입력 값 가져오기 헬퍼 (없거나 빈칸이면 null)
+function getVal(id, bi, rowIdx) {
+  const el = document.getElementById(`${id}-ra-${bi}-${rowIdx}`);
+  if (!el || el.value === '') return null;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? null : v;
+}
+
+// 경고 박스를 라운드 테이블 하단에 표시/숨김
+function showRateWarnBox(assessId, rIdx, errors) {
+  const tableDiv = document.getElementById(`round-table-${assessId}`);
+  if (!tableDiv) return;
+
+  const bounds = getBoundaries();
+  const id = `${assessId}-r${rIdx}`;
+  const gapWarnings = [];
+
+  if (assessId !== 'perf') {
+    const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서술형 쉬움','서술형 보통','서술형 어려움'];
+    for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+      for (let bi = 0; bi < bounds.length - 1; bi++) {
+        const r0 = getVal(id, bi,     rowIdx);
+        const r1 = getVal(id, bi + 1, rowIdx);
+        if (r0 === null || r1 === null) continue;
+        const gap = r0 - r1;
+        if (gap >= 20) {
+          gapWarnings.push(`• [${rowLabels[rowIdx]}] ${bounds[bi]}(${r0}%) ↔ ${bounds[bi+1]}(${r1}%) : 정답률 차이 <strong>${gap}%p</strong>`);
+        }
+      }
+    }
+  }
+
+  let warnEl = tableDiv.querySelector('.rate-warn-box');
+  if (errors.length === 0 && gapWarnings.length === 0) { if (warnEl) warnEl.remove(); return; }
+  if (!warnEl) {
+    warnEl = document.createElement('div');
+    warnEl.className = 'rate-warn-box';
+    tableDiv.appendChild(warnEl);
+  }
+  const boundary = errors.filter(e => e.kind === '경계역전')
+    .map(e => `• [${e.row}] ${e.boundary} 경계값이 앞 경계보다 높음`);
+  const diffic = errors.filter(e => e.kind === '난이도역전')
+    .map(e => `• [${e.row} / ${e.boundary}] 정답률이 쉬운 난이도보다 높음`);
+  const step5 = errors.filter(e => e.kind === '5%급간오류')
+    .map(e => `• [${e.row} / ${e.boundary}] ${e.detail || '5% 급간 아님'}`);
+  const hasRevErr = boundary.length || diffic.length;
+  let html = '';
+  if (hasRevErr) {
+    const revTitle = assessId === 'perf' ? '예상 득점 역전 감지' : '정답률 역전 감지';
+    html += `<b>주의: ${revTitle}</b><br>`;
+    if (boundary.length) html += `<u>경계 역전</u> (A/B ≥ B/C ≥ … ≥ E/I)<br>${boundary.join('<br>')}<br>`;
+    if (diffic.length)   html += `<u>난이도 역전</u> (쉬움 ≥ 보통 ≥ 어려움)<br>${diffic.join('<br>')}`;
+  }
+  if (step5.length) {
+    html += `<div class="warn5-section"><b>급간 오류</b> (A~D: 5% 단위 · E/I: 1% 단위)<br>${step5.join('<br>')}</div>`;
+  }
+  if (gapWarnings.length > 0) {
+    html += `<div class="warn5-section" style="color:#c62828;"><b>수준별 급간차이 20점 이상</b> — 인접 경계점수 차이가 너무 큽니다.<br>${gapWarnings.join('<br>')}</div>`;
+  }
+  warnEl.innerHTML = html;
+}
+
+// ============================================================
+// 경계 select 연동 제약 — 앞 경계 값 이하로 뒤 경계 선택지 자동 제한
+// ============================================================
+
+/**
+ * bi 경계의 값이 바뀌면, 같은 행의 bi+1 select 선택지를 재구성한다.
+ * E/I(bi=4)는 number input이므로 bi < 4 범위만 처리한다.
+ */
+function updateRowConstraints(id, bi, rowIdx, assessId) {
+  const bounds = getBoundaries();
+  const nextBi = bi + 1;
+  // E/I(bi=4)는 number input → 캐스케이드 없음, 또는 bounds 범위 초과 시 종료
+  if (nextBi >= bounds.length || nextBi >= 4) return;
+
+  const curEl = document.getElementById(`${id}-ra-${bi}-${rowIdx}`);
+  if (!curEl) return;
+  const curVal = curEl.value !== '' ? parseFloat(curEl.value) : null;
+  const maxVal = (curVal !== null && curVal > 0) ? curVal : 100;
+
+  const nextEl = document.getElementById(`${id}-ra-${nextBi}-${rowIdx}`);
+  if (!nextEl || nextEl.tagName !== 'SELECT') return;
+
+  // 현재 선택값 기억
+  const prevVal = nextEl.value !== '' ? parseInt(nextEl.value) : null;
+
+  // 선택지 재생성 (5% 단위, maxVal 이하)
+  let optHtml = '<option value="">-</option>';
+  for (let v = 5; v <= Math.min(maxVal, 100); v += 5) {
+    optHtml += `<option value="${v}">${v}</option>`;
+  }
+  nextEl.innerHTML = optHtml;
+
+  // 이전에 선택했던 값이 유효 범위 내이면 유지, 벗어나면 클리어
+  if (prevVal !== null && prevVal >= 5 && prevVal <= maxVal) {
+    nextEl.value = String(prevVal);
+  }
+
+  // 다음 경계로 재귀 캐스케이드
+  updateRowConstraints(id, nextBi, rowIdx, assessId);
+}
+
+/**
+ * 지필평가 한 라운드 전체의 행 제약을 일괄 재적용한다.
+ * (라운드 전환/JSON 복원 후 호출)
+ */
+function updateAllConstraints(assessId, rIdx) {
+  if (assessId === 'perf') return; // 수행평가는 select 없음
+  const id = `${assessId}-r${rIdx}`;
+  for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+    updateRowConstraints(id, 0, rowIdx, assessId); // bi=0에서 시작하면 캐스케이드로 전체 처리
+  }
+}
+
+// ============================================================
+// 과목 유형 전환
+// ============================================================
+function setSubjectType(type) {
+  const newCommon = (type === 'common');
+  if (newCommon === isCommon) return;
+
+  const hasData = ['mid','fin','perf'].some(id => state[id].results !== null);
+  if (hasData && !confirm('과목 유형을 변경하면 입력된 예시 데이터와 계산 결과가 초기화됩니다.\n계속하시겠습니까?')) {
+    document.querySelector(`input[name="subject-type"][value="${isCommon ? 'common' : 'select'}"]`).checked = true;
+    return;
+  }
+
+  isCommon = newCommon;
+  ['mid','fin','perf'].forEach(id => {
+    state[id].results = null;
+    renderRoundTabs(id);
+    document.getElementById(`result-${id}`).innerHTML = '';
+  });
+}
+
+// ============================================================
+// 라운드 생성/관리
+// ============================================================
+function addRound(assessId) {
+  const s = state[assessId];
+  const rIdx = s.rounds.length;
+  s.rounds.push({ idx: rIdx });
+  renderRoundTabs(assessId);
+  switchRound(assessId, rIdx);
+}
+
+function copyRound(assessId, rIdx) {
+  // 현재 라운드 DOM → state 저장 (renderRoundTabs 이전에 반드시 먼저 수행)
+  saveRoundData(assessId, state[assessId].currentRound);
+  const s = state[assessId];
+  const newIdx = s.rounds.length;
+  s.rounds.push({ idx: newIdx });
+
+  // 원본 라운드 데이터 깊은 복사
+  if (s.roundData[rIdx]) {
+    s.roundData[newIdx] = JSON.parse(JSON.stringify(s.roundData[rIdx]));
+  }
+  // 수행평가 행 개수도 복사
+  if (assessId === 'perf' && s.perfRowCounts[rIdx] !== undefined) {
+    s.perfRowCounts[newIdx] = s.perfRowCounts[rIdx];
+  }
+
+  // currentRound를 먼저 변경한 뒤 렌더 → switchRound의 내부 saveRoundData가
+  // 빈 DOM으로 기존 라운드를 덮어쓰는 문제를 방지
+  s.currentRound = newIdx;
+  renderRoundTabs(assessId);
+  restoreRoundData(assessId, newIdx);
+  updateAllConstraints(assessId, newIdx);
+  const errors = highlightRates(assessId, newIdx);
+  showRateWarnBox(assessId, newIdx, errors);
+}
+
+function removeRound(assessId, rIdx) {
+  const s = state[assessId];
+  if (s.rounds.length <= 1) { alert('최소 1개 라운드는 유지해야 합니다.'); return; }
+  s.rounds.splice(rIdx, 1);
+  s.rounds.forEach((r, i) => r.idx = i);
+  if (s.currentRound >= s.rounds.length) s.currentRound = s.rounds.length - 1;
+  renderRoundTabs(assessId);
+  renderRoundTable(assessId, s.currentRound);
+}
+
+function switchRound(assessId, rIdx) {
+  // 현재 라운드 데이터를 state에 저장한 뒤 전환
+  saveRoundData(assessId, state[assessId].currentRound);
+  state[assessId].currentRound = rIdx;
+  renderRoundTabs(assessId);
+  renderRoundTable(assessId, rIdx);
+  restoreRoundData(assessId, rIdx);          // 저장된 값 복원
+  updateAllConstraints(assessId, rIdx);      // select 선택지 제약 재적용
+  const errors = highlightRates(assessId, rIdx);
+  showRateWarnBox(assessId, rIdx, errors);
+}
+
+function renderRoundTabs(assessId) {
+  const s = state[assessId];
+  const container = document.getElementById(`rounds-${assessId}`);
+  let html = '<div class="round-tab-bar">';
+  s.rounds.forEach((r, i) => {
+    const active = (i === s.currentRound) ? 'active' : '';
+    html += `<button class="round-tab-btn ${active}" onclick="switchRound('${assessId}', ${i})">${i+1}라운드`;
+    html += `<button class="btn-round-copy" onclick="copyRound('${assessId}', ${i}); event.stopPropagation();" title="${i+1}라운드 복사">복사</button>`;
+    html += `<button class="btn-round-dl" onclick="downloadRound('${assessId}', ${i}); event.stopPropagation();" title="${i+1}라운드 엑셀 저장">저장</button>`;
+    if (s.rounds.length > 1) html += `<button class="btn-del-round" onclick="removeRound('${assessId}', ${i}); event.stopPropagation();">×</button>`;
+    html += `</button>`;
+  });
+  html += `<button class="btn-add-round" onclick="addRound('${assessId}')">+ 라운드 추가</button>`;
+  html += `<span class="round-label">※ 각 라운드 결과의 평균이 최종 추정분할점수가 됩니다</span>`;
+  html += '</div>';
+  html += `<div id="round-table-${assessId}"></div>`;
+  container.innerHTML = html;
+  renderRoundTable(assessId, s.currentRound);
+}
+
+// ============================================================
+// 지필평가 테이블 렌더링
+// ============================================================
+function renderRoundTable(assessId, rIdx) {
+  if (assessId === 'perf') { renderPerfRoundTable(rIdx); return; }
+  const container = document.getElementById(`round-table-${assessId}`);
+  const id = `${assessId}-r${rIdx}`;
+  const bounds = getBoundaries();
+  const bLen = bounds.length;
+
+  let html = `<table class="input-table"><thead>
+    <tr>
+      <th rowspan="2">유형</th><th rowspan="2">난이도</th><th rowspan="2">배점합</th>
+      <th colspan="${bLen}" class="sub-header">경계별 예상 정답률 (%)</th>
+    </tr>
+    <tr>${bounds.map(b=>`<th class="sub-header">${b}</th>`).join('')}</tr>
+  </thead><tbody>`;
+
+  let lastType = '';
+  WRITTEN_ROWS.forEach((row, rowIdx) => {
+    html += '<tr>';
+    if (row.type !== lastType) {
+      html += `<td class="type-cell" rowspan="3">${row.type}</td>`;
+      lastType = row.type;
+    }
+    html += `<td class="level-cell ${row.cls}">${row.level}</td>`;
+    html += `<td><input type="number" class="score-input" id="${id}-sc-${rowIdx}" min="0" placeholder="0" oninput="liveCalc('${assessId}')"></td>`;
+    bounds.forEach((b, bi) => {
+      if (bi === 4) {
+        // E/I 경계: 1% 단위 number input 유지
+        html += `<td><input type="number" class="score-input rate-input" id="${id}-ra-${bi}-${rowIdx}" min="0" max="100" placeholder="0" oninput="liveCalc('${assessId}')"></td>`;
+      } else {
+        // A/B ~ D/E: 5% 단위 select (앞 경계 값 이하로 선택지 자동 제한)
+        const opts = Array.from({length:20}, (_,i)=>(i+1)*5).map(v=>`<option value="${v}">${v}</option>`).join('');
+        html += `<td><select class="score-input rate-select" id="${id}-ra-${bi}-${rowIdx}" onchange="updateRowConstraints('${id}',${bi},${rowIdx},'${assessId}'); liveCalc('${assessId}')"><option value="">-</option>${opts}</select></td>`;
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += `<tr class="total-row"><td colspan="2">소계</td>
+    <td id="${id}-tot">—</td>
+    ${bounds.map((b,bi)=>`<td id="${id}-res-${bi}">—</td>`).join('')}
+  </tr>`;
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+// 수행평가 테이블 렌더링
+// ============================================================
+function renderPerfRoundTable(rIdx) {
+  const container = document.getElementById('round-table-perf');
+  const id = `perf-r${rIdx}`;
+  const bounds = getBoundaries();
+  const bLen = bounds.length;
+
+  if (!state.perf.perfRowCounts[rIdx]) state.perf.perfRowCounts[rIdx] = 1;
+
+  let html = `<div class="perf-add-row">
+    <button class="btn-add" onclick="addPerfRow(${rIdx})">+ 영역 추가</button>
+  </div>
+  <table class="input-table"><thead>
+    <tr>
+      <th rowspan="2">영역명</th><th rowspan="2">배점합</th>
+      <th colspan="${bLen}" class="sub-header">성취수준별 예상 득점 (점)</th>
+      <th rowspan="2"></th>
+    </tr>
+    <tr>${bounds.map(b=>`<th class="sub-header">${b}</th>`).join('')}</tr>
+  </thead><tbody id="perf-body-${rIdx}">`;
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  for (let i = 0; i < state.perf.perfRowCounts[rIdx]; i++) {
+    appendPerfBodyRow(rIdx, i);
+  }
+}
+
+function appendPerfBodyRow(rIdx, rowIdx, name='', sc='') {
+  const tbody = document.getElementById(`perf-body-${rIdx}`);
+  const id = `perf-r${rIdx}`;
+  const bounds = getBoundaries();
+  const tr = document.createElement('tr');
+  let html = `<td><input type="text" class="score-input" style="width:88px" id="${id}-nm-${rowIdx}" value="${name}" placeholder="영역명" oninput="liveCalc('perf')"></td>`;
+  html += `<td><input type="number" class="score-input" id="${id}-sc-${rowIdx}" value="${sc}" min="0" placeholder="0" oninput="liveCalc('perf')"></td>`;
+  bounds.forEach((b, bi) => {
+    html += `<td><input type="number" class="score-input rate-input" id="${id}-ra-${bi}-${rowIdx}" min="0" step="0.1" placeholder="점" oninput="liveCalc('perf')"></td>`;
+  });
+  html += `<td><button class="btn-del" onclick="delPerfRow(this, ${rIdx})">삭제</button></td>`;
+  tr.innerHTML = html;
+  tbody.appendChild(tr);
+}
+
+function addPerfRow(rIdx) {
+  const count = state.perf.perfRowCounts[rIdx] || 0;
+  appendPerfBodyRow(rIdx, count);
+  state.perf.perfRowCounts[rIdx] = count + 1;
+}
+
+function delPerfRow(btn, rIdx) {
+  btn.closest('tr').remove();
+  if (state.perf.perfRowCounts[rIdx] > 0) state.perf.perfRowCounts[rIdx]--;
+  liveCalc('perf');
+}
+
+// ============================================================
+// 계산 함수
+// ============================================================
+
+// 저장된 state 데이터로 라운드 계산 (비활성 라운드용)
+function calcRoundFromSaved(assessId, rIdx) {
+  const saved = state[assessId].roundData[rIdx];
+  if (!saved) return null;
+  const bounds = getBoundaries();
+  const bLen = bounds.length;
+  const sums = new Array(bLen).fill(0);
+  let total = 0;
+
+  if (saved.type === 'perf') {
+    (saved.rows || []).forEach(row => {
+      const sc = parseFloat(row.sc) || 0;
+      total += sc;
+      (row.rates || []).forEach((rate, bi) => {
+        if (bi < bLen) sums[bi] += parseFloat(rate) || 0;
+      });
+    });
+  } else {
+    (saved.scores || []).forEach((sc_str, rowIdx) => {
+      const sc = parseFloat(sc_str) || 0;
+      total += sc;
+      (saved.rates[rowIdx] || []).forEach((rate, bi) => {
+        if (bi < bLen) sums[bi] += sc * (parseFloat(rate) || 0) / 100;
+      });
+    });
+  }
+
+  const scores = sums.map(s => Math.round(s * 10) / 10);
+  return { total, scores };
+}
+
+function calcRound(assessId, rIdx) {
+  // 현재 표시 중인 라운드가 아니면 저장된 데이터로 계산
+  if (rIdx !== state[assessId].currentRound) {
+    return calcRoundFromSaved(assessId, rIdx);
+  }
+  const id = `${assessId}-r${rIdx}`;
+  const bounds = getBoundaries();
+  const bLen = bounds.length;
+  const sums = new Array(bLen).fill(0);
+  let total = 0;
+
+  if (assessId === 'perf') {
+    const tbody = document.getElementById(`perf-body-${rIdx}`);
+    if (!tbody) return null;
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((tr, rowIdx) => {
+      const scEl = tr.querySelector(`input[id^="${id}-sc-"]`);
+      if (!scEl) return;
+      const sc = parseFloat(scEl.value) || 0;
+      total += sc;
+      bounds.forEach((b, bi) => {
+        const raEl = tr.querySelector(`input[id^="${id}-ra-${bi}-"]`);
+        const ra = parseFloat(raEl?.value) || 0;
+        sums[bi] += ra;
+      });
+    });
+  } else {
+    for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
+      const sc = parseFloat(document.getElementById(`${id}-sc-${rowIdx}`)?.value) || 0;
+      total += sc;
+      bounds.forEach((b, bi) => {
+        const ra = parseFloat(document.getElementById(`${id}-ra-${bi}-${rowIdx}`)?.value) || 0;
+        sums[bi] += sc * ra / 100;
+      });
+    }
+  }
+
+  const scores = sums.map(s => Math.round(s * 10) / 10);
+
+  const totEl = document.getElementById(`${id}-tot`);
+  if (totEl) totEl.textContent = total + '점';
+  bounds.forEach((b, bi) => {
+    const el = document.getElementById(`${id}-res-${bi}`);
+    if (el) el.textContent = scores[bi] + '점';
+  });
+
+  return { total, scores };
+}
+
+function calcAllRounds(assessId) {
+  const s = state[assessId];
+  const roundResults = [];
+  s.rounds.forEach((r, rIdx) => {
+    const res = calcRound(assessId, rIdx);
+    if (res && res.total > 0) roundResults.push({ rIdx, ...res });
+  });
+  if (roundResults.length === 0) return null;
+
+  const bLen = getBoundaries().length;
+  const totalAvg = roundResults.reduce((a, r) => a + r.total, 0) / roundResults.length;
+  const scoresAvg = Array.from({length: bLen}, (_, bi) =>
+    Math.round(roundResults.reduce((a, r) => a + (r.scores[bi] || 0), 0) / roundResults.length * 10) / 10
+  );
+  return { total: Math.round(totalAvg * 10) / 10, scores: scoresAvg, rounds: roundResults };
+}
+
+function liveCalc(assessId) {
+  const rIdx = state[assessId].currentRound;
+  saveRoundData(assessId, rIdx);             // 입력 즉시 저장
+  const errors = highlightRates(assessId, rIdx);
+  showRateWarnBox(assessId, rIdx, errors);
+  const res = calcAllRounds(assessId);
+  state[assessId].results = res;
+  const container = document.getElementById(`result-${assessId}`);
+  if (container && container.innerHTML !== '') {
+    renderResultCards(assessId, res, `result-${assessId}`, false);
+  }
+}
+
+function calcAssessment(assessId) {
+  // 모든 라운드 검사
+  let allErrors = [];
+  state[assessId].rounds.forEach((r, rIdx) => {
+    const errs = highlightRates(assessId, rIdx);
+    if (rIdx === state[assessId].currentRound) showRateWarnBox(assessId, rIdx, errs);
+    allErrors = allErrors.concat(errs.map(e => ({...e, round: rIdx + 1})));
+  });
+  const res = calcAllRounds(assessId);
+  state[assessId].results = res;
+  renderResultCards(assessId, res, `result-${assessId}`, true, allErrors);
+}
+
+function calcPerfAssessment() { calcAssessment('perf'); }
+
+function resetAssessment(assessId) {
+  state[assessId].rounds = [];
+  state[assessId].currentRound = 0;
+  state[assessId].results = null;
+  state[assessId].roundData = {};
+  if (assessId === 'perf') state.perf.perfRowCounts = [];
+  initAssessment(assessId);
+  document.getElementById(`result-${assessId}`).innerHTML = '';
+}
+
+function resetPerfAssessment() { resetAssessment('perf'); }
+
+// ============================================================
+// 학기말 합산
+// ============================================================
+function calcSemester() {
+  const wMid  = (parseFloat(document.getElementById('w-mid').value)  || 0) / 100;
+  const wFin  = (parseFloat(document.getElementById('w-fin').value)  || 0) / 100;
+  const wPerf = (parseFloat(document.getElementById('w-perf').value) || 0) / 100;
+  const wSum  = Math.round((wMid + wFin + wPerf) * 1000) / 1000;
+
+  if (Math.abs(wSum - 1.0) > 0.005) {
+    alert('가중치 합계가 100%가 되어야 합니다.\n현재: ' + Math.round(wSum * 100) + '%');
+    return;
+  }
+
+  const rMid  = state.mid.results;
+  const rFin  = state.fin.results;
+  const rPerf = state.perf.results;
+
+  const bounds = getBoundaries();
+  const merged = bounds.map((b, bi) => {
+    let s = 0;
+    if (rMid  && rMid.total  > 0) s += (rMid.scores[bi]  || 0) * wMid;
+    if (rFin  && rFin.total  > 0) s += (rFin.scores[bi]  || 0) * wFin;
+    if (rPerf && rPerf.total > 0) s += (rPerf.scores[bi] || 0) * wPerf;
+    return Math.round(s * 10) / 10;
+  });
+
+  const totalMax = ((rMid  && rMid.total  > 0) ? rMid.total  * wMid  : 0)
+                 + ((rFin  && rFin.total  > 0) ? rFin.total  * wFin  : 0)
+                 + ((rPerf && rPerf.total > 0) ? rPerf.total * wPerf : 0);
+
+  renderSemesterResult({ scores: merged, total: Math.round(totalMax * 10) / 10 });
+}
+
+function checkWeightSum() {
+  const sum = (parseFloat(document.getElementById('w-mid').value)  || 0)
+            + (parseFloat(document.getElementById('w-fin').value)  || 0)
+            + (parseFloat(document.getElementById('w-perf').value) || 0);
+  const el = document.getElementById('weight-sum-display');
+  el.textContent = sum + '%';
+  el.className = 'weight-sum ' + (Math.abs(sum - 100) < 0.1 ? 'weight-ok' : 'weight-ng');
+}
+
+// ============================================================
+// 결과 렌더링
+// ============================================================
+function renderResultCards(assessId, res, containerId, showRounds, allErrors) {
+  if (!res) {
+    document.getElementById(containerId).innerHTML = '<p style="color:#888; padding:10px;">데이터를 입력한 후 계산하세요.</p>';
+    return;
+  }
+  const { total, scores, rounds } = res;
+  const bounds = getBoundaries();
+  const container = document.getElementById(containerId);
+
+  let html = '';
+  if (allErrors && allErrors.length > 0) {
+    const boundary = allErrors.filter(e => e.kind === '경계역전')
+      .map(e => `• [${e.round}라운드 / ${e.row}] ${e.boundary} 경계역전`);
+    const diffic = allErrors.filter(e => e.kind === '난이도역전')
+      .map(e => `• [${e.round}라운드 / ${e.row} / ${e.boundary}] 난이도역전`);
+    const step5 = allErrors.filter(e => e.kind === '5%급간오류')
+      .map(e => `• [${e.round}라운드 / ${e.row} / ${e.boundary}] ${e.detail || '급간 오류'}`);
+    const hasRevErr = boundary.length || diffic.length;
+    let warn = '';
+    if (hasRevErr) {
+      warn += '<b>주의: 역전이 있는 채로 계산되었습니다.</b> 입력값을 확인하세요.<br>';
+      if (boundary.length) warn += `<u>경계 역전</u><br>${boundary.join('<br>')}<br>`;
+      if (diffic.length)   warn += `<u>난이도 역전</u><br>${diffic.join('<br>')}`;
+    }
+    if (step5.length) {
+      warn += `<div class="warn5-section"><b>급간 오류</b> (A~D: 5% 단위 · E/I: 1% 단위)<br>${step5.join('<br>')}</div>`;
+    }
+    html += `<div class="rate-warn-box">${warn}</div>`;
+  }
+  html += `<div class="result-title">추정분할점수 결과 (${rounds.length}개 라운드 평균, 총점 기준: ${total}점)</div>`;
+  html += '<div class="result-cards">';
+  bounds.forEach((b, bi) => {
+    html += `<div class="result-card ${CARD_CLS[bi]}">
+      <div class="boundary">${b} 경계</div>
+      <div class="score">${scores[bi]}<span>점</span></div>
+    </div>`;
+  });
+  html += '</div>';
+  html += renderVizBar(total, scores);
+  html += buildGapWarnHtml(bounds, scores);
+
+  if (showRounds && rounds.length >= 2) {
+    html += `<div class="round-compare">
+      <div class="result-title" style="margin-top:16px">라운드별 추정분할점수 비교</div>
+      <table class="compare-table"><thead><tr>
+        <th>라운드</th>
+        ${bounds.map(b=>`<th>${b}</th>`).join('')}
+        <th>총점</th>
+      </tr></thead><tbody>`;
+    rounds.forEach(r => {
+      html += `<tr class="round-row"><td>${r.rIdx+1}라운드</td>
+        ${bounds.map((b,bi)=>`<td>${r.scores[bi]||0}점</td>`).join('')}
+        <td>${r.total}점</td></tr>`;
+    });
+    html += `<tr class="avg-row"><td><b>평균 (최종)</b></td>
+      ${scores.map(s=>`<td><b>${s}점</b></td>`).join('')}
+      <td><b>${total}점</b></td></tr>`;
+    html += '</tbody></table></div>';
+  }
+
+  container.innerHTML = html;
+}
+
+function renderSemesterResult(res) {
+  const container = document.getElementById('result-semester');
+  const { total, scores } = res;
+  const bounds = getBoundaries();
+
+  let html = `<div class="result-title">학기말 최종 추정분할점수 (환산 총점: ${total}점 기준)</div>`;
+  html += '<div class="result-cards">';
+  bounds.forEach((b, bi) => {
+    html += `<div class="result-card ${CARD_CLS[bi]}">
+      <div class="boundary">${b} 경계</div>
+      <div class="score">${scores[bi]}<span>점</span></div>
+    </div>`;
+  });
+  html += '</div>';
+  html += renderVizBar(total, scores);
+  html += buildGapWarnHtml(bounds, scores);
+  container.innerHTML = html;
+}
+
+function buildGapWarnHtml(bounds, scores) {
+  const warnings = [];
+  for (let i = 0; i < scores.length - 1; i++) {
+    const gap = scores[i] - scores[i + 1];
+    if (gap >= 20) {
+      warnings.push(`• <strong>${bounds[i]}</strong> 경계(${scores[i]}점) ↔ <strong>${bounds[i+1]}</strong> 경계(${scores[i+1]}점) : 급간차이 <strong>${gap}점</strong>`);
+    }
+  }
+  if (warnings.length === 0) return '';
+  return `<div class="gap-warn-box"><strong>급간차이 20점 이상 경고</strong> — 인접 경계점수 간 차이가 너무 큽니다. 입력값을 검토하세요.<br>${warnings.join('<br>')}</div>`;
+}
+
+function renderVizBar(total, scores) {
+  if (total <= 0) return '';
+  const segLabels = ['A','B','C','D','E','I'];
+  const segCls    = ['seg-a','seg-b','seg-c','seg-d','seg-e','seg-i'];
+  const numSegs   = scores.length + 1;  // 4경계→5구간, 5경계→6구간
+
+  let html = '<div class="viz-bar-wrapper"><div class="viz-bar-label">성취수준별 점수 구간 시각화</div><div class="viz-bar-track">';
+  for (let i = 0; i < numSegs; i++) {
+    const from = (i === numSegs - 1) ? 0 : scores[i];
+    const to   = (i === 0) ? total : scores[i - 1];
+    const w = (to - from) / total * 100;
+    const l = from / total * 100;
+    if (w < 0.1) continue;
+    html += `<div class="viz-seg ${segCls[i]}" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%;">${segLabels[i]}</div>`;
+  }
+  html += '</div><div class="viz-markers">';
+  scores.forEach(s => {
+    const pct = s / total * 100;
+    html += `<div class="viz-marker" style="left:${pct.toFixed(2)}%;">${s}</div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// ============================================================
+// 엑셀 헬퍼 함수 (공유)
+// ============================================================
+function xlsColWidths(ws, widths) {
+  ws['!cols'] = widths.map(w => ({ wch: w }));
+}
+
+function xlsToday() {
+  return new Date().toLocaleDateString('ko-KR');
+}
+
+function xlsFileName(parts) {
+  return parts.join('_') + '.xlsx';
+}
+
+function xlsCheckLib() {
+  if (typeof XLSX === 'undefined') {
+    alert('엑셀 라이브러리를 불러오지 못했습니다.\n인터넷 연결 후 다시 시도하세요.');
+    return false;
+  }
+  return true;
+}
+
+// 저장된 데이터 + calcRoundFromSaved로 단일 라운드 행(row array) 생성 — 지필
+function xlsWrittenRoundRows(assessId, rIdx, title) {
+  const bounds = getBoundaries();
+  const saved  = state[assessId].roundData[rIdx];
+  const res    = calcRoundFromSaved(assessId, rIdx) || { scores: Array(bounds.length).fill('') };
+  const rateHdrs  = bounds.map(b => `${b} 정답률(%)`);
+  const scoreHdrs = bounds.map(b => `${b} 분할점수`);
+  const rowMeta   = [
+    ['선택형','쉬움'],['선택형','보통'],['선택형','어려움'],
+    ['서술형','쉬움'],['서술형','보통'],['서술형','어려움'],
+  ];
+
+  const rows = [];
+  if (title) rows.push([title, '', '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
+  rows.push([`▶ ${rIdx+1}라운드 입력값`]);
+  rows.push(['유형', '난이도', '배점합', ...rateHdrs]);
+
+  let totalSc = 0;
+  if (saved && saved.type === 'written') {
+    rowMeta.forEach(([type, level], ri) => {
+      const sc = parseFloat(saved.scores[ri]) || 0;
+      totalSc += sc;
+      rows.push([type, level, sc, ...(saved.rates[ri] || []).slice(0, bounds.length).map(v => parseFloat(v) || '')]);
+    });
+  }
+  rows.push(['소계', '', totalSc, ...res.scores]);
+  return rows;
+}
+
+// 저장된 데이터 + calcRoundFromSaved로 단일 라운드 행 생성 — 수행
+function xlsPerfRoundRows(rIdx, title) {
+  const bounds = getBoundaries();
+  const saved  = state.perf.roundData[rIdx];
+  const res    = calcRoundFromSaved('perf', rIdx) || { scores: Array(bounds.length).fill('') };
+  const rateHdrs = bounds.map(b => `${b} 정답률(%)`);
+
+  const rows = [];
+  if (title) rows.push([title, '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
+  rows.push([`▶ ${rIdx+1}라운드 입력값`]);
+  rows.push(['영역명', '배점합', ...rateHdrs]);
+
+  let totalSc = 0;
+  if (saved && saved.type === 'perf') {
+    saved.rows.forEach(row => {
+      const sc = parseFloat(row.sc) || 0;
+      totalSc += sc;
+      rows.push([row.name, sc, ...row.rates.slice(0, bounds.length).map(v => parseFloat(v) || '')]);
+    });
+  }
+  rows.push(['소계', totalSc, ...res.scores]);
+  return rows;
+}
+
+// 평가 전체 시트 (모든 라운드 + 결과 비교) — 지필
+function xlsWrittenSheet(assessId, title) {
+  const bounds    = getBoundaries();
+  const s         = state[assessId];
+  const scoreHdrs = bounds.map(b => `${b} 분할점수`);
+  const rows      = [];
+
+  rows.push([title, '', '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
+
+  s.rounds.forEach((r, rIdx) => {
+    rows.push(...xlsWrittenRoundRows(assessId, rIdx));
+    rows.push([]);
+  });
+
+  if (s.results) {
+    rows.push(['▶ 라운드별 추정분할점수 비교']);
+    rows.push(['라운드', '총점', ...scoreHdrs]);
+    s.results.rounds.forEach(r => rows.push([`${r.rIdx+1}라운드`, r.total, ...r.scores]));
+    rows.push(['★ 평균(최종)', s.results.total, ...s.results.scores]);
+  } else {
+    rows.push(['※ 계산하기를 먼저 실행하세요.']);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  xlsColWidths(ws, [12, 8, 8, ...Array(bounds.length).fill(14)]);
+  return ws;
+}
+
+// 평가 전체 시트 — 수행
+function xlsPerfSheet() {
+  const bounds    = getBoundaries();
+  const s         = state.perf;
+  const scoreHdrs = bounds.map(b => `${b} 분할점수`);
+  const rows      = [];
+
+  rows.push(['수행평가', '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
+
+  s.rounds.forEach((r, rIdx) => {
+    rows.push(...xlsPerfRoundRows(rIdx));
+    rows.push([]);
+  });
+
+  if (s.results) {
+    rows.push(['▶ 라운드별 추정분할점수 비교']);
+    rows.push(['라운드', '총점', ...scoreHdrs]);
+    s.results.rounds.forEach(r => rows.push([`${r.rIdx+1}라운드`, r.total, ...r.scores]));
+    rows.push(['★ 평균(최종)', s.results.total, ...s.results.scores]);
+  } else {
+    rows.push(['※ 계산하기를 먼저 실행하세요.']);
+  }
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  xlsColWidths(ws, [14, 8, ...Array(bounds.length).fill(14)]);
+  return ws;
+}
+
+// 학기말 합산 시트
+function xlsSemSheet() {
+  const bounds    = getBoundaries();
+  const scoreHdrs = bounds.map(b => `${b} 분할점수`);
+  const wMid  = parseFloat(document.getElementById('w-mid').value)  || 0;
+  const wFin  = parseFloat(document.getElementById('w-fin').value)  || 0;
+  const wPerf = parseFloat(document.getElementById('w-perf').value) || 0;
+  const rMid  = state.mid.results;
+  const rFin  = state.fin.results;
+  const rPerf = state.perf.results;
+  const rows  = [];
+
+  rows.push(['학기말 최종 추정분할점수', '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
+  rows.push(['구분', '가중치(%)', '총점', ...scoreHdrs]);
+  if (rMid)  rows.push(['중간고사', wMid,  rMid.total,  ...rMid.scores]);
+  if (rFin)  rows.push(['기말고사', wFin,  rFin.total,  ...rFin.scores]);
+  if (rPerf) rows.push(['수행평가', wPerf, rPerf.total, ...rPerf.scores]);
+  rows.push([]);
+
+  const merged = bounds.map((b, bi) => {
+    let s = 0;
+    if (rMid  && rMid.total  > 0) s += (rMid.scores[bi]  || 0) * wMid  / 100;
+    if (rFin  && rFin.total  > 0) s += (rFin.scores[bi]  || 0) * wFin  / 100;
+    if (rPerf && rPerf.total > 0) s += (rPerf.scores[bi] || 0) * wPerf / 100;
+    return Math.round(s * 10) / 10;
+  });
+  const totalMax = ((rMid  && rMid.total  > 0) ? rMid.total  * wMid  / 100 : 0)
+                 + ((rFin  && rFin.total  > 0) ? rFin.total  * wFin  / 100 : 0)
+                 + ((rPerf && rPerf.total > 0) ? rPerf.total * wPerf / 100 : 0);
+  rows.push(['★ 최종(가중평균)', wMid+wFin+wPerf, Math.round(totalMax*10)/10, ...merged]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  xlsColWidths(ws, [16, 10, 10, ...Array(bounds.length).fill(14)]);
+  return ws;
+}
+
+// ============================================================
+// 다운로드 진입점
+// ============================================================
+
+// 라운드 단건 다운로드
+function downloadRound(assessId, rIdx) {
+  if (!xlsCheckLib()) return;
+  saveRoundData(assessId, state[assessId].currentRound);
+
+  const titles = { mid:'중간고사', fin:'기말고사', perf:'수행평가' };
+  const label  = `${titles[assessId]} ${rIdx+1}라운드`;
+  const bounds = getBoundaries();
+  const wb = XLSX.utils.book_new();
+
+  const rows = (assessId === 'perf')
+    ? xlsPerfRoundRows(rIdx, label)
+    : xlsWrittenRoundRows(assessId, rIdx, label);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  xlsColWidths(ws, assessId === 'perf'
+    ? [14, 8, ...Array(bounds.length).fill(14)]
+    : [12, 8, 8, ...Array(bounds.length).fill(14)]);
+  XLSX.utils.book_append_sheet(wb, ws, `${rIdx+1}라운드`);
+  XLSX.writeFile(wb, xlsFileName([titles[assessId], `${rIdx+1}라운드`, xlsToday().replace(/\./g,'').replace(/ /g,'')]));
+}
+
+// 평가 전체 다운로드
+function downloadAssessment(assessId) {
+  if (!xlsCheckLib()) return;
+  saveRoundData(assessId, state[assessId].currentRound);
+
+  const titles = { mid:'중간고사', fin:'기말고사', perf:'수행평가' };
+  const wb = XLSX.utils.book_new();
+  const ws = (assessId === 'perf') ? xlsPerfSheet() : xlsWrittenSheet(assessId, titles[assessId]);
+  XLSX.utils.book_append_sheet(wb, ws, titles[assessId]);
+  XLSX.writeFile(wb, xlsFileName([titles[assessId], '추정분할점수', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
+}
+
+// 전체(학기말) 다운로드
+function exportToExcel() {
+  if (!xlsCheckLib()) return;
+  ['mid','fin','perf'].forEach(id => saveRoundData(id, state[id].currentRound));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, xlsWrittenSheet('mid', '중간고사'), '중간고사');
+  XLSX.utils.book_append_sheet(wb, xlsWrittenSheet('fin', '기말고사'), '기말고사');
+  XLSX.utils.book_append_sheet(wb, xlsPerfSheet(), '수행평가');
+  XLSX.utils.book_append_sheet(wb, xlsSemSheet(), '학기말합산');
+  XLSX.writeFile(wb, xlsFileName(['추정분할점수_전체', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
+}
+
+// ============================================================
+// JSON 저장 / 불러오기
+// ============================================================
+function exportJSON() {
+  // 현재 라운드 입력값 state에 저장
+  ['mid', 'fin', 'perf'].forEach(id => saveRoundData(id, state[id].currentRound));
+
+  const today = new Date().toLocaleDateString('ko-KR').replace(/\. /g, '-').replace('.', '');
+  const data = {
+    version: 1,
+    isCommon,
+    weights: {
+      mid:  document.getElementById('w-mid').value,
+      fin:  document.getElementById('w-fin').value,
+      perf: document.getElementById('w-perf').value,
+    },
+    mid: {
+      rounds: state.mid.rounds, currentRound: state.mid.currentRound,
+      roundData: state.mid.roundData,
+    },
+    fin: {
+      rounds: state.fin.rounds, currentRound: state.fin.currentRound,
+      roundData: state.fin.roundData,
+    },
+    perf: {
+      rounds: state.perf.rounds, currentRound: state.perf.currentRound,
+      roundData: state.perf.roundData, perfRowCounts: state.perf.perfRowCounts,
+    },
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `추정분할점수_${today}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON() {
+  const input  = document.createElement('input');
+  input.type   = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+
+        // 과목 유형 복원
+        isCommon = d.isCommon ?? true;
+        document.querySelector(`input[name="subject-type"][value="${isCommon ? 'common' : 'select'}"]`).checked = true;
+
+        // 가중치 복원
+        if (d.weights) {
+          setV('w-mid',  d.weights.mid);
+          setV('w-fin',  d.weights.fin);
+          setV('w-perf', d.weights.perf);
+          checkWeightSum();
+        }
+
+        // 각 평가 복원
+        ['mid', 'fin', 'perf'].forEach(id => {
+          const s = d[id];
+          if (!s) return;
+          state[id].rounds       = (s.rounds && s.rounds.length > 0) ? s.rounds : [{ idx: 0 }];
+          state[id].currentRound = s.currentRound || 0;
+          state[id].roundData    = s.roundData || {};
+          state[id].results      = null;
+          if (id === 'perf') state.perf.perfRowCounts = s.perfRowCounts || [1];
+
+          // DOM 재렌더링 → 저장 데이터 복원
+          renderRoundTabs(id);
+          restoreRoundData(id, state[id].currentRound);
+          updateAllConstraints(id, state[id].currentRound);   // select 제약 재적용
+          const errors = highlightRates(id, state[id].currentRound);
+          showRateWarnBox(id, state[id].currentRound, errors);
+          document.getElementById(`result-${id}`).innerHTML = '';
+        });
+
+        alert('✅ 데이터를 불러왔습니다.');
+      } catch (err) {
+        alert('파일 읽기 오류: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ============================================================
+// 메인 탭 전환
+// ============================================================
+function showMainTab(name, btn) {
+  document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============================================================
+// 초기화
+// ============================================================
+function initAssessment(assessId) {
+  state[assessId].rounds = [{ idx: 0 }];
+  state[assessId].currentRound = 0;
+  if (assessId === 'perf') state.perf.perfRowCounts = [1];
+  renderRoundTabs(assessId);
+}
+
+function setV(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+(function init() {
+  ['mid', 'fin', 'perf'].forEach(id => initAssessment(id));
+  checkWeightSum();
+
+  // -------------------------------------------------------
+  // 중간고사 1라운드 — 배점합 전체 + 정답률은 선택형 쉬움·서술형 쉬움만 예시
+  // 정답률은 5% 급간(5의 배수)으로 입력해야 합니다.
+  // -------------------------------------------------------
+  // 배점합만 (전 행)
+  [21, 34.5, 16.5, 12, 10, 6].forEach((sc, ri) => setV(`mid-r0-sc-${ri}`, sc));
+  // 선택형 쉬움(row0) 정답률 예시: A/B=90, B/C=75, C/D=60, D/E=45, E/I=30
+  [90, 75, 60, 45, 30].forEach((v, bi) => setV(`mid-r0-ra-${bi}-0`, v));
+  // 서술형 쉬움(row3) 정답률 예시: A/B=85, B/C=70, C/D=55, D/E=40, E/I=25
+  [85, 70, 55, 40, 25].forEach((v, bi) => setV(`mid-r0-ra-${bi}-3`, v));
+  updateAllConstraints('mid', 0);   // select 선택지 제약 초기 적용
+
+  // -------------------------------------------------------
+  // 기말고사 1라운드 — 배점합 전체 + 선택형 쉬움만 정답률 예시
+  // -------------------------------------------------------
+  [18, 30, 18, 14, 12, 8].forEach((sc, ri) => setV(`fin-r0-sc-${ri}`, sc));
+  [90, 75, 60, 45, 30].forEach((v, bi) => setV(`fin-r0-ra-${bi}-0`, v));
+  [85, 70, 55, 40, 25].forEach((v, bi) => setV(`fin-r0-ra-${bi}-3`, v));
+  updateAllConstraints('fin', 0);   // select 선택지 제약 초기 적용
+
+  // -------------------------------------------------------
+  // 수행평가 1라운드 — 영역명·배점합만 (정답률은 직접 입력)
+  // -------------------------------------------------------
+  setV('perf-r0-nm-0', '구술발표');
+  setV('perf-r0-sc-0', 15);
+  addPerfRow(0);
+  setV('perf-r0-nm-1', '보고서');
+  setV('perf-r0-sc-1', 5);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,4699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>목표 성취수준 기반 분할점수 시뮬레이터</title>
+<style>
+  :root {
+    --ink: #1f2933;
+    --muted: #667085;
+    --line: #d9e2ec;
+    --soft: #f4f7fb;
+    --paper: #ffffff;
+    --navy: #26364d;
+    --teal: #147d7e;
+    --teal-dark: #0f5f60;
+    --violet: #8555a0;
+    --amber: #f59e0b;
+    --red: #c2410c;
+    --green: #1f7a4d;
+    --blue: #2563eb;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #eef3f7;
+    color: var(--ink);
+    font-family: "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  button, input, select {
+    font-family: inherit;
+  }
+
+  .app-header {
+    background: linear-gradient(135deg, #26364d 0%, #147d7e 100%);
+    color: #fff;
+    padding: 18px 24px;
+  }
+
+  .app-header h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 0;
+  }
+
+  .app-header .sub {
+    color: #d7f1f1;
+    margin-top: 5px;
+    font-size: 13px;
+  }
+
+  .top-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 2px 10px rgba(31, 41, 51, 0.06);
+  }
+
+  .top-nav-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 9px 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .top-nav-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    margin-right: 2px;
+  }
+
+  .top-nav-btn {
+    min-height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--navy);
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .top-nav-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal-dark);
+  }
+
+  .top-nav-btn.active {
+    border-color: var(--teal);
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .workspace {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+
+  .app-page.is-hidden {
+    display: none;
+  }
+
+  .page-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .page-step-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 6px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  button.page-step-pill {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .page-step-pill.active {
+    border-color: var(--teal);
+    color: var(--teal-dark);
+    background: #f2fbfb;
+  }
+
+  .setup-shell {
+    display: grid;
+    gap: 12px;
+  }
+
+  .setup-head-actions,
+  .setup-actions,
+  .page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .page-actions .spacer {
+    flex: 1 1 auto;
+  }
+
+  .setup-actions {
+    justify-content: space-between;
+  }
+
+  .setup-stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .setup-item-input {
+    width: 82px;
+    text-align: center;
+  }
+
+  .setup-score-input {
+    width: 82px;
+  }
+
+  .blueprint-summary-row {
+    background: #fff;
+  }
+
+  #simulator-page.view-rates .result-panel,
+  #simulator-page.view-rates aside.stack {
+    display: none;
+  }
+
+  #simulator-page.view-rates .layout {
+    grid-template-columns: 1fr;
+  }
+
+  #simulator-page.view-results .rate-panel {
+    display: none;
+  }
+
+  #simulator-page.view-results .layout {
+    grid-template-columns: minmax(480px, 0.9fr) minmax(520px, 1.1fr);
+  }
+
+  .target-guide-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .guide-note {
+    display: grid;
+    gap: 8px;
+    color: #275a5b;
+    font-size: 13px;
+  }
+
+  .guide-note p {
+    margin: 0;
+  }
+
+  .level-guide-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .level-guide-item {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 9px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px;
+    background: #fbfdff;
+  }
+
+  .level-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 900;
+  }
+
+  .level-guide-item strong {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--navy);
+  }
+
+  .level-guide-item span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  #target-level-guide {
+    scroll-margin-top: 68px;
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  .toolbar .spacer { flex: 1 1 auto; }
+
+  .persistence-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff7d6;
+    border: 1px solid #fde68a;
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    color: #92400e;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+
+  .subject-type-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: #fff8e1;
+    border: 1px solid #fbbf24;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  .subject-type-bar strong {
+    color: var(--navy);
+  }
+
+  .subject-type-bar label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: #fff;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(560px, 1.35fr) minmax(420px, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+    background: #f8fafc;
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    color: var(--navy);
+  }
+
+  .step {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: var(--teal);
+    color: #fff;
+    font-size: 12px;
+  }
+
+  .panel-body {
+    padding: 12px;
+  }
+
+  .stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+  }
+
+  th {
+    background: #e9f1f6;
+    color: #243447;
+    font-weight: 800;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  th, td {
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    padding: 7px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  th:last-child, td:last-child { border-right: 0; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: #f8fbfd; }
+
+  .left { text-align: left; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tight { width: 1%; white-space: nowrap; }
+
+  input, select {
+    height: 32px;
+    border: 1px solid #bac7d5;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    padding: 4px 7px;
+    font-size: 13px;
+  }
+
+  input:focus, select:focus {
+    outline: 2px solid rgba(20, 125, 126, 0.18);
+    border-color: var(--teal);
+  }
+
+  input[type="number"] {
+    text-align: right;
+  }
+
+  .items-input { width: 130px; }
+  .score-input { width: 82px; }
+  .rate-input {
+    width: 58px;
+    height: 30px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .category-rate-input {
+    width: 62px;
+    height: 30px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .category-rate-select {
+    width: 64px;
+    height: 30px;
+    border: 1px solid #bac7d5;
+    border-radius: 6px;
+    background: #fff;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .category-rate-select.manual {
+    border-color: var(--amber);
+    background: #fff7e6;
+    font-weight: 800;
+  }
+
+  .category-rate-select.auto {
+    border-color: #b7c4d3;
+    background: #f8fafc;
+    color: #475467;
+  }
+
+  .category-rate-free {
+    width: 64px;
+    height: 30px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .category-rate-free.manual {
+    border-color: var(--amber);
+    background: #fff7e6;
+    font-weight: 800;
+  }
+
+  .category-rate-free.auto {
+    border-color: #b7c4d3;
+    background: #f8fafc;
+    color: #475467;
+  }
+
+  .category-rate-select.error,
+  .category-rate-free.error {
+    border-color: var(--red);
+    background: #fff1eb;
+  }
+
+  .rate-cell {
+    position: relative;
+    min-width: 78px;
+  }
+
+  .order-mark {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: var(--amber);
+    color: #111827;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1px solid #b45309;
+  }
+
+  .rate-input.manual {
+    border-color: var(--amber);
+    background: #fff7e6;
+    font-weight: 700;
+  }
+
+  .category-rate-input.manual {
+    border-color: var(--violet);
+    background: #f7effb;
+    font-weight: 700;
+  }
+
+  .rate-input.error {
+    border-color: var(--red);
+    background: #fff1eb;
+  }
+
+  .btn {
+    min-height: 34px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 7px 11px;
+    background: #fff;
+    color: var(--navy);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .btn:hover { filter: brightness(0.97); }
+  .btn.primary { background: var(--teal); color: #fff; }
+  .btn.secondary { border-color: var(--teal); color: var(--teal-dark); }
+  .btn.dark { background: var(--navy); color: #fff; }
+  .btn.warn { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+  .btn.danger { border-color: #f1a29a; color: #b42318; background: #fff; }
+  .btn.small {
+    min-height: 28px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .metric-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .metric {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 11px;
+    background: #fbfdff;
+  }
+
+  .metric .label {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+
+  .metric .value {
+    color: var(--navy);
+    font-size: 22px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .result-card {
+    display: grid;
+    grid-template-columns: 72px 1fr 90px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .boundary {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    height: 30px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 900;
+    background: var(--navy);
+  }
+
+  .score-big {
+    text-align: right;
+    font-size: 23px;
+    font-weight: 900;
+    color: var(--teal-dark);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar {
+    position: relative;
+    height: 15px;
+    border-radius: 999px;
+    background: #edf2f7;
+    overflow: hidden;
+  }
+
+  .bar span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--w, 0%);
+    background: linear-gradient(90deg, var(--teal), var(--blue));
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 22px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #eef2ff;
+    color: #3730a3;
+  }
+
+  .tag.easy { background: #e7f8ef; color: #166534; }
+  .tag.medium { background: #fff7d6; color: #92400e; }
+  .tag.hard { background: #ffe9e3; color: #9a3412; }
+  .tag.manual { background: #fff0c2; color: #92400e; }
+  .tag.auto { background: #e9f1f6; color: #475467; }
+
+  .notice {
+    border: 1px solid #c9e7e7;
+    border-left: 4px solid var(--teal);
+    border-radius: 8px;
+    padding: 9px 11px;
+    color: #275a5b;
+    background: #f2fbfb;
+    font-size: 13px;
+  }
+
+  .inline-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .inline-field input,
+  .inline-field select {
+    min-width: 118px;
+  }
+
+  .aggregate-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .aggregate-status {
+    display: grid;
+    gap: 4px;
+  }
+
+  .aggregate-values {
+    max-width: 260px;
+    white-space: normal;
+    line-height: 1.35;
+  }
+
+  .aggregate-empty {
+    color: var(--muted);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .semester-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .semester-score-input,
+  .semester-weight-input {
+    width: 70px;
+    height: 30px;
+    font-size: 12px;
+    text-align: right;
+  }
+
+  .semester-weight-ok {
+    color: var(--green);
+    font-weight: 900;
+  }
+
+  .semester-weight-ng {
+    color: var(--red);
+    font-weight: 900;
+  }
+
+  .guide-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.46);
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+
+  .guide-overlay.open { display: flex; }
+
+  .guide-dialog {
+    width: min(760px, 100%);
+    max-height: min(82vh, 760px);
+    overflow: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    border: 1px solid #d6dee8;
+  }
+
+  .guide-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 16px;
+    background: var(--navy);
+    color: #fff;
+  }
+
+  .guide-head h2 {
+    margin: 0;
+    font-size: 17px;
+    letter-spacing: 0;
+  }
+
+  .guide-body {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .guide-body p { margin: 0; }
+
+  .guide-steps {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .guide-steps li {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 9px;
+    align-items: start;
+    padding: 9px;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  .guide-num {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--teal);
+    color: #fff;
+    font-weight: 900;
+    font-size: 12px;
+  }
+
+  .guide-step-title {
+    font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+
+  .guide-step-desc {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .guide-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+
+  .guide-close {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+    padding: 0 4px;
+  }
+
+  .warn-box {
+    display: none;
+    border: 1px solid #fed7aa;
+    border-left: 4px solid var(--red);
+    border-radius: 8px;
+    padding: 9px 11px;
+    color: #9a3412;
+    background: #fff7ed;
+    font-size: 13px;
+  }
+
+  .warn-box.show { display: block; }
+
+  .footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .footer-actions .spacer {
+    flex: 1 1 auto;
+  }
+
+  .hidden-file {
+    display: none;
+  }
+
+  .matrix-scroll {
+    max-height: 520px;
+    overflow: auto;
+  }
+
+  .category-rate-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+
+  #category-rate-table {
+    table-layout: fixed;
+    font-size: 12px;
+  }
+
+  #category-rate-table th,
+  #category-rate-table td {
+    padding: 4px 5px;
+    line-height: 1.25;
+  }
+
+  #category-rate-table th {
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  #category-rate-table th:nth-child(1),
+  #category-rate-table td:nth-child(1) { width: 8%; }
+
+  #category-rate-table th:nth-child(2),
+  #category-rate-table td:nth-child(2) { width: 7%; }
+
+  #category-rate-table th:nth-child(3),
+  #category-rate-table td:nth-child(3) { width: 13%; }
+
+  #category-rate-table th:nth-child(4),
+  #category-rate-table td:nth-child(4) { width: 6%; }
+
+  #category-rate-table th:nth-child(5),
+  #category-rate-table td:nth-child(5) { width: 7%; }
+
+  #category-rate-table th:nth-child(6),
+  #category-rate-table td:nth-child(6) { width: 17%; }
+
+  #category-rate-table .left {
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  #category-rate-table .tag {
+    min-width: 0;
+    height: 19px;
+    padding: 1px 5px;
+    font-size: 11px;
+  }
+
+  #category-rate-table .category-rate-select,
+  #category-rate-table .category-rate-free {
+    width: 100%;
+    min-width: 48px;
+    height: 30px;
+    padding: 3px 4px;
+    font-size: 12px;
+  }
+
+  #category-rate-table .rate-cell {
+    min-width: 0;
+  }
+
+  #category-rate-table .sticky-left {
+    position: static;
+  }
+
+  .matrix-table th.sticky-left,
+  .matrix-table td.sticky-left {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+  }
+
+  .matrix-table th.sticky-left { background: #dfeaf2; }
+  .matrix-table td.sticky-left { background: #fff; }
+  .matrix-table tbody tr:hover td.sticky-left { background: #f8fbfd; }
+
+  .summary-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .summary-item {
+    display: grid;
+    grid-template-columns: 112px 1fr 76px;
+    gap: 8px;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px;
+    background: #fff;
+  }
+
+  .summary-meta {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .target-bars {
+    display: flex;
+    height: 22px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #edf2f7;
+    border: 1px solid #d8e0ea;
+  }
+
+  .target-bars span {
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 24px;
+  }
+
+  .level-a { background: #2f5597; }
+  .level-b { background: #1f7a4d; }
+  .level-c { background: #d97706; }
+  .level-d { background: #b45309; }
+  .level-e { background: #8555a0; }
+
+  .type-separator td {
+    border-top: 3px solid var(--navy);
+  }
+
+  .type-cell-strong {
+    font-weight: 900;
+    color: var(--navy);
+    background: #eef4f8 !important;
+  }
+
+  .boundary-head {
+    display: grid;
+    gap: 2px;
+    line-height: 1.2;
+  }
+
+  .boundary-head strong {
+    color: var(--navy);
+    font-size: 12px;
+  }
+
+  .boundary-head span {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Figma-inspired editorial refresh */
+  :root {
+    --ink: #000000;
+    --muted: #000000;
+    --line: #dedede;
+    --soft: #f7f7f7;
+    --paper: #ffffff;
+    --navy: #000000;
+    --teal: #000000;
+    --teal-dark: #000000;
+    --violet: #6f5aa8;
+    --amber: #ff8f70;
+    --red: #c2410c;
+    --green: #16833a;
+    --blue: #2251d1;
+    --block-lime: #d9ff73;
+    --block-lilac: #d8ccff;
+    --block-cream: #fff1bf;
+    --block-mint: #c8f5df;
+    --block-pink: #ffd3e8;
+    --block-coral: #ff9f8a;
+    --block-navy: #0b102f;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-family: Inter, "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+    font-weight: 330;
+  }
+
+  .app-header {
+    background: #fff;
+    color: #000;
+    padding: 38px 28px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .app-header h1 {
+    color: #000;
+    font-size: 48px;
+    line-height: 1.04;
+    font-weight: 340;
+    letter-spacing: 0;
+  }
+
+  .app-header .sub {
+    max-width: 760px;
+    color: #000;
+    margin-top: 10px;
+    font-size: 19px;
+    font-weight: 330;
+  }
+
+  .top-nav {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    box-shadow: none;
+  }
+
+  .top-nav-inner {
+    max-width: 1280px;
+    min-height: 56px;
+    padding: 9px 24px;
+  }
+
+  .top-nav-label,
+  .card-kicker,
+  .summary-meta {
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .top-nav-btn,
+  .page-step-pill,
+  .pill,
+  .tag,
+  .btn,
+  .guide-close {
+    border-radius: 999px;
+  }
+
+  .top-nav-btn,
+  .page-step-pill {
+    border-color: transparent;
+    background: #fff;
+    color: #000;
+    min-height: 38px;
+    padding: 8px 16px;
+    font-weight: 480;
+  }
+
+  .top-nav-btn.active,
+  .page-step-pill.active {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+  }
+
+  .workspace {
+    max-width: 1280px;
+    padding: 24px;
+  }
+
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .panel-head {
+    min-height: 56px;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    padding: 14px 18px;
+  }
+
+  .panel-title {
+    color: #000;
+    font-size: 18px;
+    font-weight: 540;
+  }
+
+  .step {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: #000;
+    color: #fff;
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    font-weight: 400;
+  }
+
+  .panel-body {
+    padding: 18px;
+  }
+
+  #target-level-guide {
+    background: var(--block-lilac);
+  }
+
+  #setup-page .setup-shell > .panel:nth-child(2) {
+    background: var(--block-lime);
+  }
+
+  .subject-type-bar,
+  .persistence-warning {
+    background: var(--block-cream);
+    border: 0;
+    border-radius: 24px;
+    color: #000;
+    padding: 16px 18px;
+  }
+
+  .toolbar {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: none;
+    padding: 14px;
+  }
+
+  .notice {
+    border: 0;
+    border-radius: 14px;
+    background: var(--block-mint);
+    color: #000;
+    font-size: 14px;
+  }
+
+  .warn-box,
+  .warn-box.show {
+    border: 0;
+    border-radius: 14px;
+    background: var(--block-coral);
+    color: #000;
+  }
+
+  .btn {
+    min-height: 40px;
+    border: 1px solid transparent;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 480;
+  }
+
+  .btn.primary,
+  .btn.dark {
+    background: #000;
+    color: #fff;
+  }
+
+  .btn.secondary {
+    background: #fff;
+    border-color: transparent;
+    color: #000;
+  }
+
+  .btn.warn {
+    background: var(--block-cream);
+    border-color: transparent;
+    color: #000;
+  }
+
+  .btn.danger {
+    background: #fff;
+    border-color: #000;
+    color: #000;
+  }
+
+  input,
+  select {
+    border-color: var(--line);
+    border-radius: 8px;
+    color: #000;
+  }
+
+  input:focus,
+  select:focus {
+    outline: 2px solid #000;
+    border-color: #000;
+  }
+
+  .table-wrap {
+    border-color: var(--line);
+    border-radius: 14px;
+  }
+
+  th {
+    background: #f7f7f7;
+    color: #000;
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  th, td {
+    border-color: var(--line);
+  }
+
+  tbody tr:hover td {
+    background: #fafafa;
+  }
+
+  .metric,
+  .result-card,
+  .summary-item,
+  .level-guide-item {
+    border-color: var(--line);
+    border-radius: 14px;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .metric .value,
+  .score-big,
+  .boundary-head strong {
+    color: #000;
+  }
+
+  .boundary {
+    background: #000;
+    color: #fff;
+    border-radius: 999px;
+  }
+
+  .bar span {
+    background: #000;
+  }
+
+  .category-rate-select.manual,
+  .category-rate-free.manual {
+    border-color: #000;
+    background: var(--block-cream);
+    color: #000;
+  }
+
+  .category-rate-select.auto,
+  .category-rate-free.auto {
+    background: #fff;
+    color: #000;
+  }
+
+  .order-mark {
+    border: 0;
+    border-radius: 999px;
+    background: #000;
+    color: #fff;
+  }
+
+  .guide-overlay {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .guide-dialog {
+    border: 0;
+    border-radius: 24px;
+    box-shadow: none;
+  }
+
+  .guide-head {
+    background: #000;
+    color: #fff;
+  }
+
+  .guide-steps li {
+    border-color: var(--line);
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .guide-num {
+    border-radius: 999px;
+    background: #000;
+  }
+
+  /* Lovable-inspired warm refresh */
+  :root {
+    --ink: #1c1c1c;
+    --muted: #5f5f5d;
+    --line: #eceae4;
+    --soft: rgba(28, 28, 28, 0.03);
+    --paper: #f7f4ed;
+    --navy: #1c1c1c;
+    --teal: #1c1c1c;
+    --teal-dark: #1c1c1c;
+    --violet: #7d6ba8;
+    --amber: #d97706;
+    --red: #a24116;
+    --green: #257a3e;
+    --blue: #315dca;
+    --focus-shadow: rgba(0, 0, 0, 0.1) 0 4px 12px;
+    --inset-button: rgba(255,255,255,0.2) 0 0.5px 0 0 inset, rgba(0,0,0,0.2) 0 0 0 0.5px inset, rgba(0,0,0,0.05) 0 1px 2px 0;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Camera Plain Variable", ui-sans-serif, system-ui, "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-weight: 400;
+  }
+
+  .app-header {
+    background:
+      radial-gradient(circle at 16% 16%, rgba(255, 168, 128, 0.26), transparent 30%),
+      radial-gradient(circle at 82% 8%, rgba(107, 140, 255, 0.16), transparent 28%),
+      var(--paper);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    padding: 44px 28px 24px;
+  }
+
+  .app-header h1 {
+    color: var(--ink);
+    font-size: 56px;
+    line-height: 1.06;
+    font-weight: 600;
+    letter-spacing: -1.4px;
+  }
+
+  .app-header .sub {
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.38;
+    font-weight: 400;
+  }
+
+  .top-nav {
+    background: rgba(247, 244, 237, 0.96);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .top-nav-inner {
+    max-width: 1200px;
+  }
+
+  .top-nav-label,
+  .summary-meta {
+    color: var(--muted);
+    font-family: inherit;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .top-nav-btn,
+  .page-step-pill {
+    border-radius: 9999px;
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink);
+    font-weight: 400;
+  }
+
+  .top-nav-btn.active,
+  .page-step-pill.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fcfbf8;
+    box-shadow: var(--inset-button);
+  }
+
+  .workspace {
+    max-width: 1200px;
+    padding: 24px;
+  }
+
+  .panel,
+  .toolbar,
+  .metric,
+  .result-card,
+  .summary-item,
+  .level-guide-item,
+  .guide-dialog {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .panel-head {
+    background: transparent;
+    border-bottom: 1px solid var(--line);
+    min-height: 56px;
+  }
+
+  .panel-title {
+    color: var(--ink);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .step {
+    background: rgba(28, 28, 28, 0.04);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 9999px;
+    font-family: inherit;
+    font-weight: 400;
+  }
+
+  .page-step-pill.active .step,
+  .top-nav-btn.active .step {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fcfbf8;
+    border-color: transparent;
+  }
+
+  #target-level-guide,
+  #setup-page .setup-shell > .panel:nth-child(2) {
+    background: var(--paper);
+  }
+
+  .subject-type-bar,
+  .persistence-warning,
+  .notice,
+  .warn-box,
+  .warn-box.show {
+    background: rgba(28, 28, 28, 0.03);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    color: rgba(28, 28, 28, 0.83);
+  }
+
+  .btn {
+    min-height: 38px;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .btn.primary,
+  .btn.dark {
+    background: var(--ink);
+    color: #fcfbf8;
+    box-shadow: var(--inset-button);
+  }
+
+  .btn.secondary,
+  .btn.warn,
+  .btn.danger {
+    background: transparent;
+    border-color: rgba(28, 28, 28, 0.4);
+    color: var(--ink);
+  }
+
+  .btn:focus-visible,
+  input:focus,
+  select:focus {
+    outline: 0;
+    border-color: rgba(28, 28, 28, 0.4);
+    box-shadow: var(--focus-shadow);
+  }
+
+  input,
+  select {
+    background: var(--paper);
+    border-color: var(--line);
+    border-radius: 6px;
+    color: var(--ink);
+  }
+
+  .pill,
+  .tag {
+    background: rgba(28, 28, 28, 0.04);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 9999px;
+    font-weight: 400;
+  }
+
+  .table-wrap {
+    border-color: var(--line);
+    border-radius: 12px;
+  }
+
+  th {
+    background: rgba(28, 28, 28, 0.03);
+    color: rgba(28, 28, 28, 0.83);
+    font-family: inherit;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  th,
+  td {
+    border-color: var(--line);
+  }
+
+  tbody tr:hover td {
+    background: rgba(28, 28, 28, 0.03);
+  }
+
+  .metric .value,
+  .score-big,
+  .boundary-head strong,
+  .panel-title {
+    color: var(--ink);
+  }
+
+  .boundary,
+  .guide-head,
+  .guide-num {
+    background: var(--ink);
+    color: #fcfbf8;
+    box-shadow: var(--inset-button);
+  }
+
+  .bar span {
+    background: var(--ink);
+  }
+
+  .category-rate-select.manual,
+  .category-rate-free.manual {
+    border-color: rgba(28, 28, 28, 0.4);
+    background: rgba(28, 28, 28, 0.04);
+    color: var(--ink);
+  }
+
+  .category-rate-select.auto,
+  .category-rate-free.auto {
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .order-mark {
+    background: var(--ink);
+    color: #fcfbf8;
+    box-shadow: var(--inset-button);
+  }
+
+  .guide-overlay {
+    background: rgba(28, 28, 28, 0.6);
+  }
+
+  .guide-steps li {
+    background: var(--paper);
+    border-color: var(--line);
+  }
+
+  @media (max-width: 980px) {
+    .app-header h1 {
+      font-size: 38px;
+    }
+
+    .app-header .sub {
+      font-size: 17px;
+    }
+
+    .layout, .grid-2, .target-guide-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #simulator-page.view-results .layout {
+      grid-template-columns: 1fr;
+    }
+
+    .metric-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* HP-inspired restrained catalog refresh */
+  :root {
+    --hp-blue: #024ad8;
+    --hp-ink: #1a1a1a;
+    --hp-charcoal: #3d3d3d;
+    --hp-graphite: #636363;
+    --hp-canvas: #ffffff;
+    --hp-cloud: #f7f7f7;
+    --hp-fog: #e8e8e8;
+    --hp-steel: #c2c2c2;
+    --ink: var(--hp-ink);
+    --muted: var(--hp-graphite);
+    --line: var(--hp-fog);
+    --soft: var(--hp-cloud);
+    --paper: var(--hp-canvas);
+    --navy: var(--hp-ink);
+    --teal: var(--hp-blue);
+    --teal-dark: #0e3191;
+    --violet: var(--hp-ink);
+    --amber: var(--hp-ink);
+    --red: var(--hp-ink);
+    --green: var(--hp-ink);
+    --blue: var(--hp-blue);
+    --focus-shadow: 0 0 0 1px var(--hp-ink);
+    --inset-button: none;
+  }
+
+  body {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+    font-family: "Manrope", "Inter", Arial, "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .app-header {
+    background: var(--hp-canvas);
+    border-bottom: 1px solid var(--hp-fog);
+    padding: 56px 32px 28px;
+  }
+
+  .app-header h1 {
+    max-width: 1366px;
+    margin: 0 auto 12px;
+    color: var(--hp-ink);
+    font-size: clamp(36px, 5vw, 72px);
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .app-header .sub {
+    max-width: 1366px;
+    margin: 0 auto;
+    color: var(--hp-charcoal);
+    font-size: 18px;
+    line-height: 1.33;
+  }
+
+  .top-nav {
+    background: var(--hp-canvas);
+    border-bottom: 1px solid var(--hp-fog);
+  }
+
+  .top-nav-inner,
+  .workspace {
+    max-width: 1366px;
+  }
+
+  .top-nav-label,
+  .summary-meta {
+    color: var(--hp-graphite);
+    font-size: 13px;
+  }
+
+  .top-nav-btn {
+    position: relative;
+    min-height: 44px;
+    border-radius: 0;
+    background: transparent;
+    border: 0;
+    color: var(--hp-ink);
+    box-shadow: none;
+  }
+
+  .top-nav-btn.active {
+    background: transparent;
+    border: 0;
+    color: var(--hp-ink);
+    box-shadow: none;
+  }
+
+  .top-nav-btn.active::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 0;
+    height: 2px;
+    background: var(--hp-blue);
+  }
+
+  .page-step-pill {
+    min-height: 44px;
+    border-radius: 9999px;
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    color: var(--hp-ink);
+  }
+
+  .page-step-pill.active {
+    background: var(--hp-ink);
+    border-color: var(--hp-ink);
+    color: #fff;
+    box-shadow: none;
+  }
+
+  .page-step-pill.active .step {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+  }
+
+  .workspace {
+    padding: 24px 32px 64px;
+  }
+
+  .panel,
+  .toolbar,
+  .metric,
+  .result-card,
+  .summary-item,
+  .level-guide-item,
+  .guide-dialog {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(26, 26, 26, 0.06);
+  }
+
+  .panel-head {
+    background: var(--hp-canvas);
+    border-bottom: 1px solid var(--hp-fog);
+    min-height: 60px;
+  }
+
+  .panel-title {
+    color: var(--hp-ink);
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  #target-level-guide,
+  #setup-page .setup-shell > .panel:nth-child(2),
+  .subject-type-bar,
+  .persistence-warning,
+  .notice,
+  .warn-box,
+  .warn-box.show {
+    background: var(--hp-cloud);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    color: var(--hp-charcoal);
+  }
+
+  .btn {
+    min-height: 44px;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    box-shadow: none;
+  }
+
+  .btn.primary {
+    background: var(--hp-blue);
+    border-color: var(--hp-blue);
+    color: #fff;
+  }
+
+  #btn-guide,
+  #btn-add-row {
+    background: var(--hp-canvas);
+    border-color: var(--hp-ink);
+    color: var(--hp-ink);
+  }
+
+  .btn.dark {
+    background: var(--hp-ink);
+    border-color: var(--hp-ink);
+    color: #fff;
+  }
+
+  .btn.secondary,
+  .btn.warn,
+  .btn.danger {
+    background: var(--hp-canvas);
+    border-color: var(--hp-ink);
+    color: var(--hp-ink);
+  }
+
+  input,
+  select {
+    min-height: 36px;
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-steel);
+    border-radius: 4px;
+    color: var(--hp-ink);
+  }
+
+  input[type="radio"],
+  input[type="checkbox"] {
+    accent-color: var(--hp-ink);
+  }
+
+  .btn:focus-visible,
+  input:focus,
+  select:focus {
+    outline: 0;
+    border-color: var(--hp-ink);
+    box-shadow: var(--focus-shadow);
+  }
+
+  .pill,
+  .tag,
+  .tag.easy,
+  .tag.medium,
+  .tag.hard,
+  .tag.manual,
+  .tag.auto,
+  .level-badge {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    color: var(--hp-ink);
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  .tag {
+    white-space: nowrap;
+    word-break: keep-all;
+    line-height: 1;
+  }
+
+  .boundary,
+  .guide-head,
+  .guide-num,
+  .order-mark {
+    background: var(--hp-ink);
+    color: #fff;
+    border-color: var(--hp-ink);
+    box-shadow: none;
+  }
+
+  .step {
+    background: var(--hp-cloud);
+    color: var(--hp-ink);
+    border-color: var(--hp-fog);
+    box-shadow: none;
+  }
+
+  .table-wrap {
+    background: var(--hp-canvas);
+    border: 1px solid var(--hp-fog);
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  th {
+    background: var(--hp-cloud);
+    color: var(--hp-charcoal);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  th,
+  td {
+    border-color: var(--hp-fog);
+  }
+
+  #category-rate-table th:nth-child(2),
+  #category-rate-table td:nth-child(2) {
+    min-width: 64px;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+
+  #category-rate-table td:nth-child(2) .tag {
+    min-width: 48px;
+    min-height: 24px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+
+  tbody tr:hover td {
+    background: var(--hp-cloud);
+  }
+
+  .category-rate-select.manual,
+  .category-rate-free.manual {
+    border-color: var(--hp-ink);
+    background: var(--hp-cloud);
+    color: var(--hp-ink);
+    font-weight: 600;
+  }
+
+  .category-rate-select.auto,
+  .category-rate-free.auto {
+    background: var(--hp-canvas);
+    color: var(--hp-ink);
+  }
+
+  .bar span {
+    background: var(--hp-blue);
+  }
+
+  #category-rate-table .rate-cell.error {
+    background: #fff5f5;
+    box-shadow: inset 0 0 0 1px #b3262b;
+  }
+
+  #category-rate-table .category-rate-select.error,
+  #category-rate-table .category-rate-free.error {
+    border-color: #b3262b;
+    background: #fff5f5;
+    color: var(--hp-ink);
+  }
+
+  .guide-overlay {
+    background: rgba(26, 26, 26, 0.62);
+  }
+
+  .guide-steps li {
+    background: var(--hp-cloud);
+    border-color: var(--hp-fog);
+  }
+
+  @media (max-width: 980px) {
+    .app-header {
+      padding: 44px 20px 24px;
+    }
+
+    .workspace {
+      padding: 20px 16px 48px;
+    }
+
+    .app-header .sub {
+      font-size: 16px;
+    }
+  }
+
+  @media print {
+    body { background: #fff; }
+    .top-nav, .toolbar, .btn, .footer-actions { display: none !important; }
+    .workspace { max-width: none; padding: 0; }
+    .layout { grid-template-columns: 1fr; }
+    .panel { break-inside: avoid; margin-bottom: 10px; }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <h1>목표 성취수준 기반 분할점수 시뮬레이터</h1>
+  <div class="sub">문항 목표 성취수준과 일부 예상 정답률을 연결해 성취수준 경계 점수를 추정합니다.</div>
+</header>
+
+<nav class="top-nav" aria-label="상단 내비게이션">
+  <div class="top-nav-inner">
+    <span class="top-nav-label">이동</span>
+    <button class="top-nav-btn active" id="nav-setup" type="button">문항 입력</button>
+    <button class="top-nav-btn" id="nav-rates" type="button">정답률 입력</button>
+    <button class="top-nav-btn" id="nav-results" type="button">결과 확인</button>
+    <button class="top-nav-btn" id="nav-target-guide" type="button">목표 성취수준 안내</button>
+  </div>
+</nav>
+
+<main class="workspace app-page" id="setup-page">
+  <div class="page-stepper" aria-label="입력 단계">
+    <span class="page-step-pill active"><span class="step">1</span> 문항별 입력</span>
+    <span class="page-step-pill"><span class="step">2</span> 정답률 입력</span>
+    <span class="page-step-pill"><span class="step">3</span> 결과 확인</span>
+  </div>
+
+  <section class="setup-shell">
+    <div class="panel" id="target-level-guide">
+      <div class="panel-head">
+        <div class="panel-title"><span class="step">?</span> 목표 성취수준 안내</div>
+      </div>
+      <div class="panel-body target-guide-grid">
+        <div class="notice guide-note">
+          <p><strong>목표 성취수준</strong>은 해당 성취수준의 학생 중 약 2/3 이상이 맞힐 것으로 기대되는 문항 수준입니다.</p>
+          <p>가장 쉬운 문항은 성취수준 E 학생도 대부분 맞추어야 하므로 E 목표로 두고, 어려운 문항은 A 수준 학생이 해결할 것으로 기대되면 A 목표로 둡니다.</p>
+          <p>난이도는 문항의 쉬움과 어려움을 나타내고, 목표 성취수준은 그 문항이 어느 수준 학생에게 기대되는지를 나타냅니다. 이 값은 A/B, B/C, C/D, D/E, E/I 경계별 예상 정답률 추정의 근거로 사용됩니다.</p>
+        </div>
+        <div class="level-guide-list">
+          <div class="level-guide-item">
+            <span class="level-badge level-a">A</span>
+            <div><strong>A 목표 문항</strong><span>A 수준 학생의 2/3 이상이 맞힐 것으로 기대되는 어려운 문항입니다.</span></div>
+          </div>
+          <div class="level-guide-item">
+            <span class="level-badge level-b">B</span>
+            <div><strong>B 목표 문항</strong><span>B 수준 학생의 2/3 이상이 맞힐 것으로 기대되는 문항입니다.</span></div>
+          </div>
+          <div class="level-guide-item">
+            <span class="level-badge level-c">C</span>
+            <div><strong>C 목표 문항</strong><span>C 수준 학생의 2/3 이상이 맞힐 것으로 기대되는 보통 수준 문항입니다.</span></div>
+          </div>
+          <div class="level-guide-item">
+            <span class="level-badge level-d">D</span>
+            <div><strong>D 목표 문항</strong><span>D 수준 학생의 2/3 이상이 맞힐 것으로 기대되는 비교적 쉬운 문항입니다.</span></div>
+          </div>
+          <div class="level-guide-item">
+            <span class="level-badge level-e">E</span>
+            <div><strong>E 목표 문항</strong><span>E 수준 학생도 대부분 맞힐 것으로 기대되는 가장 쉬운 문항입니다.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="step">1</span> 문항별 기본 정보</div>
+        <div class="setup-head-actions">
+          <button class="btn secondary small" id="btn-setup-load">JSON 불러오기</button>
+          <button class="btn primary small" id="btn-setup-next-top">다음으로</button>
+        </div>
+      </div>
+      <div class="panel-body stack">
+        <div class="notice">
+          문항번호, 문항구분, 배점, 난이도, 목표 성취수준을 문항별로 입력하세요. 배점은 직접 입력하거나 배점 자동 채우기로 빈 칸에 남은 점수를 난이도별로 차등 배분할 수 있습니다.
+        </div>
+        <div class="setup-actions">
+          <div class="setup-stat-row">
+            <span class="pill">총점 <strong id="setup-total-score">0</strong>점</span>
+            <span class="pill">문항 <strong id="setup-total-count">0</strong>개</span>
+            <span class="pill">묶음 <strong id="setup-group-count">0</strong>개</span>
+          </div>
+          <div class="setup-head-actions">
+            <button class="btn secondary" id="btn-setup-add-row">문항 추가</button>
+            <button class="btn secondary" id="btn-setup-add-five">5행 추가</button>
+            <button class="btn secondary" id="btn-setup-autofill-scores">배점 자동 채우기</button>
+            <button class="btn secondary" id="btn-setup-demo">예시값 복원</button>
+            <button class="btn warn" id="btn-setup-clear">모두 비우기</button>
+          </div>
+        </div>
+        <div class="warn-box" id="setup-warning"></div>
+        <div class="table-wrap matrix-scroll">
+          <table id="setup-table">
+            <thead>
+              <tr>
+                <th class="tight">문항번호</th>
+                <th class="tight">문항구분</th>
+                <th class="tight">배점</th>
+                <th class="tight">난이도</th>
+                <th class="tight">목표 성취수준</th>
+                <th class="tight">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="setup-body"></tbody>
+          </table>
+        </div>
+        <div class="page-actions">
+          <button class="btn secondary" id="btn-setup-add-bottom">문항 추가</button>
+          <span class="spacer"></span>
+          <button class="btn primary" id="btn-setup-next">다음: 정답률 입력</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<main class="workspace app-page is-hidden view-rates" id="simulator-page">
+  <div class="persistence-warning">
+    <strong>안내</strong>
+    <span>입력하신 데이터는 브라우저를 닫으면 사라집니다. 백업·복구가 필요하시면 상단의 JSON 저장 기능을 이용해 주세요.</span>
+  </div>
+
+  <div class="toolbar">
+    <span class="pill">총점 <strong id="total-score-pill">0</strong>점</span>
+    <span class="pill">문항 <strong id="total-count-pill">0</strong>개</span>
+    <span class="pill">교사 입력 <strong id="manual-count-pill">0</strong>칸</span>
+    <span class="pill">자동 추정 <strong id="auto-count-pill">0</strong>칸</span>
+    <span class="spacer"></span>
+    <label class="inline-field">교사명 <input id="teacher-name" placeholder="예: 김교사"></label>
+    <button class="btn primary" id="btn-guide">입력 순서 가이드</button>
+    <button class="btn secondary" id="btn-back-setup">문항 입력으로</button>
+    <button class="btn secondary" id="btn-toolbar-rates">정답률 입력</button>
+    <button class="btn secondary" id="btn-toolbar-results">결과 확인</button>
+    <button class="btn secondary" id="btn-save">JSON 저장</button>
+    <button class="btn secondary" id="btn-load">JSON 불러오기</button>
+    <button class="btn dark" id="btn-print">인쇄</button>
+    <input class="hidden-file" type="file" id="file-input" accept="application/json">
+    <input class="hidden-file" type="file" id="aggregate-file-input" accept="application/json" multiple>
+  </div>
+
+  <div class="page-stepper" aria-label="작업 단계">
+    <button class="page-step-pill" id="step-setup" type="button"><span class="step">1</span> 문항별 입력</button>
+    <button class="page-step-pill active" id="step-rates" type="button"><span class="step">2</span> 정답률 입력</button>
+    <button class="page-step-pill" id="step-results" type="button"><span class="step">3</span> 결과 확인</button>
+  </div>
+
+  <div class="subject-type-bar">
+    <strong>과목 유형:</strong>
+    <label>
+      <input type="radio" name="subject-type" value="common" id="subject-common" checked>
+      공통과목 <span class="summary-meta">(A/B · B/C · C/D · D/E · E/I — 5개 경계)</span>
+    </label>
+    <label>
+      <input type="radio" name="subject-type" value="elective" id="subject-elective">
+      선택과목 <span class="summary-meta">(A/B · B/C · C/D · D/E — 4개 경계, E/I 없음)</span>
+    </label>
+  </div>
+
+  <div class="layout">
+    <section class="stack">
+      <div class="panel rate-panel">
+        <div class="panel-head">
+          <div class="panel-title"><span class="step">1</span> 문항 설계 요약</div>
+          <button class="btn primary small" id="btn-add-row">문항 입력 수정</button>
+        </div>
+        <div class="panel-body">
+          <div class="notice">
+            앞 화면에서 입력한 문항을 같은 문항구분·난이도·목표 성취수준끼리 묶어 표시합니다. 목표가 C인 문항은 C 수준 최소 능력자가 맞힐 것으로 기대되는 문항으로 보고 경계 정답률 추정의 근거로 사용합니다.
+          </div>
+          <div class="table-wrap">
+            <table id="blueprint-table">
+              <thead>
+                <tr>
+                  <th class="tight">문항구분</th>
+                  <th class="tight">난이도</th>
+                  <th class="left">해당 문항번호</th>
+                  <th class="tight">목표 성취수준</th>
+                  <th class="tight">배점합</th>
+                  <th class="tight">문항수</th>
+                </tr>
+              </thead>
+              <tbody id="blueprint-body"></tbody>
+            </table>
+          </div>
+          <div class="footer-actions">
+            <button class="btn secondary" id="btn-demo">예시값 복원</button>
+            <button class="btn warn" id="btn-clear-blueprint">문항 설계 비우기</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2 rate-panel">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="step">2</span> 난이도 범주 요약</div>
+          </div>
+          <div class="panel-body">
+            <div id="summary-list" class="summary-list"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title"><span class="step">3</span> 추정 설정</div>
+          </div>
+          <div class="panel-body stack">
+            <div class="notice">
+              범주 입력표의 ①~⑤ 순서대로 정답률을 입력하면 나머지 칸은 자동으로 채워집니다. A~D는 5점 단위, E/I는 직접 숫자로 입력합니다.
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>기준</th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                    <th>E</th>
+                  </tr>
+                </thead>
+                <tbody id="anchor-summary"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel rate-panel">
+        <div class="panel-head">
+          <div class="panel-title"><span class="step">4</span> 분포비중 기반 범주 입력</div>
+          <span class="tag manual">우선 입력</span>
+        </div>
+        <div class="panel-body stack">
+          <div class="notice" id="category-input-notice">
+            ① 쉬움-E, ② 보통-C, ③ 어려움-A, ④ 어려움-E, ⑤ 쉬움-A 순서로 입력하세요. A~D는 5점 단위 선택, E/I는 1점 단위 직접 입력이며 나머지는 자동 추정됩니다.
+          </div>
+          <div class="notice" id="entry-guide-text"></div>
+          <div class="warn-box" id="rate-warning"></div>
+          <div class="table-wrap matrix-scroll category-rate-wrap">
+            <table class="matrix-table" id="category-rate-table">
+              <thead>
+                <tr>
+                  <th class="sticky-left" rowspan="2">문항구분</th>
+                  <th rowspan="2">난이도</th>
+                  <th rowspan="2">해당 문항번호</th>
+                  <th rowspan="2">문항수</th>
+                  <th rowspan="2">배점합</th>
+                  <th rowspan="2">목표 성취수준 분포</th>
+                  <th colspan="5">최소능력자의 예상 정답률(%)</th>
+                </tr>
+                <tr>
+                  <th><span class="boundary-head"><strong>A</strong><span>A/B</span></span></th>
+                  <th><span class="boundary-head"><strong>B</strong><span>B/C</span></span></th>
+                  <th><span class="boundary-head"><strong>C</strong><span>C/D</span></span></th>
+                  <th><span class="boundary-head"><strong>D</strong><span>D/E</span></span></th>
+                  <th><span class="boundary-head"><strong>E</strong><span>E/I</span></span></th>
+                </tr>
+              </thead>
+              <tbody id="category-rate-body"></tbody>
+            </table>
+          </div>
+          <div class="footer-actions">
+            <button class="btn warn" id="btn-clear-category-rates">범주 입력 비우기</button>
+            <button class="btn secondary" id="btn-auto-fill-category-rates">전체 자동입력</button>
+            <span class="spacer"></span>
+            <button class="btn primary" id="btn-go-results">다음: 결과 확인</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel result-panel">
+        <div class="panel-head">
+          <div class="panel-title">여러 교사 JSON 취합</div>
+          <span class="tag auto" id="aggregate-count">0명</span>
+        </div>
+        <div class="panel-body stack">
+          <div class="notice">
+            같은 기준 JSON으로 저장한 교사별 파일을 여러 개 불러오면 각 교사가 산출한 추정 분할점수를 경계별로 모아 평균·중앙값·범위를 비교합니다. 문항 설계가 다른 파일은 자동으로 제외됩니다.
+          </div>
+          <div class="aggregate-controls">
+            <button class="btn secondary" id="btn-load-aggregate">여러 JSON 불러오기</button>
+            <label class="inline-field">적용값
+              <select id="aggregation-method">
+                <option value="median">중앙값</option>
+                <option value="average">평균</option>
+              </select>
+            </label>
+            <button class="btn primary" id="btn-apply-aggregate">최종 점수 적용</button>
+            <button class="btn warn" id="btn-clear-aggregate">취합 비우기</button>
+          </div>
+          <div class="notice aggregate-status" id="aggregate-status">
+            <span>아직 불러온 교사 JSON이 없습니다.</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="aggregate-head"></thead>
+              <tbody id="aggregate-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="stack">
+      <div class="panel result-panel">
+        <div class="panel-head">
+          <div class="panel-title"><span class="step">5</span> 추정 분할점수</div>
+          <div class="setup-head-actions">
+            <button class="btn secondary small" id="btn-result-back-rates">정답률 입력으로</button>
+            <button class="btn primary small" id="btn-calc">계산</button>
+          </div>
+        </div>
+        <div class="panel-body stack">
+          <div class="metric-row">
+            <div class="metric">
+              <div class="label">총 배점</div>
+              <div class="value" id="metric-total">0</div>
+            </div>
+            <div class="metric">
+              <div class="label">평균 기준율</div>
+              <div class="value" id="metric-rate">0%</div>
+            </div>
+            <div class="metric">
+              <div class="label">최고 경계</div>
+              <div class="value" id="metric-top">0</div>
+            </div>
+            <div class="metric">
+              <div class="label">최저 경계</div>
+              <div class="value" id="metric-low">0</div>
+            </div>
+          </div>
+          <div id="result-list" class="stack"></div>
+        </div>
+      </div>
+
+      <div class="panel result-panel">
+        <div class="panel-head">
+          <div class="panel-title">학기말 합산 점수 입력</div>
+          <span class="tag auto" id="semester-weight-status">100%</span>
+        </div>
+        <div class="panel-body stack">
+          <div class="notice">
+            중간고사·기말고사·수행평가의 경계 점수를 입력하면 반영비율에 따라 학기말 최종 분할점수를 계산합니다. 점수는 각 평가에서 산출된 추정 분할점수를 입력하세요.
+          </div>
+          <div class="semester-controls">
+            <label class="inline-field">현재 추정값 반영
+              <select id="assessment-copy-target">
+                <option value="mid">중간고사</option>
+                <option value="fin">기말고사</option>
+                <option value="perf">수행평가</option>
+              </select>
+            </label>
+            <button class="btn secondary" id="btn-copy-current-assessment">가져오기</button>
+            <button class="btn primary" id="btn-apply-semester">학기말 최종 적용</button>
+            <button class="btn warn" id="btn-clear-semester">합산 입력 비우기</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead id="semester-head"></thead>
+              <tbody id="semester-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel result-panel">
+        <div class="panel-head">
+          <div class="panel-title">기여도 상세</div>
+        </div>
+        <div class="panel-body">
+          <div class="table-wrap">
+            <table>
+              <thead id="contrib-head"></thead>
+              <tbody id="contrib-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="guide-overlay" id="guide-modal" role="dialog" aria-modal="true" aria-labelledby="guide-title">
+  <div class="guide-dialog">
+    <div class="guide-head">
+      <h2 id="guide-title">입력 순서 가이드</h2>
+      <button class="guide-close" id="guide-close" aria-label="닫기">×</button>
+    </div>
+    <div class="guide-body" id="guide-body"></div>
+    <div class="guide-actions">
+      <button class="btn secondary" id="guide-cancel">닫기</button>
+      <button class="btn primary" id="guide-confirm">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LEVELS = ["A", "B", "C", "D", "E"];
+const ALL_BOUNDARIES = [
+  { label: "A/B", level: "A" },
+  { label: "B/C", level: "B" },
+  { label: "C/D", level: "C" },
+  { label: "D/E", level: "D" },
+  { label: "E/I", level: "E" }
+];
+const TYPES = ["선택형", "서답형"];
+const DIFFICULTIES = ["쉬움", "보통", "어려움"];
+const ASSESSMENTS = [
+  { id: "mid", label: "중간고사" },
+  { id: "fin", label: "기말고사" },
+  { id: "perf", label: "수행평가" }
+];
+const LEVEL_RANK = { A: 5, B: 4, C: 3, D: 2, E: 1 };
+const DIFFICULTY_ADJUST = { "쉬움": 5, "보통": 0, "어려움": -5 };
+const DIFFICULTY_CLASS = { "쉬움": "easy", "보통": "medium", "어려움": "hard" };
+const SCORE_DIFFICULTY_WEIGHT = { "쉬움": 0.8, "보통": 1, "어려움": 1.2 };
+const SCORE_AUTOFILL_STEP = 0.1;
+
+let state = {
+  blueprint: [],
+  rates: {},
+  categoryRates: {},
+  categoryManual: {},
+  categoryAutoFilledAll: false,
+  isCommon: true,
+  teacherName: "",
+  aggregation: {
+    entries: [],
+    warnings: [],
+    baseline: null
+  },
+  finalBoundaries: null,
+  finalResultLabel: "",
+  assessmentWeights: { mid: 40, fin: 40, perf: 20 },
+  assessmentScores: { mid: {}, fin: {}, perf: {} }
+};
+
+let pendingGuideAction = null;
+
+const GUIDE_CONTENT = {
+  workflow: {
+    title: "입력 순서 가이드",
+    intro: "문항별 기본 정보를 먼저 입력한 뒤 정답률 입력 화면에서 일부 기준 정답률을 정하고, 결과 확인 화면에서 분할점수를 검토하는 순서입니다.",
+    steps: [
+      ["문항별 기본 정보 입력", "첫 화면에서 문항번호, 문항구분, 배점, 난이도, 목표 성취수준을 문항별로 입력합니다. 목표 성취수준은 해당 수준 학생의 2/3 이상이 맞힐 것으로 기대되는 문항 수준입니다."],
+      ["난이도 범주 요약 확인", "쉬움, 보통, 어려움 범주에 어떤 목표 성취수준 문항이 얼마만큼 들어 있는지 분포를 확인합니다."],
+      ["분포비중 기반 범주 입력", "공통과목은 표에 표시된 ① 쉬움-E, ② 보통-C, ③ 어려움-A, ④ 어려움-E, ⑤ 쉬움-A 순서로 기준값을 입력합니다. 선택과목은 순서 표시 없이 A/B~D/E 경계값을 확인합니다."],
+      ["자동 채움 확인", "값을 하나 입력할 때마다 나머지 칸이 자동 추정됩니다. A~D는 5점 단위, E/I는 1점 단위로 처리됩니다."],
+      ["필요한 칸만 수정", "자동값이 교사의 판단과 다르면 해당 칸을 직접 바꾸세요. 직접 바꾼 칸은 다시 기준값으로 활용됩니다."],
+      ["과목 유형 확인", "공통과목은 E/I까지 5개 경계를, 선택과목은 A/B~D/E 4개 경계를 결과에 표시합니다."],
+      ["분할점수 확인", "결과 확인 화면에서 경계 점수, 기여도 상세, 학기말 합산, 여러 교사 JSON 취합 결과를 검토합니다."]
+    ]
+  },
+  demo: {
+    title: "예시값 복원 안내",
+    intro: "현재 입력값을 예시 데이터로 바꿉니다. 문항 설계와 범주 입력값이 모두 예시 상태로 돌아갑니다.",
+    steps: [
+      ["언제 쓰나요?", "처음 사용법을 확인하거나 입력 흐름을 다시 보고 싶을 때 사용합니다."],
+      ["주의할 점", "현재 입력 중인 값은 사라집니다. 필요한 경우 먼저 JSON 저장을 해 두세요."]
+    ]
+  },
+  clearBlueprint: {
+    title: "문항 설계 비우기 안내",
+    intro: "문항 설계와 연결된 정답률 입력값을 모두 비웁니다.",
+    steps: [
+      ["삭제되는 내용", "문항 목표 성취수준과 난이도 범주 입력이 함께 초기화됩니다."],
+      ["다음 순서", "새 문항 설계를 입력한 뒤 공통과목은 순서 표시를 따라, 선택과목은 A/B~D/E 경계값을 확인하며 범주 정답률을 다시 입력합니다."]
+    ]
+  },
+  clearCategoryRates: {
+    title: "범주 입력 비우기 안내",
+    intro: "난이도 범주 단위로 입력한 기준 정답률을 비웁니다.",
+    steps: [
+      ["유지되는 내용", "문항 설계는 유지됩니다."],
+      ["다음 순서", "공통과목은 ①~⑤ 순서로 다시 입력하고, 선택과목은 순서 표시 없이 A/B~D/E 경계값을 확인합니다."]
+    ]
+  },
+  calc: {
+    title: "계산 안내",
+    intro: "현재 화면의 문항 설계와 정답률을 기준으로 분할점수를 다시 계산합니다.",
+    steps: [
+      ["계산식", "각 문항 묶음의 배점합에 예상 정답률을 곱해 과목 유형에 맞는 경계별로 합산합니다."],
+      ["검토 위치", "오른쪽 결과 카드와 기여도 상세에서 어떤 문항 묶음이 경계점수에 크게 작용했는지 확인합니다."]
+    ]
+  }
+};
+
+function demoBlueprint() {
+  return expandBlueprintRows([
+    { id: uid(), type: "선택형", difficulty: "쉬움", items: "1, 2, 3, 4, 5, 6", target: "E", score: 21 },
+    { id: uid(), type: "선택형", difficulty: "보통", items: "7, 8, 9, 10, 11, 12", target: "C", score: 21 },
+    { id: uid(), type: "선택형", difficulty: "보통", items: "13, 14, 15, 16", target: "B", score: 14 },
+    { id: uid(), type: "선택형", difficulty: "어려움", items: "17, 18", target: "B", score: 7 },
+    { id: uid(), type: "선택형", difficulty: "어려움", items: "19, 20", target: "A", score: 7 },
+    { id: uid(), type: "서답형", difficulty: "쉬움", items: "21, 22", target: "D", score: 10 },
+    { id: uid(), type: "서답형", difficulty: "보통", items: "23, 24", target: "C", score: 10 },
+    { id: uid(), type: "서답형", difficulty: "어려움", items: "25", target: "B", score: 5 },
+    { id: uid(), type: "서답형", difficulty: "어려움", items: "26", target: "A", score: 5 }
+  ]);
+}
+
+function initialBlueprint() {
+  return demoBlueprint().map(row => ({
+    ...row,
+    score: ""
+  }));
+}
+
+function demoRates() {
+  const next = {};
+  for (const group of aggregateGroups(demoBlueprint())) {
+    next[group.key] = {};
+  }
+  return next;
+}
+
+function demoCategoryRates() {
+  const next = {};
+  setRate(next, "선택형|쉬움", "A", 90);
+  setRate(next, "선택형|쉬움", "E", 55);
+  setRate(next, "선택형|보통", "C", 60);
+  setRate(next, "선택형|어려움", "A", 70);
+  setRate(next, "선택형|어려움", "E", 20);
+  setRate(next, "서답형|쉬움", "A", 85);
+  setRate(next, "서답형|쉬움", "E", 50);
+  setRate(next, "서답형|보통", "C", 55);
+  setRate(next, "서답형|어려움", "A", 65);
+  setRate(next, "서답형|어려움", "E", 15);
+  return next;
+}
+
+function demoCategoryManual() {
+  const next = {};
+  setManual(next, "선택형|쉬움", "E");
+  setManual(next, "선택형|보통", "C");
+  setManual(next, "선택형|어려움", "A");
+  setManual(next, "선택형|어려움", "E");
+  setManual(next, "선택형|쉬움", "A");
+  setManual(next, "서답형|쉬움", "E");
+  setManual(next, "서답형|보통", "C");
+  setManual(next, "서답형|어려움", "A");
+  setManual(next, "서답형|어려움", "E");
+  setManual(next, "서답형|쉬움", "A");
+  return next;
+}
+
+function uid() {
+  return "r" + Math.random().toString(36).slice(2, 9);
+}
+
+function getBoundaries() {
+  return state.isCommon ? ALL_BOUNDARIES : ALL_BOUNDARIES.slice(0, 4);
+}
+
+function getBoundariesForType(isCommon) {
+  return isCommon ? ALL_BOUNDARIES : ALL_BOUNDARIES.slice(0, 4);
+}
+
+function getActiveLevels() {
+  return getBoundaries().map(boundary => boundary.level);
+}
+
+function parseNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function isBlankScore(value) {
+  return value === "" || value === null || value === undefined;
+}
+
+function formatNumber(value, digits = 2) {
+  const n = parseNumber(value);
+  return n.toLocaleString("ko-KR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits
+  });
+}
+
+function splitItems(text) {
+  return String(text || "")
+    .split(/[,，\s]+/)
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
+function countItems(text) {
+  return splitItems(text).length;
+}
+
+function itemSortValue(value) {
+  const text = String(value || "").trim();
+  const n = Number(text);
+  return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+}
+
+function sortItemLabels(items) {
+  return [...items].sort((a, b) => {
+    const an = itemSortValue(a);
+    const bn = itemSortValue(b);
+    if (an !== bn) return an - bn;
+    return String(a).localeCompare(String(b), "ko-KR", { numeric: true });
+  });
+}
+
+function groupKey(row) {
+  return [normalizeQuestionType(row.type), row.difficulty, row.target].join("|");
+}
+
+function normalizeQuestionType(type) {
+  return type === "서술형" ? "서답형" : type;
+}
+
+function categoryKey(item) {
+  return [normalizeQuestionType(item.type), item.difficulty].join("|");
+}
+
+function groupLabelFromKey(key) {
+  const [type, difficulty, target] = key.split("|");
+  return `${type} ${difficulty} · 목표 ${target}`;
+}
+
+function setRate(target, key, level, value) {
+  if (!target[key]) target[key] = {};
+  target[key][level] = value;
+}
+
+function setManual(target, key, level) {
+  if (!target[key]) target[key] = {};
+  target[key][level] = true;
+}
+
+function getRate(key, level) {
+  return state.rates[key] && state.rates[key][level] !== undefined
+    ? state.rates[key][level]
+    : "";
+}
+
+function getCategoryRate(key, level) {
+  return state.categoryRates[key] && state.categoryRates[key][level] !== undefined
+    ? state.categoryRates[key][level]
+    : "";
+}
+
+function isCategoryManual(key, level) {
+  return !!(state.categoryManual[key] && state.categoryManual[key][level]);
+}
+
+function sanitizeBlueprintRow(row = {}) {
+  return {
+    id: row.id || uid(),
+    type: TYPES.includes(normalizeQuestionType(row.type)) ? normalizeQuestionType(row.type) : "선택형",
+    difficulty: DIFFICULTIES.includes(row.difficulty) ? row.difficulty : "보통",
+    items: row.items || "",
+    target: LEVELS.includes(row.target) ? row.target : "C",
+    score: isBlankScore(row.score) ? "" : parseNumber(row.score)
+  };
+}
+
+function sanitizeBlueprintRows(rows) {
+  return Array.isArray(rows) ? rows.map(sanitizeBlueprintRow) : [];
+}
+
+function createBlueprintItem(itemNo = "") {
+  return {
+    id: uid(),
+    type: "선택형",
+    difficulty: "보통",
+    items: String(itemNo || ""),
+    target: "C",
+    score: ""
+  };
+}
+
+function expandBlueprintRows(rows) {
+  const expanded = [];
+  for (const sourceRow of sanitizeBlueprintRows(rows)) {
+    const items = splitItems(sourceRow.items);
+    const labels = items.length ? items : [sourceRow.items || ""];
+    const hasScore = !isBlankScore(sourceRow.score);
+    const perItemScore = hasScore
+      ? (labels.length > 1 ? parseNumber(sourceRow.score) / labels.length : parseNumber(sourceRow.score))
+      : "";
+    for (const label of labels) {
+      expanded.push({
+        id: uid(),
+        type: sourceRow.type,
+        difficulty: sourceRow.difficulty,
+        items: label,
+        target: sourceRow.target,
+        score: hasScore ? Number(perItemScore.toFixed(3)) : ""
+      });
+    }
+  }
+  return expanded;
+}
+
+function compactBlueprintRows(rows) {
+  const map = new Map();
+  for (const sourceRow of sanitizeBlueprintRows(rows)) {
+    const score = parseNumber(sourceRow.score);
+    if (!sourceRow.type || !sourceRow.difficulty || !sourceRow.target || score <= 0) continue;
+
+    const key = groupKey(sourceRow);
+    if (!map.has(key)) {
+      map.set(key, {
+        id: uid(),
+        type: sourceRow.type,
+        difficulty: sourceRow.difficulty,
+        target: sourceRow.target,
+        score: 0,
+        items: []
+      });
+    }
+
+    const group = map.get(key);
+    group.score += score;
+    const items = splitItems(sourceRow.items);
+    if (items.length) {
+      group.items.push(...items);
+    } else if (sourceRow.items) {
+      group.items.push(sourceRow.items);
+    }
+  }
+
+  return Array.from(map.values()).map(group => ({
+    ...group,
+    items: sortItemLabels(group.items).join(", "),
+    score: Number(group.score.toFixed(3))
+  })).sort((a, b) => {
+    const t = TYPES.indexOf(a.type) - TYPES.indexOf(b.type);
+    if (t !== 0) return t;
+    const d = DIFFICULTIES.indexOf(a.difficulty) - DIFFICULTIES.indexOf(b.difficulty);
+    if (d !== 0) return d;
+    return LEVELS.indexOf(a.target) - LEVELS.indexOf(b.target);
+  });
+}
+
+function blueprintSignature(rows, isCommon) {
+  return JSON.stringify({
+    isCommon: !!isCommon,
+    rows: compactBlueprintRows(rows).map(row => ({
+      type: row.type,
+      difficulty: row.difficulty,
+      items: String(row.items || "").replace(/\s+/g, ""),
+      target: row.target,
+      score: parseNumber(row.score)
+    }))
+  });
+}
+
+function teacherLabel(payload, fileName = "") {
+  return String(payload.teacherName || "").trim() || fileName.replace(/\.json$/i, "") || "이름 없음";
+}
+
+function safeFilePart(text, fallback) {
+  const value = String(text || "").trim().replace(/[\\/:*?"<>|]+/g, "_").replace(/\s+/g, "_");
+  return value || fallback;
+}
+
+function readJSONFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        resolve(JSON.parse(reader.result));
+      } catch (error) {
+        reject(new Error(`${file.name}: JSON을 읽을 수 없습니다.`));
+      }
+    };
+    reader.onerror = () => reject(new Error(`${file.name}: 파일을 읽을 수 없습니다.`));
+    reader.readAsText(file, "utf-8");
+  });
+}
+
+function clampRate(value) {
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function clampRate5(value) {
+  return Math.min(100, Math.max(5, Math.round(parseNumber(value) / 5) * 5));
+}
+
+function clampRateForLevel(level, value) {
+  return level === "E" ? clampRate(value) : clampRate5(value);
+}
+
+function levelGapAfter(level) {
+  return 5;
+}
+
+function rate5Options(value = "") {
+  let html = '<option value="">-</option>';
+  for (let v = 5; v <= 100; v += 5) {
+    const selected = String(value) === String(v) ? " selected" : "";
+    html += `<option value="${v}"${selected}>${v}</option>`;
+  }
+  return html;
+}
+
+function rateCellControl(category, level, value, sourceMode) {
+  const key = escapeAttr(category.key);
+  const modeClass = sourceMode === "manual" ? "manual" : "auto";
+  return level === "E"
+    ? `<input class="category-rate-free ${modeClass}" type="number" min="0" max="100" step="1" data-key="${key}" data-level="${level}" value="${escapeAttr(value)}">`
+    : `<select class="category-rate-select ${modeClass}" data-key="${key}" data-level="${level}">${rate5Options(value)}</select>`;
+}
+
+function inputOrderMark(category, level) {
+  if (!state.isCommon) return "";
+  const order = {
+    "쉬움|E": 1,
+    "보통|C": 2,
+    "어려움|A": 3,
+    "어려움|E": 4,
+    "쉬움|A": 5
+  }[`${category.difficulty}|${level}`];
+  return order ? `<span class="order-mark">${order}</span>` : "";
+}
+
+function orderedInputTargets() {
+  const activeLevels = new Set(getActiveLevels());
+  return [
+    { order: 1, difficulty: "쉬움", level: "E", label: "① 쉬움-E" },
+    { order: 2, difficulty: "보통", level: "C", label: "② 보통-C" },
+    { order: 3, difficulty: "어려움", level: "A", label: "③ 어려움-A" },
+    { order: 4, difficulty: "어려움", level: "E", label: "④ 어려움-E" },
+    { order: 5, difficulty: "쉬움", level: "A", label: "⑤ 쉬움-A" }
+  ].filter(target => activeLevels.has(target.level));
+}
+
+function categoriesForInputTarget(target) {
+  return aggregateCategories().filter(category => category.difficulty === target.difficulty);
+}
+
+function isInputTargetComplete(target) {
+  const categories = categoriesForInputTarget(target);
+  if (!categories.length) return true;
+  return categories.every(category => isCategoryManual(category.key, target.level));
+}
+
+function nextCategoryInputTarget() {
+  if (!state.isCommon) return null;
+  const categories = aggregateCategories();
+  if (!categories.length) return null;
+  return orderedInputTargets().find(target => !isInputTargetComplete(target)) || null;
+}
+
+function isCategoryInputSequenceComplete() {
+  if (!state.isCommon) return true;
+  const categories = aggregateCategories();
+  if (!categories.length) return false;
+  return orderedInputTargets().every(isInputTargetComplete);
+}
+
+function baseRate(level, target, difficulty) {
+  const gap = LEVEL_RANK[level] - LEVEL_RANK[target];
+  let rate = 65 + gap * 15 + (DIFFICULTY_ADJUST[difficulty] || 0);
+  if (gap <= -2) rate -= 5;
+  if (gap >= 2) rate += 5;
+  return clampRate(rate);
+}
+
+function aggregateGroups(source = state.blueprint) {
+  const map = new Map();
+  for (const row of source) {
+    const score = parseNumber(row.score);
+    row.type = normalizeQuestionType(row.type);
+    if (!row.type || !row.difficulty || !row.target || score <= 0) continue;
+    const key = groupKey(row);
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        type: row.type,
+        difficulty: row.difficulty,
+        target: row.target,
+        score: 0,
+        count: 0,
+        items: []
+      });
+    }
+    const group = map.get(key);
+    group.score += score;
+    group.count += countItems(row.items);
+    if (row.items) group.items.push(row.items);
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    const d = DIFFICULTIES.indexOf(a.difficulty) - DIFFICULTIES.indexOf(b.difficulty);
+    if (d !== 0) return d;
+    return LEVELS.indexOf(a.target) - LEVELS.indexOf(b.target);
+  });
+}
+
+function aggregateCategories(source = state.blueprint) {
+  const map = new Map();
+  for (const row of source) {
+    const score = parseNumber(row.score);
+    row.type = normalizeQuestionType(row.type);
+    if (!row.type || !row.difficulty || !row.target || score <= 0) continue;
+    const key = categoryKey(row);
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        type: row.type,
+        difficulty: row.difficulty,
+        score: 0,
+        count: 0,
+        items: [],
+        targets: Object.fromEntries(LEVELS.map(level => [level, 0]))
+      });
+    }
+    const category = map.get(key);
+    category.score += score;
+    category.count += countItems(row.items);
+    category.targets[row.target] += score;
+    if (row.items) category.items.push(row.items);
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    const t = TYPES.indexOf(a.type) - TYPES.indexOf(b.type);
+    if (t !== 0) return t;
+    return DIFFICULTIES.indexOf(a.difficulty) - DIFFICULTIES.indexOf(b.difficulty);
+  });
+}
+
+function findCategory(key) {
+  return aggregateCategories().find(category => category.key === key) || null;
+}
+
+function categoryWeightedBase(category, level) {
+  if (!category || category.score <= 0) return 0;
+  const sum = LEVELS.reduce((total, target) => {
+    return total + category.targets[target] * baseRate(level, target, category.difficulty);
+  }, 0);
+  return sum / category.score;
+}
+
+function categoryTargetRank(category) {
+  if (!category || category.score <= 0) return 3;
+  const sum = LEVELS.reduce((total, target) => {
+    return total + category.targets[target] * LEVEL_RANK[target];
+  }, 0);
+  return sum / category.score;
+}
+
+function projectedCategoryRate(group, level) {
+  const cKey = categoryKey(group);
+  const raw = getCategoryRate(cKey, level);
+  if (raw === "" || raw === null) return null;
+  const category = findCategory(cKey);
+  if (!category) return null;
+  const weightedBase = categoryWeightedBase(category, level);
+  const groupBase = baseRate(level, group.target, group.difficulty);
+  return clampRate(parseNumber(raw) + groupBase - weightedBase);
+}
+
+function categoryAnchors() {
+  const anchors = [];
+  const levels = getActiveLevels();
+  for (const category of aggregateCategories()) {
+    for (const level of levels) {
+      const raw = getCategoryRate(category.key, level);
+      if (raw !== "" && raw !== null && isCategoryManual(category.key, level)) {
+        anchors.push({
+          category,
+          level,
+          value: parseNumber(raw),
+          model: categoryWeightedBase(category, level),
+          levelRank: LEVEL_RANK[level],
+          targetRank: categoryTargetRank(category),
+          difficultyIndex: DIFFICULTIES.indexOf(category.difficulty)
+        });
+      }
+    }
+  }
+  return anchors;
+}
+
+function estimateCategoryRate(category, level) {
+  const raw = getCategoryRate(category.key, level);
+  if (raw !== "" && raw !== null && isCategoryManual(category.key, level)) return clampRateForLevel(level, raw);
+
+  const anchors = categoryAnchors();
+  const base = categoryWeightedBase(category, level);
+  if (!anchors.length) return clampRateForLevel(level, base);
+
+  const levelRank = LEVEL_RANK[level];
+  const targetRank = categoryTargetRank(category);
+  const difficultyIndex = DIFFICULTIES.indexOf(category.difficulty);
+  const weighted = anchors.map(anchor => {
+    const levelDistance = Math.abs(anchor.levelRank - levelRank);
+    const targetDistance = Math.abs(anchor.targetRank - targetRank);
+    const difficultyDistance = Math.abs(anchor.difficultyIndex - difficultyIndex);
+    const distance = levelDistance + targetDistance + difficultyDistance * 0.75;
+    return {
+      delta: anchor.value - anchor.model,
+      weight: 1 / Math.pow(distance + 0.65, 2)
+    };
+  });
+  const wSum = weighted.reduce((sum, item) => sum + item.weight, 0);
+  const delta = wSum ? weighted.reduce((sum, item) => sum + item.delta * item.weight, 0) / wSum : 0;
+  return clampRateForLevel(level, base + delta);
+}
+
+function categoryRateValue(category, level) {
+  const raw = getCategoryRate(category.key, level);
+  return raw === "" || raw === null ? estimateCategoryRate(category, level) : parseNumber(raw);
+}
+
+function setAutoCategoryRate(category, level, value) {
+  if (isCategoryManual(category.key, level)) return;
+  if (!state.categoryRates[category.key]) state.categoryRates[category.key] = {};
+  state.categoryRates[category.key][level] = clampRateForLevel(level, value);
+}
+
+function clearAutoCategoryRates() {
+  for (const key of Object.keys(state.categoryRates)) {
+    for (const level of Object.keys(state.categoryRates[key] || {})) {
+      if (!isCategoryManual(key, level)) delete state.categoryRates[key][level];
+    }
+  }
+}
+
+function interpolateWithinCategory(category) {
+  const levels = getActiveLevels();
+  const manualIndexes = levels
+    .map((level, index) => ({ level, index, value: getCategoryRate(category.key, level) }))
+    .filter(item => item.value !== "" && item.value !== null && isCategoryManual(category.key, item.level));
+
+  if (!manualIndexes.length) return;
+
+  for (let i = 0; i < manualIndexes.length - 1; i++) {
+    const left = manualIndexes[i];
+    const right = manualIndexes[i + 1];
+    const span = right.index - left.index;
+    if (span <= 1) continue;
+
+    for (let idx = left.index + 1; idx < right.index; idx++) {
+      const level = levels[idx];
+      if (isCategoryManual(category.key, level)) continue;
+
+      const ratio = (idx - left.index) / span;
+      const interpolated = parseNumber(left.value) + (parseNumber(right.value) - parseNumber(left.value)) * ratio;
+      setAutoCategoryRate(category, level, interpolated);
+    }
+  }
+}
+
+function enforceCategoryRateRules() {
+  const categories = aggregateCategories();
+  const levels = getActiveLevels();
+  for (let pass = 0; pass < 10; pass++) {
+    for (const category of categories) {
+      for (let i = 1; i < levels.length; i++) {
+        const higher = levels[i - 1];
+        const lower = levels[i];
+        const higherValue = categoryRateValue(category, higher);
+        const lowerValue = categoryRateValue(category, lower);
+        const minGap = levelGapAfter(higher);
+        if (higherValue >= lowerValue + minGap) continue;
+
+        if (!isCategoryManual(category.key, lower)) {
+          setAutoCategoryRate(category, lower, higherValue - minGap);
+        } else if (!isCategoryManual(category.key, higher)) {
+          setAutoCategoryRate(category, higher, lowerValue + minGap);
+        }
+      }
+    }
+
+    for (const type of TYPES) {
+      for (const level of levels) {
+        const byDifficulty = DIFFICULTIES
+          .map(difficulty => categories.find(category => category.type === type && category.difficulty === difficulty))
+          .filter(Boolean);
+
+        for (let i = 1; i < byDifficulty.length; i++) {
+          const easier = byDifficulty[i - 1];
+          const harder = byDifficulty[i];
+          const easierValue = categoryRateValue(easier, level);
+          const harderValue = categoryRateValue(harder, level);
+          if (easierValue >= harderValue) continue;
+
+          if (!isCategoryManual(harder.key, level)) {
+            setAutoCategoryRate(harder, level, easierValue);
+          } else if (!isCategoryManual(easier.key, level)) {
+            setAutoCategoryRate(easier, level, harderValue);
+          }
+        }
+      }
+    }
+  }
+}
+
+function canAutoFillCategoryRates(force = false) {
+  if (force || state.categoryAutoFilledAll) return true;
+  if (!categoryAnchors().length) return false;
+  return !state.isCommon || isCategoryInputSequenceComplete();
+}
+
+function autoFillCategoryRates(force = false) {
+  if (!canAutoFillCategoryRates(force)) {
+    clearAutoCategoryRates();
+    return;
+  }
+
+  const levels = getActiveLevels();
+  for (let pass = 0; pass < 2; pass++) {
+    for (const category of aggregateCategories()) {
+      if (!state.categoryRates[category.key]) state.categoryRates[category.key] = {};
+      for (const level of levels) {
+        if (!isCategoryManual(category.key, level)) {
+          state.categoryRates[category.key][level] = estimateCategoryRate(category, level);
+        }
+      }
+      interpolateWithinCategory(category);
+    }
+  }
+  enforceCategoryRateRules();
+}
+
+function interpolationAnchors() {
+  return manualRateEntries()
+    .filter(entry => entry.value >= 0 && entry.value <= 100)
+    .map(entry => ({
+      levelRank: LEVEL_RANK[entry.level],
+      targetRank: entry.targetRank,
+      difficultyIndex: DIFFICULTIES.indexOf(entry.difficulty),
+      value: entry.value,
+      model: entry.model
+    }));
+}
+
+function interpolateRateFromAnchors(group, level) {
+  const anchors = interpolationAnchors();
+  if (!anchors.length) return null;
+
+  const levelRank = LEVEL_RANK[level];
+  const targetRank = LEVEL_RANK[group.target];
+  const difficultyIndex = DIFFICULTIES.indexOf(group.difficulty);
+  const base = baseRate(level, group.target, group.difficulty);
+
+  const weighted = anchors.map(anchor => {
+    const levelDistance = Math.abs(anchor.levelRank - levelRank);
+    const targetDistance = Math.abs(anchor.targetRank - targetRank);
+    const difficultyDistance = Math.abs(anchor.difficultyIndex - difficultyIndex);
+    const distance = levelDistance + targetDistance + difficultyDistance * 0.75;
+    return {
+      delta: anchor.value - anchor.model,
+      weight: 1 / Math.pow(distance + 0.65, 2)
+    };
+  }).sort((a, b) => b.weight - a.weight).slice(0, 5);
+
+  const wSum = weighted.reduce((sum, item) => sum + item.weight, 0);
+  if (!wSum) return null;
+
+  const delta = weighted.reduce((sum, item) => sum + item.delta * item.weight, 0) / wSum;
+  return clampRate(base + delta);
+}
+
+function totalScore() {
+  return state.blueprint.reduce((sum, row) => sum + parseNumber(row.score), 0);
+}
+
+function totalCount() {
+  return state.blueprint.reduce((sum, row) => sum + countItems(row.items), 0);
+}
+
+function manualRateEntries() {
+  const entries = [];
+  const levels = getActiveLevels();
+  for (const group of aggregateGroups()) {
+    for (const level of levels) {
+      const raw = getRate(group.key, level);
+      if (raw !== "" && raw !== null) {
+        entries.push({
+          source: "group",
+          key: group.key,
+          group,
+          level,
+          value: parseNumber(raw),
+          model: baseRate(level, group.target, group.difficulty),
+          difficulty: group.difficulty,
+          targetRank: LEVEL_RANK[group.target]
+        });
+      }
+    }
+  }
+  for (const category of aggregateCategories()) {
+    for (const level of levels) {
+      const raw = getCategoryRate(category.key, level);
+      if (raw !== "" && raw !== null && isCategoryManual(category.key, level)) {
+        entries.push({
+          source: "category",
+          key: category.key,
+          category,
+          level,
+          value: parseNumber(raw),
+          model: categoryWeightedBase(category, level),
+          difficulty: category.difficulty,
+          targetRank: categoryTargetRank(category)
+        });
+      }
+    }
+  }
+  return entries;
+}
+
+function estimateRate(group, level) {
+  const raw = getRate(group.key, level);
+  if (raw !== "" && raw !== null) return clampRate(parseNumber(raw));
+
+  const projected = projectedCategoryRate(group, level);
+  if (projected !== null) return projected;
+
+  const interpolated = interpolateRateFromAnchors(group, level);
+  if (interpolated !== null) return interpolated;
+
+  const entries = manualRateEntries().filter(e => e.value >= 0 && e.value <= 100);
+  const offsets = [];
+  for (const entry of entries) {
+    const sameLevelBonus = entry.level === level ? 1.3 : 1;
+    const sameDiffBonus = entry.difficulty === group.difficulty ? 1.15 : 1;
+    const distance = Math.abs(LEVEL_RANK[entry.level] - LEVEL_RANK[level]) +
+      Math.abs(entry.targetRank - LEVEL_RANK[group.target]);
+    const weight = sameLevelBonus * sameDiffBonus / (1 + distance);
+    offsets.push({ delta: entry.value - entry.model, weight });
+  }
+
+  const base = baseRate(level, group.target, group.difficulty);
+  if (!offsets.length) return base;
+
+  const wSum = offsets.reduce((sum, item) => sum + item.weight, 0);
+  const delta = offsets.reduce((sum, item) => sum + item.delta * item.weight, 0) / wSum;
+  return clampRate(base + delta);
+}
+
+function normalizeRatesForCurrentGroups() {
+  const allowed = new Set(aggregateGroups().map(group => group.key));
+  const allowedCategories = new Set(aggregateCategories().map(category => category.key));
+  const next = {};
+  for (const key of allowed) {
+    next[key] = state.rates[key] ? { ...state.rates[key] } : {};
+  }
+  state.rates = next;
+
+  const nextCategoryRates = {};
+  const nextCategoryManual = {};
+  for (const key of allowedCategories) {
+    nextCategoryRates[key] = state.categoryRates[key] ? { ...state.categoryRates[key] } : {};
+    nextCategoryManual[key] = state.categoryManual[key] ? { ...state.categoryManual[key] } : {};
+  }
+  state.categoryRates = nextCategoryRates;
+  state.categoryManual = nextCategoryManual;
+}
+
+function nextItemNumber() {
+  const numbers = state.blueprint
+    .flatMap(row => splitItems(row.items))
+    .map(item => Number(item))
+    .filter(Number.isFinite);
+  return numbers.length ? Math.max(...numbers) + 1 : state.blueprint.length + 1;
+}
+
+function addSetupRows(count = 1) {
+  resetAggregationData();
+  let nextNo = nextItemNumber();
+  for (let i = 0; i < count; i++) {
+    state.blueprint.push(createBlueprintItem(nextNo++));
+  }
+  normalizeRatesForCurrentGroups();
+  renderAll();
+}
+
+function scoreDifficultyWeight(row) {
+  return SCORE_DIFFICULTY_WEIGHT[row.difficulty] || 1;
+}
+
+function distributeDifficultyWeightedScores(rows, total) {
+  const weightSum = rows.reduce((sum, row) => sum + scoreDifficultyWeight(row), 0);
+  if (!rows.length || weightSum <= 0) return [];
+
+  const step = total >= rows.length * SCORE_AUTOFILL_STEP ? SCORE_AUTOFILL_STEP : 0.001;
+  const unitCount = Math.floor((total + 1e-9) / step);
+  const weighted = rows.map((row, index) => {
+    const weight = scoreDifficultyWeight(row);
+    const rawUnits = unitCount * weight / weightSum;
+    return {
+      index,
+      weight,
+      units: Math.floor(rawUnits),
+      remainder: rawUnits - Math.floor(rawUnits)
+    };
+  });
+
+  let usedUnits = weighted.reduce((sum, item) => sum + item.units, 0);
+  const byRemainder = [...weighted].sort((a, b) => {
+    if (b.remainder !== a.remainder) return b.remainder - a.remainder;
+    if (b.weight !== a.weight) return b.weight - a.weight;
+    return a.index - b.index;
+  });
+  let cursor = 0;
+  while (usedUnits < unitCount && byRemainder.length) {
+    byRemainder[cursor % byRemainder.length].units += 1;
+    usedUnits += 1;
+    cursor += 1;
+  }
+
+  const scores = new Array(rows.length).fill(0);
+  for (const item of weighted) {
+    scores[item.index] = item.units * step;
+  }
+
+  const allocated = scores.reduce((sum, value) => sum + value, 0);
+  const residual = total - allocated;
+  if (Math.abs(residual) > 0.000001) {
+    const target = [...weighted].sort((a, b) => {
+      if (b.weight !== a.weight) return b.weight - a.weight;
+      return a.index - b.index;
+    })[0];
+    scores[target.index] += residual;
+  }
+
+  return scores.map(score => Number(score.toFixed(3)));
+}
+
+function autoFillSetupScores() {
+  const blankRows = state.blueprint.filter(row => isBlankScore(row.score));
+  if (!blankRows.length) {
+    alert("비어 있는 배점 칸이 없습니다.");
+    return;
+  }
+
+  const fixedTotal = state.blueprint
+    .filter(row => !isBlankScore(row.score))
+    .reduce((sum, row) => sum + parseNumber(row.score), 0);
+  const remaining = 100 - fixedTotal;
+
+  if (remaining <= 0) {
+    alert("이미 입력된 배점 합계가 100점 이상입니다. 빈 칸을 자동으로 채울 수 없습니다.");
+    return;
+  }
+
+  const scores = distributeDifficultyWeightedScores(blankRows, remaining);
+  blankRows.forEach((row, index) => {
+    row.score = scores[index];
+  });
+
+  resetAggregationData();
+  normalizeRatesForCurrentGroups();
+  renderAll();
+}
+
+function updateSetupRow(row, field, value) {
+  row[field] = value;
+  if (field === "type") row.type = normalizeQuestionType(value);
+  if (field === "score") row.score = isBlankScore(value) ? "" : parseNumber(value);
+  resetAggregationData();
+  normalizeRatesForCurrentGroups();
+  renderAll();
+}
+
+function deleteSetupRow(rowId) {
+  resetAggregationData();
+  state.blueprint = state.blueprint.filter(row => row.id !== rowId);
+  normalizeRatesForCurrentGroups();
+  renderAll();
+}
+
+function setupValidationIssues() {
+  const issues = [];
+  if (!state.blueprint.length) {
+    issues.push("문항을 1개 이상 추가하세요.");
+    return issues;
+  }
+
+  const seen = new Set();
+  state.blueprint.forEach((row, index) => {
+    const label = String(row.items || "").trim();
+    const labels = splitItems(label);
+    if (!label) issues.push(`${index + 1}행의 문항번호를 입력하세요.`);
+    if (labels.length > 1) issues.push(`${index + 1}행에는 문항번호를 하나만 입력하세요.`);
+    if (isBlankScore(row.score)) {
+      issues.push(`${label || index + 1}번 문항의 배점을 입력하거나 배점 자동 채우기를 실행하세요.`);
+    } else if (parseNumber(row.score) <= 0) {
+      issues.push(`${label || index + 1}번 문항의 배점을 0보다 크게 입력하세요.`);
+    }
+    for (const itemLabel of labels.length ? labels : (label ? [label] : [])) {
+      const compact = itemLabel.replace(/\s+/g, "");
+      if (seen.has(compact)) issues.push(`${label}번 문항이 중복되어 있습니다.`);
+      seen.add(compact);
+    }
+  });
+
+  return issues;
+}
+
+function renderSetupWarning(issues = []) {
+  const box = document.getElementById("setup-warning");
+  if (!box) return;
+  if (!issues.length) {
+    box.classList.remove("show");
+    box.innerHTML = "";
+    return;
+  }
+  box.classList.add("show");
+  box.innerHTML = issues.slice(0, 5).map(issue => `<div>${escapeHtml(issue)}</div>`).join("");
+}
+
+function renderSetupStats() {
+  const totalScoreEl = document.getElementById("setup-total-score");
+  const totalCountEl = document.getElementById("setup-total-count");
+  const groupCountEl = document.getElementById("setup-group-count");
+  if (totalScoreEl) totalScoreEl.textContent = formatNumber(totalScore());
+  if (totalCountEl) totalCountEl.textContent = totalCount();
+  if (groupCountEl) groupCountEl.textContent = compactBlueprintRows(state.blueprint).length;
+}
+
+function renderSetupPage() {
+  const tbody = document.getElementById("setup-body");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+  for (const row of state.blueprint) {
+    row.type = normalizeQuestionType(row.type);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input class="setup-item-input" data-field="items" value="${escapeAttr(row.items)}"></td>
+      <td>${selectHtml("type", TYPES, row.type)}</td>
+      <td><input class="setup-score-input" type="number" min="0" step="0.001" data-field="score" value="${escapeAttr(row.score)}"></td>
+      <td>${selectHtml("difficulty", DIFFICULTIES, row.difficulty)}</td>
+      <td>${selectHtml("target", LEVELS, row.target)}</td>
+      <td><button class="btn danger small" data-action="delete">삭제</button></td>
+    `;
+    tr.querySelectorAll("[data-field]").forEach(el => {
+      el.addEventListener("change", () => updateSetupRow(row, el.dataset.field, el.value));
+    });
+    tr.querySelector("[data-action='delete']").addEventListener("click", () => deleteSetupRow(row.id));
+    tbody.appendChild(tr);
+  }
+
+  renderSetupStats();
+  renderSetupWarning();
+}
+
+function renderBlueprint() {
+  const tbody = document.getElementById("blueprint-body");
+  tbody.innerHTML = "";
+  const rows = compactBlueprintRows(state.blueprint);
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6">문항별 입력 화면에서 문항을 추가하세요.</td></tr>`;
+    return;
+  }
+
+  for (const row of rows) {
+    const tr = document.createElement("tr");
+    tr.className = "blueprint-summary-row";
+    tr.innerHTML = `
+      <td>${escapeHtml(row.type)}</td>
+      <td><span class="tag ${DIFFICULTY_CLASS[row.difficulty]}">${escapeHtml(row.difficulty)}</span></td>
+      <td class="left">${escapeHtml(row.items)}</td>
+      <td><span class="tag">${escapeHtml(row.target)}</span></td>
+      <td class="num">${formatNumber(row.score)}</td>
+      <td class="num">${countItems(row.items)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function selectHtml(field, options, value) {
+  return `<select data-field="${field}">` + options.map(option => {
+    const selected = option === value ? " selected" : "";
+    return `<option value="${option}"${selected}>${option}</option>`;
+  }).join("") + `</select>`;
+}
+
+function escapeAttr(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderSummary() {
+  const container = document.getElementById("summary-list");
+  const groupsByDifficulty = new Map();
+  for (const row of state.blueprint) {
+    const key = `${row.type}|${row.difficulty}`;
+    if (!groupsByDifficulty.has(key)) {
+      groupsByDifficulty.set(key, {
+        type: row.type,
+        difficulty: row.difficulty,
+        score: 0,
+        count: 0,
+        targets: Object.fromEntries(LEVELS.map(level => [level, 0]))
+      });
+    }
+    const item = groupsByDifficulty.get(key);
+    item.score += parseNumber(row.score);
+    item.count += countItems(row.items);
+    item.targets[row.target] += parseNumber(row.score);
+  }
+
+  const list = Array.from(groupsByDifficulty.values()).sort((a, b) => {
+    const t = TYPES.indexOf(a.type) - TYPES.indexOf(b.type);
+    if (t !== 0) return t;
+    return DIFFICULTIES.indexOf(a.difficulty) - DIFFICULTIES.indexOf(b.difficulty);
+  });
+
+  if (!list.length) {
+    container.innerHTML = `<div class="notice">문항 설계 행을 추가하면 범주 요약이 표시됩니다.</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(item => {
+    const bars = LEVELS.map(level => {
+      const width = item.score > 0 ? (item.targets[level] / item.score) * 100 : 0;
+      if (width <= 0) return "";
+      return `<span class="level-${level.toLowerCase()}" style="width:${width}%">${level}</span>`;
+    }).join("");
+    return `
+      <div class="summary-item">
+        <div>
+          <span class="tag ${DIFFICULTY_CLASS[item.difficulty]}">${item.difficulty}</span>
+          <span class="summary-meta">${item.type}</span>
+        </div>
+        <div class="target-bars">${bars}</div>
+        <div class="summary-meta num">${formatNumber(item.score)}점 · ${item.count}문항</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderRateMatrix() {
+  const tbody = document.getElementById("rate-body");
+  if (!tbody) return;
+  const groups = aggregateGroups();
+  const levels = getActiveLevels();
+  tbody.innerHTML = "";
+
+  if (!groups.length) {
+    tbody.innerHTML = `<tr><td colspan="7">문항 설계 행을 추가하세요.</td></tr>`;
+    return;
+  }
+
+  for (const group of groups) {
+    const tr = document.createElement("tr");
+    const label = `${group.type} ${group.difficulty}<br><span class="summary-meta">목표 ${group.target} · ${group.items.join(", ")}</span>`;
+    tr.innerHTML = `
+      <td class="left sticky-left">${label}</td>
+      <td class="num">${formatNumber(group.score)}</td>
+      ${levels.map(level => {
+        const raw = getRate(group.key, level);
+        const value = raw === "" ? estimateRate(group, level) : raw;
+        const cls = raw === "" ? "" : " manual";
+        return `<td><input class="rate-input${cls}" type="number" min="0" max="100" step="1" data-key="${group.key}" data-level="${level}" value="${value}"></td>`;
+      }).join("")}
+    `;
+    tr.querySelectorAll(".rate-input").forEach(input => {
+      input.addEventListener("change", () => {
+        const key = input.dataset.key;
+        const level = input.dataset.level;
+        if (!state.rates[key]) state.rates[key] = {};
+        if (input.value === "") {
+          delete state.rates[key][level];
+        } else {
+          state.rates[key][level] = clampRate(parseNumber(input.value));
+        }
+        renderAll();
+      });
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+function renderCategoryRateMatrix() {
+  renderCategoryRateHeader();
+  const tbody = document.getElementById("category-rate-body");
+  const categories = aggregateCategories();
+  const levels = getActiveLevels();
+  tbody.innerHTML = "";
+
+  if (!categories.length) {
+    tbody.innerHTML = `<tr><td colspan="${6 + levels.length}">문항 설계 행을 추가하세요.</td></tr>`;
+    return;
+  }
+
+  let previousType = "";
+  for (const category of categories) {
+    const tr = document.createElement("tr");
+    if (previousType && previousType !== category.type) tr.classList.add("type-separator");
+    previousType = category.type;
+    const distribution = LEVELS.map(level => {
+      const score = category.targets[level];
+      if (score <= 0) return "";
+      const pct = category.score > 0 ? score / category.score * 100 : 0;
+      return `<span class="tag">${level} ${formatNumber(pct, 0)}%</span>`;
+    }).filter(Boolean).join(" ");
+    tr.innerHTML = `
+      <td class="sticky-left type-cell-strong">${category.type}</td>
+      <td><span class="tag ${DIFFICULTY_CLASS[category.difficulty]}">${category.difficulty}</span></td>
+      <td class="left">${category.items.join(", ")}</td>
+      <td class="num">${category.count}</td>
+      <td class="num">${formatNumber(category.score)}</td>
+      <td class="left">${distribution || "-"}</td>
+      ${levels.map(level => {
+        const raw = getCategoryRate(category.key, level);
+        const value = raw === "" && canAutoFillCategoryRates() ? estimateCategoryRate(category, level) : raw;
+        const sourceMode = isCategoryManual(category.key, level) ? "manual" : "auto";
+        const mark = inputOrderMark(category, level);
+        return `<td class="rate-cell">${mark}${rateCellControl(category, level, value, sourceMode)}</td>`;
+      }).join("")}
+    `;
+    tr.querySelectorAll(".category-rate-select, .category-rate-free").forEach(field => {
+      field.addEventListener("change", () => {
+        const key = field.dataset.key;
+        const level = field.dataset.level;
+        updateCategoryRateCell(key, level, field.value);
+      });
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+function updateCategoryRateCell(key, level, value) {
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  if (!state.categoryRates[key]) state.categoryRates[key] = {};
+  if (!state.categoryManual[key]) state.categoryManual[key] = {};
+
+  if (value === "") {
+    delete state.categoryRates[key][level];
+    delete state.categoryManual[key][level];
+  } else {
+    state.categoryRates[key][level] = clampRateForLevel(level, parseNumber(value));
+    state.categoryManual[key][level] = true;
+  }
+
+  autoFillCategoryRates();
+  renderAll();
+}
+
+function renderCategoryRateHeader() {
+  const thead = document.querySelector("#category-rate-table thead");
+  if (!thead) return;
+  const boundaries = getBoundaries();
+  const table = document.getElementById("category-rate-table");
+  if (table) {
+    table.querySelectorAll("colgroup").forEach(group => group.remove());
+    const baseWidths = [8, 7, 13, 6, 7, 17];
+    const rateWidth = (100 - baseWidths.reduce((sum, width) => sum + width, 0)) / boundaries.length;
+    const colgroup = document.createElement("colgroup");
+    colgroup.innerHTML = [
+      ...baseWidths.map(width => `<col style="width:${width}%">`),
+      ...boundaries.map(() => `<col style="width:${rateWidth}%">`)
+    ].join("");
+    table.insertBefore(colgroup, thead);
+  }
+  thead.innerHTML = `
+    <tr>
+      <th class="sticky-left" rowspan="2">문항구분</th>
+      <th rowspan="2">난이도</th>
+      <th rowspan="2">해당 문항번호</th>
+      <th rowspan="2">문항수</th>
+      <th rowspan="2">배점합</th>
+      <th rowspan="2">목표 성취수준 분포</th>
+      <th colspan="${boundaries.length}">최소능력자의 예상 정답률(%)</th>
+    </tr>
+    <tr>
+      ${boundaries.map(boundary => `
+        <th><span class="boundary-head"><strong>${boundary.level}</strong><span>${boundary.label}</span></span></th>
+      `).join("")}
+    </tr>
+  `;
+}
+
+function renderEntryGuide() {
+  const box = document.getElementById("entry-guide-text");
+  const notice = document.getElementById("category-input-notice");
+  if (!box) return;
+
+  if (notice) {
+    notice.textContent = state.isCommon
+      ? "① 쉬움-E, ② 보통-C, ③ 어려움-A, ④ 어려움-E, ⑤ 쉬움-A 순서로 입력하세요. ①~⑤ 기준값이 모두 들어가면 나머지 칸이 자동으로 채워집니다."
+      : "선택과목은 E/I 경계가 없으므로 순서 입력 표시를 사용하지 않습니다. 필요한 칸만 직접 수정하거나 전체 자동입력을 사용할 수 있습니다.";
+  }
+
+  if (!state.isCommon) {
+    const categories = aggregateCategories();
+    if (!categories.length) {
+      box.textContent = "먼저 문항 목표 성취수준을 입력하면 선택과목 A/B~D/E 경계 입력표가 표시됩니다.";
+      return;
+    }
+    box.innerHTML = state.categoryAutoFilledAll
+      ? "<strong>전체 자동입력 완료:</strong> 자동값을 확인하고 필요한 칸만 직접 수정하세요."
+      : "<strong>선택과목:</strong> 기준값 입력 순서 없이 A/B, B/C, C/D, D/E 경계 정답률을 필요한 칸만 수정하거나 전체 자동입력으로 채우세요.";
+    return;
+  }
+
+  const categories = aggregateCategories();
+  const next = nextCategoryInputTarget();
+
+  if (!categories.length) {
+    box.textContent = "먼저 문항 목표 성취수준을 입력하면 ①~⑤ 입력 위치가 표시됩니다.";
+    return;
+  }
+
+  if (state.categoryAutoFilledAll) {
+    box.innerHTML = "<strong>전체 자동입력 완료:</strong> 자동값을 확인하고 필요한 칸만 직접 수정하세요.";
+    return;
+  }
+
+  if (next) {
+    const method = next.level === "E" ? "직접 숫자로 입력하세요" : "5점 단위로 선택하세요";
+    box.innerHTML = `<strong>다음 입력:</strong> ${next.label} 칸에 예상 정답률을 ${method}. ①~⑤를 모두 입력하면 나머지 칸이 자동으로 채워집니다.`;
+  } else {
+    box.innerHTML = "<strong>입력 완료:</strong> ①~⑤ 기준값이 모두 입력되어 나머지 칸이 자동으로 채워졌습니다. 필요한 칸만 수정하세요.";
+  }
+}
+
+function renderAnchorSummary() {
+  renderAnchorSummaryHeader();
+  const tbody = document.getElementById("anchor-summary");
+  const levels = getActiveLevels();
+  const rows = [
+    { label: "교사 입력 평균", mode: "manual" },
+    { label: "자동 추정 평균", mode: "auto" }
+  ];
+  tbody.innerHTML = rows.map(row => {
+    return `<tr><td class="left">${row.label}</td>${levels.map(level => {
+      const values = aggregateCategories().map(category => {
+        const raw = getCategoryRate(category.key, level);
+        if (row.mode === "manual") return isCategoryManual(category.key, level) ? parseNumber(raw) : null;
+        return !isCategoryManual(category.key, level) && raw !== "" ? parseNumber(raw) : null;
+      }).filter(value => value !== null);
+      const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+      return `<td class="num">${values.length ? formatNumber(avg, 1) + "%" : "-"}</td>`;
+    }).join("")}</tr>`;
+  }).join("");
+}
+
+function renderAnchorSummaryHeader() {
+  const tbody = document.getElementById("anchor-summary");
+  const thead = tbody && tbody.closest("table") ? tbody.closest("table").querySelector("thead") : null;
+  if (!thead) return;
+  thead.innerHTML = `<tr><th>기준</th>${getActiveLevels().map(level => `<th>${level}</th>`).join("")}</tr>`;
+}
+
+function validateRates() {
+  const warnings = [];
+  document.querySelectorAll(".category-rate-select, .category-rate-free").forEach(input => input.classList.remove("error"));
+  document.querySelectorAll("#category-rate-table .rate-cell").forEach(cell => cell.classList.remove("error"));
+  const levels = getActiveLevels();
+
+  function markCategoryCell(category, level) {
+    const selector = `.category-rate-select[data-key="${CSS.escape(category.key)}"][data-level="${level}"], .category-rate-free[data-key="${CSS.escape(category.key)}"][data-level="${level}"]`;
+    const el = document.querySelector(selector);
+    if (el) {
+      el.classList.add("error");
+      const cell = el.closest(".rate-cell");
+      if (cell) cell.classList.add("error");
+    }
+  }
+
+  const categories = aggregateCategories();
+  for (const category of categories) {
+    const values = levels.map(level => categoryRateValue(category, level));
+    for (let i = 1; i < values.length; i++) {
+      const minGap = levelGapAfter(levels[i - 1]);
+      if (values[i - 1] < values[i] + minGap) {
+        warnings.push(`${category.type} ${category.difficulty}: ${levels[i - 1]} 경계 정답률은 ${levels[i]} 경계보다 최소 ${minGap}점 이상 높아야 합니다.`);
+        markCategoryCell(category, levels[i - 1]);
+        markCategoryCell(category, levels[i]);
+      }
+    }
+    for (const level of levels) {
+      const value = categoryRateValue(category, level);
+      if (value < 0 || value > 100) {
+        warnings.push(`${category.type} ${category.difficulty} ${level} 경계 정답률은 0-100 범위여야 합니다.`);
+        markCategoryCell(category, level);
+      }
+    }
+  }
+
+  for (const type of TYPES) {
+    for (const level of levels) {
+      const byDifficulty = DIFFICULTIES
+        .map(difficulty => categories.find(category => category.type === type && category.difficulty === difficulty))
+        .filter(Boolean);
+      for (let i = 1; i < byDifficulty.length; i++) {
+        const easier = byDifficulty[i - 1];
+        const harder = byDifficulty[i];
+        if (categoryRateValue(easier, level) < categoryRateValue(harder, level)) {
+          warnings.push(`${type} ${level} 경계: ${easier.difficulty} 정답률이 ${harder.difficulty}보다 낮습니다.`);
+          markCategoryCell(easier, level);
+          markCategoryCell(harder, level);
+        }
+      }
+    }
+  }
+
+  const box = document.getElementById("rate-warning");
+  if (warnings.length) {
+    box.classList.add("show");
+    box.innerHTML = warnings.slice(0, 5).join("<br>");
+  } else {
+    box.classList.remove("show");
+    box.innerHTML = "";
+  }
+}
+
+function calculateBoundaries() {
+  const categories = aggregateCategories();
+  const results = [];
+  for (const boundary of getBoundaries()) {
+    const score = categories.reduce((sum, category) => {
+      return sum + category.score * categoryRateValue(category, boundary.level) / 100;
+    }, 0);
+    results.push({ ...boundary, score });
+  }
+  return results;
+}
+
+function categoryRateValueFromEntry(entry, category, level) {
+  const raw = entry.categoryRates[category.key] ? entry.categoryRates[category.key][level] : undefined;
+  if (raw !== undefined && raw !== "") return clampRateForLevel(level, parseNumber(raw));
+  return categoryWeightedBase(category, level);
+}
+
+function calculateBoundariesForEntry(entry) {
+  const categories = aggregateCategories(entry.blueprint);
+  return getBoundariesForType(entry.isCommon).map(boundary => {
+    const score = categories.reduce((sum, category) => {
+      return sum + category.score * categoryRateValueFromEntry(entry, category, boundary.level) / 100;
+    }, 0);
+    return { ...boundary, score };
+  });
+}
+
+function normalizeAssessmentWeights(weights) {
+  return weights && typeof weights === "object"
+    ? { mid: parseNumber(weights.mid, 40), fin: parseNumber(weights.fin, 40), perf: parseNumber(weights.perf, 20) }
+    : { mid: 40, fin: 40, perf: 20 };
+}
+
+function normalizeAssessmentScores(scores) {
+  return scores && typeof scores === "object"
+    ? { mid: scores.mid || {}, fin: scores.fin || {}, perf: scores.perf || {} }
+    : { mid: {}, fin: {}, perf: {} };
+}
+
+function boundaryResultsForEntry(entry) {
+  if (Array.isArray(entry.finalBoundaries) && entry.finalBoundaries.length) {
+    return entry.finalBoundaries.map(item => ({
+      label: item.label,
+      level: item.level,
+      score: parseNumber(item.score)
+    }));
+  }
+  if (hasAssessmentScores(entry.assessmentScores) && Math.round(assessmentWeightSum(entry.assessmentWeights) * 10) === 1000) {
+    return calculateSemesterBoundariesFromScores(entry.assessmentWeights, entry.assessmentScores, entry.isCommon);
+  }
+  return calculateBoundariesForEntry(entry);
+}
+
+function renderResults() {
+  const total = totalScore();
+  const isFinal = Array.isArray(state.finalBoundaries) && state.finalBoundaries.length;
+  const results = isFinal ? state.finalBoundaries : calculateBoundaries();
+  const finalLabel = state.finalResultLabel || "여러 교사 취합 최종";
+  const resultList = document.getElementById("result-list");
+  const avgRate = results.length && total > 0
+    ? results.reduce((sum, item) => sum + item.score / total * 100, 0) / results.length
+    : 0;
+
+  document.getElementById("metric-total").textContent = formatNumber(total);
+  document.getElementById("metric-rate").textContent = `${formatNumber(avgRate, 1)}%`;
+  document.getElementById("metric-top").textContent = results[0] ? formatNumber(results[0].score) : "0";
+  document.getElementById("metric-low").textContent = results[results.length - 1] ? formatNumber(results[results.length - 1].score) : "0";
+
+  if (!results.length || total <= 0) {
+    resultList.innerHTML = `<div class="notice">문항 설계와 정답률을 입력하면 경계 점수가 표시됩니다.</div>`;
+  } else {
+    resultList.innerHTML = results.map(item => {
+      const pct = total > 0 ? item.score / total * 100 : 0;
+      return `
+        <div class="result-card">
+          <div class="boundary">${item.label}</div>
+          <div>
+            <div class="bar" style="--w:${pct}%"><span></span></div>
+            <div class="summary-meta">${isFinal ? finalLabel : item.level + " 최소능력자 기준"} · ${formatNumber(pct, 1)}%</div>
+          </div>
+          <div class="score-big">${formatNumber(item.score)}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  renderContributions();
+}
+
+function renderContributions() {
+  const tbody = document.getElementById("contrib-body");
+  const boundaries = getBoundaries();
+  renderContributionHeader(boundaries);
+  if (Array.isArray(state.finalBoundaries) && state.finalBoundaries.length) {
+    tbody.innerHTML = `<tr>
+      <td class="left">${state.finalResultLabel || "여러 교사 취합 최종"}</td>
+      ${state.finalBoundaries.map(boundary => `<td class="num">${formatNumber(boundary.score)}</td>`).join("")}
+    </tr>`;
+    return;
+  }
+  const categories = aggregateCategories();
+  if (!categories.length) {
+    tbody.innerHTML = `<tr><td colspan="${boundaries.length + 1}">기여도 없음</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = categories.map(category => {
+    return `<tr>
+      <td class="left">${category.type} ${category.difficulty}</td>
+      ${boundaries.map(boundary => {
+        const score = category.score * categoryRateValue(category, boundary.level) / 100;
+        return `<td class="num">${formatNumber(score)}</td>`;
+      }).join("")}
+    </tr>`;
+  }).join("");
+}
+
+function renderContributionHeader(boundaries = getBoundaries()) {
+  const head = document.getElementById("contrib-head");
+  if (!head) return;
+  head.innerHTML = `<tr><th class="left">문항 묶음</th>${boundaries.map(boundary => `<th>${boundary.label}</th>`).join("")}</tr>`;
+}
+
+function assessmentScoreValue(assessmentId, label) {
+  const scores = state.assessmentScores[assessmentId] || {};
+  return scores[label] !== undefined && scores[label] !== "" ? parseNumber(scores[label]) : "";
+}
+
+function assessmentWeightSum(weights = state.assessmentWeights) {
+  return ASSESSMENTS.reduce((sum, item) => sum + parseNumber(weights[item.id]), 0);
+}
+
+function calculateSemesterBoundariesFromScores(weights = state.assessmentWeights, scores = state.assessmentScores, isCommon = state.isCommon) {
+  return getBoundariesForType(isCommon).map(boundary => {
+    const score = ASSESSMENTS.reduce((sum, item) => {
+      const value = scores[item.id] && scores[item.id][boundary.label] !== undefined
+        ? parseNumber(scores[item.id][boundary.label])
+        : 0;
+      return sum + value * parseNumber(weights[item.id]) / 100;
+    }, 0);
+    return {
+      label: boundary.label,
+      level: boundary.level,
+      score: Math.round(score * 10) / 10,
+      source: "semester"
+    };
+  });
+}
+
+function hasAssessmentScores(scores = state.assessmentScores) {
+  return ASSESSMENTS.some(item => {
+    const row = scores[item.id] || {};
+    return Object.values(row).some(value => value !== "" && value !== null && value !== undefined);
+  });
+}
+
+function renderSemesterScoreInputs() {
+  const head = document.getElementById("semester-head");
+  const body = document.getElementById("semester-body");
+  const status = document.getElementById("semester-weight-status");
+  if (!head || !body || !status) return;
+
+  const boundaries = getBoundaries();
+  const sum = assessmentWeightSum();
+  status.textContent = `${formatNumber(sum, 1)}%`;
+  status.classList.toggle("semester-weight-ok", Math.round(sum * 10) === 1000);
+  status.classList.toggle("semester-weight-ng", Math.round(sum * 10) !== 1000);
+
+  head.innerHTML = `
+    <tr>
+      <th class="left">평가</th>
+      <th>반영비율(%)</th>
+      ${boundaries.map(boundary => `<th>${boundary.label}</th>`).join("")}
+    </tr>
+  `;
+
+  body.innerHTML = ASSESSMENTS.map(item => `
+    <tr>
+      <td class="left">${item.label}</td>
+      <td><input class="semester-weight-input" type="number" min="0" max="100" step="1" data-assessment="${item.id}" value="${state.assessmentWeights[item.id]}"></td>
+      ${boundaries.map(boundary => `
+        <td><input class="semester-score-input" type="number" min="0" step="0.1" data-assessment="${item.id}" data-boundary="${boundary.label}" value="${assessmentScoreValue(item.id, boundary.label)}"></td>
+      `).join("")}
+    </tr>
+  `).join("");
+
+  body.querySelectorAll(".semester-weight-input").forEach(input => {
+    input.addEventListener("change", () => {
+      state.finalBoundaries = null;
+      state.finalResultLabel = "";
+      state.assessmentWeights[input.dataset.assessment] = parseNumber(input.value);
+      renderAll();
+    });
+  });
+
+  body.querySelectorAll(".semester-score-input").forEach(input => {
+    input.addEventListener("change", () => {
+      state.finalBoundaries = null;
+      state.finalResultLabel = "";
+      const assessment = input.dataset.assessment;
+      const boundary = input.dataset.boundary;
+      if (!state.assessmentScores[assessment]) state.assessmentScores[assessment] = {};
+      if (input.value === "") {
+        delete state.assessmentScores[assessment][boundary];
+      } else {
+        state.assessmentScores[assessment][boundary] = parseNumber(input.value);
+      }
+      renderAll();
+    });
+  });
+}
+
+function copyCurrentEstimateToAssessment() {
+  const target = document.getElementById("assessment-copy-target").value;
+  if (!state.assessmentScores[target]) state.assessmentScores[target] = {};
+  for (const boundary of calculateBoundaries()) {
+    state.assessmentScores[target][boundary.label] = Math.round(boundary.score * 10) / 10;
+  }
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  renderAll();
+}
+
+function applySemesterFinal() {
+  const sum = assessmentWeightSum();
+  if (Math.round(sum * 10) !== 1000) {
+    alert(`반영비율 합계가 100%가 되어야 합니다.\n현재: ${formatNumber(sum, 1)}%`);
+    return;
+  }
+  state.finalBoundaries = calculateSemesterBoundariesFromScores();
+  state.finalResultLabel = "학기말 최종";
+  renderAll();
+}
+
+function clearSemesterInputs() {
+  state.assessmentWeights = { mid: 40, fin: 40, perf: 20 };
+  state.assessmentScores = { mid: {}, fin: {}, perf: {} };
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  renderAll();
+}
+
+function resetSemesterData() {
+  state.assessmentWeights = { mid: 40, fin: 40, perf: 20 };
+  state.assessmentScores = { mid: {}, fin: {}, perf: {} };
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+}
+
+function renderPills() {
+  const manualCount = manualRateEntries().length;
+  const categories = aggregateCategories();
+  const totalCells = categories.length * getActiveLevels().length;
+  document.getElementById("total-score-pill").textContent = formatNumber(totalScore());
+  document.getElementById("total-count-pill").textContent = totalCount();
+  document.getElementById("manual-count-pill").textContent = manualCount;
+  document.getElementById("auto-count-pill").textContent = Math.max(0, totalCells - manualCount);
+}
+
+function aggregateStats() {
+  const entries = state.aggregation.entries || [];
+  const rows = [];
+  for (const boundary of getBoundaries()) {
+    const values = entries.map(entry => {
+      const result = (entry.boundaryResults || []).find(item => item.label === boundary.label);
+      if (!result) return null;
+      return {
+        teacherName: entry.teacherName,
+        value: parseNumber(result.score)
+      };
+    }).filter(Boolean);
+    if (!values.length) continue;
+
+    const nums = values.map(item => item.value).sort((a, b) => a - b);
+    const average = nums.reduce((sum, value) => sum + value, 0) / nums.length;
+    const middle = Math.floor(nums.length / 2);
+    const median = nums.length % 2 ? nums[middle] : (nums[middle - 1] + nums[middle]) / 2;
+    rows.push({
+      label: boundary.label,
+      level: boundary.level,
+      count: nums.length,
+      average,
+      median,
+      min: nums[0],
+      max: nums[nums.length - 1],
+      values
+    });
+  }
+  return rows;
+}
+
+function renderTeacherName() {
+  const input = document.getElementById("teacher-name");
+  if (input && document.activeElement !== input) input.value = state.teacherName || "";
+}
+
+function renderAggregation() {
+  const entries = state.aggregation.entries || [];
+  const warnings = state.aggregation.warnings || [];
+  const stats = aggregateStats();
+  const count = document.getElementById("aggregate-count");
+  const status = document.getElementById("aggregate-status");
+  const head = document.getElementById("aggregate-head");
+  const body = document.getElementById("aggregate-body");
+  if (!count || !status || !head || !body) return;
+
+  count.textContent = `${entries.length}명`;
+  head.innerHTML = `
+    <tr>
+      <th>경계</th>
+      <th>교사수</th>
+      <th>평균 점수</th>
+      <th>중앙값 점수</th>
+      <th>범위</th>
+      <th class="left">교사별 추정 분할점수</th>
+    </tr>
+  `;
+
+  if (!entries.length) {
+    status.innerHTML = `<span>아직 불러온 교사 JSON이 없습니다.</span>`;
+    body.innerHTML = `<tr><td class="aggregate-empty" colspan="6">여러 JSON 불러오기를 눌러 교사별 파일을 선택하세요.</td></tr>`;
+    return;
+  }
+
+  const teacherNames = entries.map(entry => escapeHtml(entry.teacherName)).join(", ");
+  status.innerHTML = `
+    <span><strong>취합 대상:</strong> ${teacherNames}</span>
+    <span><strong>취합 기준:</strong> 학기말 최종 점수가 저장된 JSON은 그 점수를, 없으면 각 교사의 현재 추정 분할점수를 경계별로 취합합니다.</span>
+    ${warnings.length ? `<span><strong>제외/주의:</strong> ${warnings.map(escapeHtml).join(" / ")}</span>` : ""}
+  `;
+
+  if (!stats.length) {
+    body.innerHTML = `<tr><td class="aggregate-empty" colspan="6">취합할 추정 분할점수가 없습니다.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = stats.map(row => {
+    const values = row.values
+      .map(item => `${escapeHtml(item.teacherName)}: ${formatNumber(item.value, 1)}`)
+      .join(" · ");
+    return `
+      <tr>
+        <td>${row.label}</td>
+        <td class="num">${row.count}</td>
+        <td class="num">${formatNumber(row.average, 1)}</td>
+        <td class="num">${formatNumber(row.median, 1)}</td>
+        <td class="num">${formatNumber(row.min, 1)}~${formatNumber(row.max, 1)}</td>
+        <td class="left aggregate-values">${values}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderSubjectType() {
+  const common = document.getElementById("subject-common");
+  const elective = document.getElementById("subject-elective");
+  if (common) common.checked = state.isCommon;
+  if (elective) elective.checked = !state.isCommon;
+}
+
+function renderAll() {
+  normalizeRatesForCurrentGroups();
+  autoFillCategoryRates();
+  renderSetupPage();
+  renderTeacherName();
+  renderSubjectType();
+  renderBlueprint();
+  renderSummary();
+  renderCategoryRateMatrix();
+  renderEntryGuide();
+  renderAnchorSummary();
+  validateRates();
+  renderResults();
+  renderSemesterScoreInputs();
+  renderPills();
+  renderAggregation();
+}
+
+function setActivePage(page) {
+  const setup = document.getElementById("setup-page");
+  const simulator = document.getElementById("simulator-page");
+  const isSetup = page === "setup";
+  const isSimulator = page === "rates" || page === "results";
+  if (setup) setup.classList.toggle("is-hidden", !isSetup);
+  if (simulator) {
+    simulator.classList.toggle("is-hidden", !isSimulator);
+    simulator.classList.toggle("view-rates", page === "rates");
+    simulator.classList.toggle("view-results", page === "results");
+  }
+  updateTopNav(page);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function showSetupPage() {
+  renderAll();
+  setActivePage("setup");
+}
+
+function updateTopNav(page, focus = "") {
+  const setupNav = document.getElementById("nav-setup");
+  const rateNav = document.getElementById("nav-rates");
+  const resultNav = document.getElementById("nav-results");
+  const guideNav = document.getElementById("nav-target-guide");
+  const setupStep = document.getElementById("step-setup");
+  const rateStep = document.getElementById("step-rates");
+  const resultStep = document.getElementById("step-results");
+  if (setupNav) {
+    setupNav.classList.toggle("active", page === "setup" && focus !== "guide");
+    setupNav.setAttribute("aria-current", page === "setup" && focus !== "guide" ? "page" : "false");
+  }
+  if (rateNav) {
+    rateNav.classList.toggle("active", page === "rates");
+    rateNav.setAttribute("aria-current", page === "rates" ? "page" : "false");
+  }
+  if (resultNav) {
+    resultNav.classList.toggle("active", page === "results");
+    resultNav.setAttribute("aria-current", page === "results" ? "page" : "false");
+  }
+  if (guideNav) {
+    guideNav.classList.toggle("active", focus === "guide");
+    guideNav.setAttribute("aria-current", focus === "guide" ? "page" : "false");
+  }
+  if (setupStep) setupStep.classList.toggle("active", page === "setup");
+  if (rateStep) rateStep.classList.toggle("active", page === "rates");
+  if (resultStep) resultStep.classList.toggle("active", page === "results");
+}
+
+function showTargetGuide() {
+  renderAll();
+  setActivePage("setup");
+  requestAnimationFrame(() => {
+    const guide = document.getElementById("target-level-guide");
+    if (guide) guide.scrollIntoView({ behavior: "smooth", block: "start" });
+    updateTopNav("setup", "guide");
+  });
+}
+
+function canLeaveSetup() {
+  const issues = setupValidationIssues();
+  if (issues.length) {
+    renderSetupWarning(issues);
+    setActivePage("setup");
+    return false;
+  }
+  renderSetupWarning();
+  return true;
+}
+
+function showRatesPage() {
+  if (!canLeaveSetup()) return;
+  renderAll();
+  setActivePage("rates");
+}
+
+function showResultsPage() {
+  if (!canLeaveSetup()) return;
+  renderAll();
+  setActivePage("results");
+}
+
+function showSimulatorPage() {
+  showRatesPage();
+}
+
+function addBlueprintRow() {
+  resetAggregationData();
+  state.blueprint.push({
+    id: uid(),
+    type: "선택형",
+    difficulty: "보통",
+    items: "",
+    target: "C",
+    score: ""
+  });
+  renderAll();
+}
+
+function fillEmptyRates() {
+  const updates = [];
+  const levels = getActiveLevels();
+  for (const group of aggregateGroups()) {
+    for (const level of levels) {
+      const current = state.rates[group.key] ? state.rates[group.key][level] : undefined;
+      if (current === undefined || current === "") {
+        updates.push({ key: group.key, level, value: estimateRate(group, level) });
+      }
+    }
+  }
+  for (const update of updates) {
+    if (!state.rates[update.key]) state.rates[update.key] = {};
+    state.rates[update.key][update.level] = update.value;
+  }
+  renderAll();
+}
+
+function fillInterpolatedRates() {
+  const updates = [];
+  const levels = getActiveLevels();
+  for (const group of aggregateGroups()) {
+    for (const level of levels) {
+      const current = state.rates[group.key] ? state.rates[group.key][level] : undefined;
+      if (current !== undefined && current !== "") continue;
+
+      const projected = projectedCategoryRate(group, level);
+      const interpolated = projected !== null ? projected : interpolateRateFromAnchors(group, level);
+      if (interpolated !== null) {
+        updates.push({ key: group.key, level, value: interpolated });
+      }
+    }
+  }
+
+  if (!updates.length) {
+    fillEmptyRates();
+    return;
+  }
+
+  for (const update of updates) {
+    if (!state.rates[update.key]) state.rates[update.key] = {};
+    state.rates[update.key][update.level] = update.value;
+  }
+  renderAll();
+}
+
+function spreadCategoryRates() {
+  const levels = getActiveLevels();
+  for (const group of aggregateGroups()) {
+    if (!state.rates[group.key]) state.rates[group.key] = {};
+    for (const level of levels) {
+      const raw = getRate(group.key, level);
+      const projected = projectedCategoryRate(group, level);
+      if ((raw === "" || raw === undefined) && projected !== null) {
+        state.rates[group.key][level] = projected;
+      }
+    }
+  }
+  renderAll();
+}
+
+function clearRates() {
+  state.rates = {};
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  renderAll();
+}
+
+function clearCategoryRates() {
+  state.categoryRates = {};
+  state.categoryManual = {};
+  state.categoryAutoFilledAll = false;
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  renderAll();
+}
+
+function fillAllCategoryRates() {
+  if (!aggregateCategories().length) {
+    alert("먼저 문항별 기본 정보를 입력하세요.");
+    return;
+  }
+  state.categoryAutoFilledAll = true;
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  autoFillCategoryRates(true);
+  renderAll();
+}
+
+function exportJSON() {
+  const payload = {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    teacherName: state.teacherName,
+    isCommon: state.isCommon,
+    blueprint: state.blueprint,
+    rates: state.rates,
+    categoryRates: state.categoryRates,
+    categoryManual: state.categoryManual,
+    categoryAutoFilledAll: state.categoryAutoFilledAll,
+    finalBoundaries: state.finalBoundaries,
+    finalResultLabel: state.finalResultLabel,
+    assessmentWeights: state.assessmentWeights,
+    assessmentScores: state.assessmentScores
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${safeFilePart(state.teacherName, "교사")}_목표성취수준_분할점수.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const payload = JSON.parse(reader.result);
+      resetAggregationData();
+      state.teacherName = String(payload.teacherName || state.teacherName || "").trim();
+      state.blueprint = expandBlueprintRows(sanitizeBlueprintRows(payload.blueprint));
+      state.rates = payload.rates && typeof payload.rates === "object" ? payload.rates : {};
+      state.categoryRates = payload.categoryRates && typeof payload.categoryRates === "object" ? payload.categoryRates : {};
+      state.categoryManual = payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {};
+      state.categoryAutoFilledAll = typeof payload.categoryAutoFilledAll === "boolean" ? payload.categoryAutoFilledAll : false;
+      state.finalBoundaries = Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null;
+      state.finalResultLabel = String(payload.finalResultLabel || "").trim();
+      state.assessmentWeights = normalizeAssessmentWeights(payload.assessmentWeights);
+      state.assessmentScores = normalizeAssessmentScores(payload.assessmentScores);
+      state.isCommon = typeof payload.isCommon === "boolean" ? payload.isCommon : true;
+      renderAll();
+    } catch (error) {
+      alert("JSON 파일을 읽을 수 없습니다.");
+    }
+  };
+  reader.readAsText(file, "utf-8");
+}
+
+async function importAggregateJSON(files) {
+  const selected = Array.from(files || []);
+  if (!selected.length) return;
+
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+  const warnings = [];
+  const parsed = [];
+  for (const file of selected) {
+    try {
+      const payload = await readJSONFile(file);
+      const blueprint = sanitizeBlueprintRows(payload.blueprint);
+      if (!blueprint.length) {
+        warnings.push(`${file.name}: 문항 설계가 없어 제외`);
+        continue;
+      }
+      parsed.push({
+        fileName: file.name,
+        teacherName: teacherLabel(payload, file.name),
+        isCommon: typeof payload.isCommon === "boolean" ? payload.isCommon : true,
+        blueprint,
+        categoryRates: payload.categoryRates && typeof payload.categoryRates === "object" ? payload.categoryRates : {},
+        categoryManual: payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {},
+        finalBoundaries: Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null,
+        assessmentWeights: normalizeAssessmentWeights(payload.assessmentWeights),
+        assessmentScores: normalizeAssessmentScores(payload.assessmentScores),
+        boundaryResults: []
+      });
+    } catch (error) {
+      warnings.push(error.message);
+    }
+  }
+
+  if (!parsed.length) {
+    state.aggregation = { entries: [], warnings, baseline: null };
+    renderAll();
+    alert("취합할 수 있는 JSON 파일이 없습니다.");
+    return;
+  }
+
+  const currentSignature = blueprintSignature(state.blueprint, state.isCommon);
+  const currentMatch = parsed.find(item => blueprintSignature(item.blueprint, item.isCommon) === currentSignature);
+  const baseline = currentMatch || parsed[0];
+  const baselineSignature = blueprintSignature(baseline.blueprint, baseline.isCommon);
+  const entries = [];
+  for (const item of parsed) {
+    if (blueprintSignature(item.blueprint, item.isCommon) !== baselineSignature) {
+      warnings.push(`${item.fileName}: 첫 번째 파일과 문항 설계 또는 과목 유형이 달라 제외`);
+      continue;
+    }
+    item.boundaryResults = boundaryResultsForEntry(item);
+    entries.push(item);
+  }
+
+  if (currentSignature !== baselineSignature) {
+    state.blueprint = expandBlueprintRows(baseline.blueprint);
+    state.isCommon = baseline.isCommon;
+    state.rates = {};
+    state.categoryRates = {};
+    state.categoryManual = {};
+    state.categoryAutoFilledAll = false;
+    warnings.push("현재 화면의 문항 설계를 첫 번째 JSON 기준으로 맞췄습니다.");
+  }
+
+  state.aggregation = {
+    entries,
+    warnings,
+    baseline: {
+      signature: baselineSignature,
+      isCommon: baseline.isCommon
+    }
+  };
+  renderAll();
+}
+
+function applyAggregation() {
+  const stats = aggregateStats();
+  if (!stats.length) {
+    alert("적용할 취합 분할점수가 없습니다.");
+    return;
+  }
+
+  const method = document.getElementById("aggregation-method").value === "average" ? "average" : "median";
+  state.finalBoundaries = stats.map(row => ({
+    label: row.label,
+    level: row.level,
+    score: row[method],
+    source: method
+  }));
+  state.finalResultLabel = "여러 교사 취합 최종";
+  renderAll();
+}
+
+function resetAggregationData() {
+  state.aggregation = { entries: [], warnings: [], baseline: null };
+  state.finalBoundaries = null;
+  state.finalResultLabel = "";
+}
+
+function clearAggregation() {
+  resetAggregationData();
+  renderAll();
+}
+
+function guideStepsHtml(steps) {
+  return `
+    <ol class="guide-steps">
+      ${steps.map((step, index) => `
+        <li>
+          <span class="guide-num">${index + 1}</span>
+          <div>
+            <div class="guide-step-title">${step[0]}</div>
+            <div class="guide-step-desc">${step[1]}</div>
+          </div>
+        </li>
+      `).join("")}
+    </ol>
+  `;
+}
+
+function showGuide(key, action = null) {
+  const guide = GUIDE_CONTENT[key] || GUIDE_CONTENT.workflow;
+  pendingGuideAction = action;
+  document.getElementById("guide-title").textContent = guide.title;
+  document.getElementById("guide-body").innerHTML = `
+    <p>${guide.intro}</p>
+    ${guideStepsHtml(guide.steps)}
+  `;
+  document.getElementById("guide-confirm").textContent = action ? "설명 확인 후 실행" : "확인";
+  document.getElementById("guide-cancel").style.display = action ? "inline-flex" : "none";
+  document.getElementById("guide-modal").classList.add("open");
+}
+
+function closeGuide(runAction = false) {
+  const action = pendingGuideAction;
+  pendingGuideAction = null;
+  document.getElementById("guide-modal").classList.remove("open");
+  if (runAction && typeof action === "function") action();
+}
+
+document.getElementById("btn-setup-add-row").addEventListener("click", () => addSetupRows(1));
+document.getElementById("btn-setup-add-bottom").addEventListener("click", () => addSetupRows(1));
+document.getElementById("btn-setup-add-five").addEventListener("click", () => addSetupRows(5));
+document.getElementById("btn-setup-autofill-scores").addEventListener("click", autoFillSetupScores);
+document.getElementById("btn-setup-demo").addEventListener("click", () => {
+  resetAggregationData();
+  resetSemesterData();
+  state.blueprint = demoBlueprint();
+  state.rates = demoRates();
+  state.categoryRates = demoCategoryRates();
+  state.categoryManual = demoCategoryManual();
+  state.categoryAutoFilledAll = false;
+  renderAll();
+});
+document.getElementById("btn-setup-clear").addEventListener("click", () => {
+  resetAggregationData();
+  resetSemesterData();
+  state.blueprint = [];
+  state.rates = {};
+  state.categoryRates = {};
+  state.categoryManual = {};
+  state.categoryAutoFilledAll = false;
+  renderAll();
+});
+document.getElementById("btn-setup-next").addEventListener("click", showRatesPage);
+document.getElementById("btn-setup-next-top").addEventListener("click", showRatesPage);
+document.getElementById("btn-setup-load").addEventListener("click", () => document.getElementById("file-input").click());
+document.getElementById("nav-setup").addEventListener("click", showSetupPage);
+document.getElementById("nav-rates").addEventListener("click", showRatesPage);
+document.getElementById("nav-results").addEventListener("click", showResultsPage);
+document.getElementById("nav-target-guide").addEventListener("click", showTargetGuide);
+document.getElementById("step-setup").addEventListener("click", showSetupPage);
+document.getElementById("step-rates").addEventListener("click", showRatesPage);
+document.getElementById("step-results").addEventListener("click", showResultsPage);
+document.getElementById("btn-add-row").addEventListener("click", showSetupPage);
+document.getElementById("btn-back-setup").addEventListener("click", showSetupPage);
+document.getElementById("btn-toolbar-rates").addEventListener("click", showRatesPage);
+document.getElementById("btn-toolbar-results").addEventListener("click", showResultsPage);
+document.getElementById("btn-go-results").addEventListener("click", showResultsPage);
+document.getElementById("btn-result-back-rates").addEventListener("click", showRatesPage);
+document.getElementById("btn-guide").addEventListener("click", () => showGuide("workflow"));
+document.getElementById("btn-demo").addEventListener("click", () => showGuide("demo", () => {
+  resetAggregationData();
+  resetSemesterData();
+  state.blueprint = demoBlueprint();
+  state.rates = demoRates();
+  state.categoryRates = demoCategoryRates();
+  state.categoryManual = demoCategoryManual();
+  state.categoryAutoFilledAll = false;
+  renderAll();
+}));
+document.getElementById("btn-clear-blueprint").addEventListener("click", () => showGuide("clearBlueprint", () => {
+  resetAggregationData();
+  resetSemesterData();
+  state.blueprint = [];
+  state.rates = {};
+  state.categoryRates = {};
+  state.categoryManual = {};
+  state.categoryAutoFilledAll = false;
+  renderAll();
+  showSetupPage();
+}));
+document.getElementById("btn-clear-category-rates").addEventListener("click", () => showGuide("clearCategoryRates", clearCategoryRates));
+document.getElementById("btn-auto-fill-category-rates").addEventListener("click", fillAllCategoryRates);
+document.getElementById("btn-calc").addEventListener("click", () => showGuide("calc", renderAll));
+document.getElementById("btn-print").addEventListener("click", () => window.print());
+document.getElementById("btn-save").addEventListener("click", exportJSON);
+document.getElementById("btn-load").addEventListener("click", () => document.getElementById("file-input").click());
+document.getElementById("teacher-name").addEventListener("input", event => {
+  state.teacherName = event.target.value.trim();
+});
+document.getElementById("btn-load-aggregate").addEventListener("click", () => document.getElementById("aggregate-file-input").click());
+document.getElementById("btn-apply-aggregate").addEventListener("click", applyAggregation);
+document.getElementById("btn-clear-aggregate").addEventListener("click", clearAggregation);
+document.getElementById("aggregation-method").addEventListener("change", renderAggregation);
+document.getElementById("btn-copy-current-assessment").addEventListener("click", copyCurrentEstimateToAssessment);
+document.getElementById("btn-apply-semester").addEventListener("click", applySemesterFinal);
+document.getElementById("btn-clear-semester").addEventListener("click", clearSemesterInputs);
+document.getElementById("subject-common").addEventListener("change", event => {
+  if (event.target.checked) {
+    resetAggregationData();
+    state.isCommon = true;
+    state.categoryAutoFilledAll = false;
+    renderAll();
+  }
+});
+document.getElementById("subject-elective").addEventListener("change", event => {
+  if (event.target.checked) {
+    resetAggregationData();
+    state.isCommon = false;
+    state.categoryAutoFilledAll = false;
+    renderAll();
+  }
+});
+document.getElementById("guide-close").addEventListener("click", () => closeGuide(false));
+document.getElementById("guide-cancel").addEventListener("click", () => closeGuide(false));
+document.getElementById("guide-confirm").addEventListener("click", () => closeGuide(true));
+document.getElementById("guide-modal").addEventListener("click", event => {
+  if (event.target === event.currentTarget) closeGuide(false);
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && document.getElementById("guide-modal").classList.contains("open")) {
+    closeGuide(false);
+  }
+});
+document.getElementById("file-input").addEventListener("change", event => {
+  const file = event.target.files && event.target.files[0];
+  if (file) importJSON(file);
+  event.target.value = "";
+});
+document.getElementById("aggregate-file-input").addEventListener("change", event => {
+  importAggregateJSON(event.target.files);
+  event.target.value = "";
+});
+
+state.blueprint = initialBlueprint();
+state.rates = {};
+state.categoryRates = {};
+state.categoryManual = {};
+state.categoryAutoFilledAll = false;
+renderAll();
+</script>
+</body>
+</html>
