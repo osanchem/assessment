@@ -2901,14 +2901,23 @@ function resetPerfAssessment() { resetAssessment('perf'); }
 // ============================================================
 // 학기말 합산
 // ============================================================
-function calcSemester() {
-  const wMid  = (parseFloat(document.getElementById('w-mid').value)  || 0) / 100;
-  const wFin  = (parseFloat(document.getElementById('w-fin').value)  || 0) / 100;
-  const wPerf = (parseFloat(document.getElementById('w-perf').value) || 0) / 100;
-  const wSum  = Math.round((wMid + wFin + wPerf) * 1000) / 1000;
+function semesterWeightedScore(result, weightPercent, boundaryIndex) {
+  if (!result || result.total <= 0 || weightPercent <= 0) return 0;
+  return (result.scores[boundaryIndex] || 0) * weightPercent / result.total;
+}
 
-  if (Math.abs(wSum - 1.0) > 0.005) {
-    alert('가중치 합계가 100%가 되어야 합니다.\n현재: ' + Math.round(wSum * 100) + '%');
+function semesterWeightedTotal(result, weightPercent) {
+  return result && result.total > 0 ? weightPercent : 0;
+}
+
+function calcSemester() {
+  const wMid  = parseFloat(document.getElementById('w-mid').value)  || 0;
+  const wFin  = parseFloat(document.getElementById('w-fin').value)  || 0;
+  const wPerf = parseFloat(document.getElementById('w-perf').value) || 0;
+  const wSum  = Math.round((wMid + wFin + wPerf) * 10) / 10;
+
+  if (Math.abs(wSum - 100) > 0.1) {
+    alert('가중치 합계가 100%가 되어야 합니다.\n현재: ' + wSum + '%');
     return;
   }
 
@@ -2918,16 +2927,15 @@ function calcSemester() {
 
   const bounds = getBoundaries();
   const merged = bounds.map((b, bi) => {
-    let s = 0;
-    if (rMid  && rMid.total  > 0) s += (rMid.scores[bi]  || 0) * wMid;
-    if (rFin  && rFin.total  > 0) s += (rFin.scores[bi]  || 0) * wFin;
-    if (rPerf && rPerf.total > 0) s += (rPerf.scores[bi] || 0) * wPerf;
+    const s = semesterWeightedScore(rMid, wMid, bi)
+            + semesterWeightedScore(rFin, wFin, bi)
+            + semesterWeightedScore(rPerf, wPerf, bi);
     return Math.round(s * 10) / 10;
   });
 
-  const totalMax = ((rMid  && rMid.total  > 0) ? rMid.total  * wMid  : 0)
-                 + ((rFin  && rFin.total  > 0) ? rFin.total  * wFin  : 0)
-                 + ((rPerf && rPerf.total > 0) ? rPerf.total * wPerf : 0);
+  const totalMax = semesterWeightedTotal(rMid, wMid)
+                 + semesterWeightedTotal(rFin, wFin)
+                 + semesterWeightedTotal(rPerf, wPerf);
 
   renderSemesterResult({ scores: merged, total: Math.round(totalMax * 10) / 10 });
 }
@@ -3218,15 +3226,14 @@ function xlsSemSheet() {
   rows.push([]);
 
   const merged = bounds.map((b, bi) => {
-    let s = 0;
-    if (rMid  && rMid.total  > 0) s += (rMid.scores[bi]  || 0) * wMid  / 100;
-    if (rFin  && rFin.total  > 0) s += (rFin.scores[bi]  || 0) * wFin  / 100;
-    if (rPerf && rPerf.total > 0) s += (rPerf.scores[bi] || 0) * wPerf / 100;
+    const s = semesterWeightedScore(rMid, wMid, bi)
+            + semesterWeightedScore(rFin, wFin, bi)
+            + semesterWeightedScore(rPerf, wPerf, bi);
     return Math.round(s * 10) / 10;
   });
-  const totalMax = ((rMid  && rMid.total  > 0) ? rMid.total  * wMid  / 100 : 0)
-                 + ((rFin  && rFin.total  > 0) ? rFin.total  * wFin  / 100 : 0)
-                 + ((rPerf && rPerf.total > 0) ? rPerf.total * wPerf / 100 : 0);
+  const totalMax = semesterWeightedTotal(rMid, wMid)
+                 + semesterWeightedTotal(rFin, wFin)
+                 + semesterWeightedTotal(rPerf, wPerf);
   rows.push(['★ 최종(가중평균)', wMid+wFin+wPerf, Math.round(totalMax*10)/10, ...merged]);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);

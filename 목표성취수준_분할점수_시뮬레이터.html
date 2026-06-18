@@ -719,7 +719,8 @@
   }
 
   .semester-score-input,
-  .semester-weight-input {
+  .semester-weight-input,
+  .semester-total-input {
     width: 70px;
     height: 30px;
     font-size: 12px;
@@ -2986,7 +2987,9 @@ let state = {
   },
   finalBoundaries: null,
   finalResultLabel: "",
+  finalResultTotal: null,
   assessmentWeights: { mid: 40, fin: 40, perf: 20 },
+  assessmentTotals: { mid: 100, fin: 100, perf: 20 },
   assessmentScores: { mid: {}, fin: {}, perf: {} }
 };
 
@@ -3118,6 +3121,11 @@ function getActiveLevels() {
 function parseNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function parsePositiveNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 function isBlankScore(value) {
@@ -3349,6 +3357,28 @@ function emptyAssessmentScores() {
   return { mid: {}, fin: {}, perf: {} };
 }
 
+function defaultAssessmentTotal(assessmentId, weights = emptyAssessmentWeights()) {
+  return assessmentId === "perf" ? parsePositiveNumber(weights.perf, 20) : 100;
+}
+
+function emptyAssessmentTotals(weights = emptyAssessmentWeights()) {
+  return {
+    mid: defaultAssessmentTotal("mid", weights),
+    fin: defaultAssessmentTotal("fin", weights),
+    perf: defaultAssessmentTotal("perf", weights)
+  };
+}
+
+function normalizeAssessmentTotals(totals, weights = emptyAssessmentWeights()) {
+  const fallback = emptyAssessmentTotals(weights);
+  if (!totals || typeof totals !== "object") return fallback;
+  return {
+    mid: parsePositiveNumber(totals.mid, fallback.mid),
+    fin: parsePositiveNumber(totals.fin, fallback.fin),
+    perf: parsePositiveNumber(totals.perf, fallback.perf)
+  };
+}
+
 function roundSnapshotFromState(label = "", id = "") {
   const isAggregateFinal = state.finalResultLabel === "여러 교사 취합 최종";
   return {
@@ -3360,7 +3390,9 @@ function roundSnapshotFromState(label = "", id = "") {
     categoryAutoFilledAll: !!state.categoryAutoFilledAll,
     finalBoundaries: isAggregateFinal ? null : clonePlain(state.finalBoundaries, null),
     finalResultLabel: isAggregateFinal ? "" : state.finalResultLabel || "",
+    finalResultTotal: isAggregateFinal ? null : parsePositiveNumber(state.finalResultTotal, null),
     assessmentWeights: clonePlain(state.assessmentWeights, emptyAssessmentWeights()),
+    assessmentTotals: clonePlain(state.assessmentTotals, emptyAssessmentTotals(state.assessmentWeights)),
     assessmentScores: clonePlain(state.assessmentScores, emptyAssessmentScores())
   };
 }
@@ -3375,12 +3407,15 @@ function emptyRound(label = "1라운드") {
     categoryAutoFilledAll: false,
     finalBoundaries: null,
     finalResultLabel: "",
+    finalResultTotal: null,
     assessmentWeights: emptyAssessmentWeights(),
+    assessmentTotals: emptyAssessmentTotals(),
     assessmentScores: emptyAssessmentScores()
   };
 }
 
 function normalizeRound(round = {}, index = 0) {
+  const assessmentWeights = normalizeAssessmentWeights(round.assessmentWeights);
   return {
     id: String(round.id || uid()),
     label: String(round.label || `${index + 1}라운드`),
@@ -3390,7 +3425,9 @@ function normalizeRound(round = {}, index = 0) {
     categoryAutoFilledAll: typeof round.categoryAutoFilledAll === "boolean" ? round.categoryAutoFilledAll : false,
     finalBoundaries: Array.isArray(round.finalBoundaries) ? clonePlain(round.finalBoundaries, []) : null,
     finalResultLabel: String(round.finalResultLabel || "").trim(),
-    assessmentWeights: normalizeAssessmentWeights(round.assessmentWeights),
+    finalResultTotal: parsePositiveNumber(round.finalResultTotal, null),
+    assessmentWeights,
+    assessmentTotals: normalizeAssessmentTotals(round.assessmentTotals, assessmentWeights),
     assessmentScores: normalizeAssessmentScores(round.assessmentScores)
   };
 }
@@ -3457,6 +3494,8 @@ function loadActiveRoundState() {
   state.finalBoundaries = clonePlain(round.finalBoundaries, null);
   state.finalResultLabel = round.finalResultLabel || "";
   state.assessmentWeights = normalizeAssessmentWeights(round.assessmentWeights);
+  state.finalResultTotal = parsePositiveNumber(round.finalResultTotal, null);
+  state.assessmentTotals = normalizeAssessmentTotals(round.assessmentTotals, state.assessmentWeights);
   state.assessmentScores = normalizeAssessmentScores(round.assessmentScores);
 }
 
@@ -4625,7 +4664,7 @@ function boundaryResultsForEntry(entry) {
     }));
   }
   if (hasAssessmentScores(entry.assessmentScores) && Math.round(assessmentWeightSum(entry.assessmentWeights) * 10) === 1000) {
-    return calculateSemesterBoundariesFromScores(entry.assessmentWeights, entry.assessmentScores, entry.isCommon);
+    return calculateSemesterBoundariesFromScores(entry.assessmentWeights, entry.assessmentScores, entry.isCommon, entry.assessmentTotals);
   }
   return calculateBoundariesForEntry(entry);
 }
@@ -4655,13 +4694,15 @@ function combineBoundaryResultSets(resultSets, method = "median", boundaries = g
 }
 
 function boundaryResultsForRound(round, blueprint = state.blueprint, isCommon = state.isCommon) {
+  const assessmentWeights = normalizeAssessmentWeights(round.assessmentWeights);
   return boundaryResultsForEntry({
     blueprint,
     isCommon,
     categoryRates: round.categoryRates && typeof round.categoryRates === "object" ? round.categoryRates : {},
     categoryManual: round.categoryManual && typeof round.categoryManual === "object" ? round.categoryManual : {},
     finalBoundaries: Array.isArray(round.finalBoundaries) ? round.finalBoundaries : null,
-    assessmentWeights: normalizeAssessmentWeights(round.assessmentWeights),
+    assessmentWeights,
+    assessmentTotals: normalizeAssessmentTotals(round.assessmentTotals, assessmentWeights),
     assessmentScores: normalizeAssessmentScores(round.assessmentScores)
   });
 }
@@ -4695,6 +4736,7 @@ function aggregateEntriesFromPayload(payload, fileName, warnings) {
         categoryManual: {},
         finalBoundaries: boundaryResults,
         assessmentWeights: emptyAssessmentWeights(),
+        assessmentTotals: emptyAssessmentTotals(),
         assessmentScores: emptyAssessmentScores(),
         boundaryResults,
         roundCount: teacher.rounds.length,
@@ -4712,6 +4754,7 @@ function aggregateEntriesFromPayload(payload, fileName, warnings) {
     categoryManual: payload.categoryManual && typeof payload.categoryManual === "object" ? payload.categoryManual : {},
     finalBoundaries: Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null,
     assessmentWeights: normalizeAssessmentWeights(payload.assessmentWeights),
+    assessmentTotals: normalizeAssessmentTotals(payload.assessmentTotals, normalizeAssessmentWeights(payload.assessmentWeights)),
     assessmentScores: normalizeAssessmentScores(payload.assessmentScores),
     boundaryResults: [],
     roundCount: 1,
@@ -4719,10 +4762,20 @@ function aggregateEntriesFromPayload(payload, fileName, warnings) {
   }];
 }
 
+function activeResultTotal(isFinal, rawTotal = totalScore()) {
+  if (isFinal && state.finalResultLabel === "학기말 최종") {
+    const savedTotal = parsePositiveNumber(state.finalResultTotal, 0);
+    if (savedTotal > 0) return savedTotal;
+    const weightTotal = assessmentWeightSum();
+    if (Math.round(weightTotal * 10) === 1000) return weightTotal;
+  }
+  return rawTotal;
+}
+
 function renderResults() {
-  const total = totalScore();
   const isFinal = Array.isArray(state.finalBoundaries) && state.finalBoundaries.length;
   const results = isFinal ? state.finalBoundaries : calculateBoundaries();
+  const total = activeResultTotal(isFinal);
   const finalLabel = state.finalResultLabel || "여러 교사 취합 최종";
   const resultList = document.getElementById("result-list");
   const avgRate = results.length && total > 0
@@ -4793,17 +4846,24 @@ function assessmentScoreValue(assessmentId, label) {
   return scores[label] !== undefined && scores[label] !== "" ? parseNumber(scores[label]) : "";
 }
 
+function assessmentTotalValue(assessmentId) {
+  state.assessmentTotals = normalizeAssessmentTotals(state.assessmentTotals, state.assessmentWeights);
+  return state.assessmentTotals[assessmentId];
+}
+
 function assessmentWeightSum(weights = state.assessmentWeights) {
   return ASSESSMENTS.reduce((sum, item) => sum + parseNumber(weights[item.id]), 0);
 }
 
-function calculateSemesterBoundariesFromScores(weights = state.assessmentWeights, scores = state.assessmentScores, isCommon = state.isCommon) {
+function calculateSemesterBoundariesFromScores(weights = state.assessmentWeights, scores = state.assessmentScores, isCommon = state.isCommon, totals = state.assessmentTotals) {
+  const normalizedTotals = normalizeAssessmentTotals(totals, weights);
   return getBoundariesForType(isCommon).map(boundary => {
     const score = ASSESSMENTS.reduce((sum, item) => {
       const value = scores[item.id] && scores[item.id][boundary.label] !== undefined
         ? parseNumber(scores[item.id][boundary.label])
         : 0;
-      return sum + value * parseNumber(weights[item.id]) / 100;
+      const total = parsePositiveNumber(normalizedTotals[item.id], defaultAssessmentTotal(item.id, weights));
+      return sum + value * parseNumber(weights[item.id]) / total;
     }, 0);
     return {
       label: boundary.label,
@@ -4837,6 +4897,7 @@ function renderSemesterScoreInputs() {
     <tr>
       <th class="left">평가</th>
       <th>반영비율(%)</th>
+      <th>원점수 만점</th>
       ${boundaries.map(boundary => `<th>${boundary.label}</th>`).join("")}
     </tr>
   `;
@@ -4845,6 +4906,7 @@ function renderSemesterScoreInputs() {
     <tr>
       <td class="left">${item.label}</td>
       <td><input class="semester-weight-input" type="number" min="0" max="100" step="1" data-assessment="${item.id}" value="${state.assessmentWeights[item.id]}"></td>
+      <td><input class="semester-total-input" type="number" min="0.1" step="0.1" data-assessment="${item.id}" value="${assessmentTotalValue(item.id)}"></td>
       ${boundaries.map(boundary => `
         <td><input class="semester-score-input" type="number" min="0" step="0.1" data-assessment="${item.id}" data-boundary="${boundary.label}" value="${assessmentScoreValue(item.id, boundary.label)}"></td>
       `).join("")}
@@ -4855,7 +4917,27 @@ function renderSemesterScoreInputs() {
     input.addEventListener("change", () => {
       state.finalBoundaries = null;
       state.finalResultLabel = "";
-      state.assessmentWeights[input.dataset.assessment] = parseNumber(input.value);
+      state.finalResultTotal = null;
+      const assessment = input.dataset.assessment;
+      const previousWeight = parseNumber(state.assessmentWeights[assessment]);
+      const previousTotal = assessmentTotalValue(assessment);
+      state.assessmentWeights[assessment] = parseNumber(input.value);
+      if (assessment === "perf" && Math.abs(previousTotal - previousWeight) < 0.001) {
+        state.assessmentTotals[assessment] = state.assessmentWeights[assessment];
+      }
+      state.assessmentTotals = normalizeAssessmentTotals(state.assessmentTotals, state.assessmentWeights);
+      renderAll();
+    });
+  });
+
+  body.querySelectorAll(".semester-total-input").forEach(input => {
+    input.addEventListener("change", () => {
+      state.finalBoundaries = null;
+      state.finalResultLabel = "";
+      state.finalResultTotal = null;
+      const assessment = input.dataset.assessment;
+      if (!state.assessmentTotals) state.assessmentTotals = emptyAssessmentTotals(state.assessmentWeights);
+      state.assessmentTotals[assessment] = parsePositiveNumber(input.value, defaultAssessmentTotal(assessment, state.assessmentWeights));
       renderAll();
     });
   });
@@ -4864,6 +4946,7 @@ function renderSemesterScoreInputs() {
     input.addEventListener("change", () => {
       state.finalBoundaries = null;
       state.finalResultLabel = "";
+      state.finalResultTotal = null;
       const assessment = input.dataset.assessment;
       const boundary = input.dataset.boundary;
       if (!state.assessmentScores[assessment]) state.assessmentScores[assessment] = {};
@@ -4883,8 +4966,11 @@ function copyCurrentEstimateToAssessment() {
   for (const boundary of calculateBoundaries()) {
     state.assessmentScores[target][boundary.label] = Math.round(boundary.score * 10) / 10;
   }
+  if (!state.assessmentTotals) state.assessmentTotals = emptyAssessmentTotals(state.assessmentWeights);
+  state.assessmentTotals[target] = Math.round(totalScore() * 10) / 10;
   state.finalBoundaries = null;
   state.finalResultLabel = "";
+  state.finalResultTotal = null;
   renderAll();
 }
 
@@ -4896,22 +4982,27 @@ function applySemesterFinal() {
   }
   state.finalBoundaries = calculateSemesterBoundariesFromScores();
   state.finalResultLabel = "학기말 최종";
+  state.finalResultTotal = Math.round(sum * 10) / 10;
   renderAll();
 }
 
 function clearSemesterInputs() {
   state.assessmentWeights = { mid: 40, fin: 40, perf: 20 };
+  state.assessmentTotals = emptyAssessmentTotals(state.assessmentWeights);
   state.assessmentScores = { mid: {}, fin: {}, perf: {} };
   state.finalBoundaries = null;
   state.finalResultLabel = "";
+  state.finalResultTotal = null;
   renderAll();
 }
 
 function resetSemesterData() {
   state.assessmentWeights = { mid: 40, fin: 40, perf: 20 };
+  state.assessmentTotals = emptyAssessmentTotals(state.assessmentWeights);
   state.assessmentScores = { mid: {}, fin: {}, perf: {} };
   state.finalBoundaries = null;
   state.finalResultLabel = "";
+  state.finalResultTotal = null;
 }
 
 function renderPills() {
@@ -5309,7 +5400,9 @@ function exportJSON() {
     categoryAutoFilledAll: state.categoryAutoFilledAll,
     finalBoundaries: state.finalBoundaries,
     finalResultLabel: state.finalResultLabel,
+    finalResultTotal: state.finalResultTotal,
     assessmentWeights: state.assessmentWeights,
+    assessmentTotals: state.assessmentTotals,
     assessmentScores: state.assessmentScores
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -5346,6 +5439,8 @@ function importJSON(file) {
         state.finalBoundaries = Array.isArray(payload.finalBoundaries) ? payload.finalBoundaries : null;
         state.finalResultLabel = String(payload.finalResultLabel || "").trim();
         state.assessmentWeights = normalizeAssessmentWeights(payload.assessmentWeights);
+        state.finalResultTotal = parsePositiveNumber(payload.finalResultTotal, null);
+        state.assessmentTotals = normalizeAssessmentTotals(payload.assessmentTotals, state.assessmentWeights);
         state.assessmentScores = normalizeAssessmentScores(payload.assessmentScores);
         state.teacherRounds = [];
         state.activeTeacherId = "";
@@ -5457,6 +5552,7 @@ function aggregateWorkspaceTeacherRounds() {
       categoryManual: {},
       finalBoundaries: boundaryResults,
       assessmentWeights: emptyAssessmentWeights(),
+      assessmentTotals: emptyAssessmentTotals(),
       assessmentScores: emptyAssessmentScores(),
       boundaryResults,
       roundCount: teacher.rounds.length,
