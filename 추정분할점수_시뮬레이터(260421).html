@@ -2575,12 +2575,47 @@ function applyFinalTargetRates() {
 // ============================================================
 // 라운드 생성/관리
 // ============================================================
+function copyRoundScoresOnly(assessId, fromIdx, toIdx) {
+  const saved = state[assessId].roundData[fromIdx];
+  const bounds = getBoundaries();
+  if (!saved) return;
+
+  if (assessId === 'perf' && saved.type === 'perf') {
+    const rows = saved.rows.map(row => ({
+      name: row.name,
+      sc: row.sc,
+      rates: Array(bounds.length).fill('')
+    }));
+    state[assessId].roundData[toIdx] = { type: 'perf', rows };
+    state.perf.perfRowCounts[toIdx] = rows.length || 1;
+    return;
+  }
+
+  if (saved.type === 'written') {
+    state[assessId].roundData[toIdx] = {
+      type: 'written',
+      scores: saved.scores.slice(),
+      rates: Array.from({ length: 6 }, () => Array(bounds.length).fill(''))
+    };
+  }
+}
+
 function addRound(assessId) {
   const s = state[assessId];
+  const fromIdx = s.currentRound;
+  saveRoundData(assessId, fromIdx);
+
   const rIdx = s.rounds.length;
   s.rounds.push({ idx: rIdx });
+  copyRoundScoresOnly(assessId, fromIdx, rIdx);
+  if (assessId === 'fin') finTargetPreviewData = null;
+
+  s.currentRound = rIdx;
   renderRoundTabs(assessId);
-  switchRound(assessId, rIdx);
+  restoreRoundData(assessId, rIdx);
+  updateAllConstraints(assessId, rIdx);
+  const errors = highlightRates(assessId, rIdx);
+  showRateWarnBox(assessId, rIdx, errors);
 }
 
 function copyRound(assessId, rIdx) {
