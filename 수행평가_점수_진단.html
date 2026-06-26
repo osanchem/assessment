@@ -871,7 +871,7 @@
             <button id="importTeacherPlan" class="btn secondary" type="button">평가계획서 업로드</button>
             <input id="teacherPlanFile" class="hidden-file" type="file" accept=".pdf,.xlsx,.xls,.csv">
           </div>
-          <div class="small-note">평가계획서 업로드에는 PDF 파일로 올려주세요.</div>
+          <div class="small-note">평가계획서는 PDF로 올리거나, 영역명·만점·가능점수 열을 가진 CSV 기준표로 올려주세요.</div>
           <div id="teacherPlanPreview" class="extract-preview"></div>
           <div class="divider"></div>
           <div class="plan-table-wrap">
@@ -880,7 +880,6 @@
                 <tr>
                   <th>영역명</th>
                   <th>만점</th>
-                  <th>급간</th>
                   <th>가능점수</th>
                   <th class="nowrap">삭제</th>
                 </tr>
@@ -891,7 +890,7 @@
           <div class="mini-toolbar">
             <button id="addTeacherDomain" class="btn secondary" type="button">영역 추가</button>
             <button id="resetTeacherPlan" class="btn secondary" type="button">예시 기준</button>
-            <button id="downloadTeacherTemplate" class="btn secondary" type="button">CSV 양식</button>
+            <button id="downloadTeacherTemplate" class="btn secondary" type="button">평가기준 CSV</button>
           </div>
         </div>
       </div>
@@ -1026,7 +1025,6 @@
                     <tr>
                       <th>영역명</th>
                       <th>만점</th>
-                      <th>급간</th>
                       <th>가능점수</th>
                       <th class="nowrap">삭제</th>
                     </tr>
@@ -1237,9 +1235,6 @@
           <input class="input max-input teacher-domain-max" type="number" min="0" step="0.1" value="${escapeHtml(domain.max)}" aria-label="만점">
         </td>
         <td>
-          <input class="input max-input teacher-domain-step" type="number" min="0.1" step="0.1" value="${escapeHtml(domain.step ?? 1)}" aria-label="급간">
-        </td>
-        <td>
           <input class="input possible-input teacher-domain-possible" type="text" value="${escapeHtml(formatPossibleScores(domain.possibleScores))}" placeholder="예: 20,18,17" aria-label="가능점수">
         </td>
         <td>
@@ -1270,9 +1265,6 @@
         </td>
         <td>
           <input class="input max-input admin-domain-max" type="number" min="0" step="0.1" value="${escapeHtml(domain.max)}" ${locked ? "disabled" : ""} aria-label="만점">
-        </td>
-        <td>
-          <input class="input max-input admin-domain-step" type="number" min="0.1" step="0.1" value="${escapeHtml(domain.step ?? 1)}" ${locked ? "disabled" : ""} aria-label="급간">
         </td>
         <td>
           <input class="input possible-input admin-domain-possible" type="text" value="${escapeHtml(formatPossibleScores(domain.possibleScores))}" placeholder="예: 20,18,17" ${locked ? "disabled" : ""} aria-label="가능점수">
@@ -1317,14 +1309,13 @@
               </div>
               <table class="compact-table">
                 <thead>
-                  <tr><th>영역명</th><th>만점</th><th>급간</th><th>가능점수</th></tr>
+                  <tr><th>영역명</th><th>만점</th><th>가능점수</th></tr>
                 </thead>
                 <tbody>
                   ${item.domains.map(domain => `
                     <tr>
                       <td>${escapeHtml(domain.name)}</td>
                       <td>${escapeHtml(domain.max)}</td>
-                      <td>${escapeHtml(domain.step ?? 1)}</td>
                       <td>${escapeHtml(formatPossibleScores(domain.possibleScores))}</td>
                     </tr>
                   `).join("")}
@@ -1359,14 +1350,13 @@
       <div class="extract-body">
         <table class="compact-table">
           <thead>
-            <tr><th>영역명</th><th>만점</th><th>급간</th><th>가능점수</th></tr>
+            <tr><th>영역명</th><th>만점</th><th>가능점수</th></tr>
           </thead>
           <tbody>
             ${preview.domains.map(domain => `
               <tr>
                 <td>${escapeHtml(domain.name)}</td>
                 <td>${escapeHtml(domain.max)}</td>
-                <td>${escapeHtml(domain.step ?? 1)}</td>
                 <td>${escapeHtml(formatPossibleScores(domain.possibleScores))}</td>
               </tr>
             `).join("")}
@@ -2050,7 +2040,8 @@
           const name = normalizeText(aoa[next][nameIndex]);
           const max = parseScore(aoa[next][maxIndex]);
           const step = stepIndex >= 0 ? parseScore(aoa[next][stepIndex]) : 1;
-          const possibleScores = possibleIndex >= 0 ? parsePossibleScores(aoa[next][possibleIndex]) : [];
+          const possibleValue = possibleIndex >= 0 ? aoa[next].slice(possibleIndex).join(", ") : "";
+          const possibleScores = possibleIndex >= 0 ? parsePossibleScores(possibleValue) : [];
           if (!name && max === null) continue;
           if (!name || max === null || Number.isNaN(max)) break;
           domains.push({ name, max, step: step === null || Number.isNaN(step) ? 1 : step, possibleScores });
@@ -3427,7 +3418,6 @@
             <th>학생</th>
             <th>영역</th>
             <th>값</th>
-            <th>급간</th>
             <th>가능점수</th>
             <th>구분</th>
             <th>사유</th>
@@ -3444,7 +3434,6 @@
               <td>${escapeHtml(issue.student)}</td>
               <td>${escapeHtml(issue.domainName)}</td>
               <td>${escapeHtml(issue.value)}</td>
-              <td>${escapeHtml(issue.step)}</td>
               <td>${escapeHtml(formatPossibleScores(issue.possibleScores))}</td>
               <td>${escapeHtml(issue.label)}</td>
               <td class="result-error">${escapeHtml(issue.message)}</td>
@@ -3466,7 +3455,6 @@
       영역: issue.domainName,
       입력값: issue.value,
       만점: issue.max,
-      급간: issue.step,
       가능점수: formatPossibleScores(issue.possibleScores),
       구분: issue.label,
       오류내용: issue.message
@@ -3522,6 +3510,16 @@
     downloadBlob(`\uFEFF${csv}`, `${kind === "admin" ? "수행평가_일괄업로드_양식" : "수행평가_점수_양식"}.csv`, "text/csv;charset=utf-8");
   }
 
+  function downloadPlanTemplate() {
+    const rows = [
+      ["영역명", "만점", "가능점수"],
+      ["길이 측정 및 오차 분석을 통한 SI 단위의 필요성 탐구", 20, "20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5"],
+      ["지구시스템의 물질 순환과 에너지 순환 탐구", 20, "20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0"]
+    ];
+    const csv = rows.map(row => row.map(csvCell).join(",")).join("\r\n");
+    downloadBlob(`\uFEFF${csv}`, "수행평가_평가기준_양식.csv", "text/csv;charset=utf-8");
+  }
+
   function bindDropZone(zoneSelector, inputSelector, handler) {
     const zone = $(zoneSelector);
     const input = $(inputSelector);
@@ -3571,9 +3569,6 @@
       if (event.target.classList.contains("teacher-domain-max")) {
         state.teacher.plan[index].max = event.target.value;
       }
-      if (event.target.classList.contains("teacher-domain-step")) {
-        state.teacher.plan[index].step = event.target.value;
-      }
       if (event.target.classList.contains("teacher-domain-possible")) {
         state.teacher.plan[index].possibleScores = event.target.value;
       }
@@ -3615,7 +3610,7 @@
       $("#teacherFileName").textContent = "";
       rerunTeacherDiagnostics();
     });
-    $("#downloadTeacherTemplate").addEventListener("click", () => downloadTemplate("teacher"));
+    $("#downloadTeacherTemplate").addEventListener("click", downloadPlanTemplate);
 
     $("#importAdminPlan").addEventListener("click", () => $("#adminPlanFile").click());
     $("#adminPlanFile").addEventListener("change", event => {
@@ -3639,9 +3634,6 @@
       }
       if (event.target.classList.contains("admin-domain-max")) {
         plan.domains[index].max = event.target.value;
-      }
-      if (event.target.classList.contains("admin-domain-step")) {
-        plan.domains[index].step = event.target.value;
       }
       if (event.target.classList.contains("admin-domain-possible")) {
         plan.domains[index].possibleScores = event.target.value;
