@@ -1195,6 +1195,23 @@
     return [...set].sort((a, b) => b - a);
   }
 
+  function isScoreWithinMax(score, maxScore) {
+    if (score === null || Number.isNaN(score)) return false;
+    const max = parseScore(maxScore);
+    if (max === null || Number.isNaN(max)) return score >= -1e-7;
+    return score >= -1e-7 && score <= max + 1e-7;
+  }
+
+  function filterPossibleScoresForMax(scores, maxScore) {
+    return normalizePossibleScores(parsePossibleScores(scores).filter(score => isScoreWithinMax(score, maxScore)));
+  }
+
+  function cleanRubricScaleGroups(groups, maxScore) {
+    return groups
+      .map(group => filterPossibleScoresForMax(group, maxScore))
+      .filter(group => group.length);
+  }
+
   function formatPossibleScores(scores) {
     return parsePossibleScores(scores).join(", ");
   }
@@ -1601,7 +1618,8 @@
         possibleScores: [],
         scaleGroups: []
       };
-      const nextIndex = sectionStarts[sectionIndex + 1]?.index ?? allLines.length;
+      const nextIndex = getPerformanceSectionEndIndex(allLines, sectionStarts, sectionIndex);
+      const sectionEndLine = allLines[nextIndex];
       const sectionLines = allLines.slice(section.index, nextIndex);
       const headerLine = sectionLines.find(line => headerKey(line.text).includes("채점요소") && headerKey(line.text).includes("척도"));
       if (!headerLine) {
@@ -1611,7 +1629,7 @@
 
       const pageRange = pages.filter(page => {
         if (page.pageNumber < headerLine.pageNumber) return false;
-        if (sectionStarts[sectionIndex + 1] && page.pageNumber > sectionStarts[sectionIndex + 1].line.pageNumber) return false;
+        if (sectionEndLine && page.pageNumber > sectionEndLine.pageNumber) return false;
         return true;
       });
       const headerPage = pages.find(page => page.pageNumber === headerLine.pageNumber);
@@ -1626,10 +1644,10 @@
       const pointHeader = headerItems.find(item => headerKey(item.text) === "배점")
         || headerItems.find(item => headerKey(item.text).includes("배점"));
       if (!scaleHeader || !pointHeader) {
-        const textGroups = extractScaleGroupsFromRubricLines(sectionLines, headerLine, sectionDomain.max);
+        const textGroups = cleanRubricScaleGroups(extractScaleGroupsFromRubricLines(sectionLines, headerLine, sectionDomain.max), sectionDomain.max);
         domains.push({
           ...sectionDomain,
-          possibleScores: textGroups.length ? cartesianSumScores(textGroups) : [],
+          possibleScores: textGroups.length ? includeExplicitZeroScore(cartesianSumScores(textGroups, sectionDomain.max), sectionLines, headerLine, sectionDomain.max) : [],
           scaleGroups: textGroups
         });
         return;
@@ -1644,15 +1662,14 @@
       const scaleLeft = leftHeader ? (leftHeader.centerX + scaleHeader.centerX) / 2 : scaleHeader.centerX - 45;
       const pointRight = rightHeader ? (rightHeader.centerX + pointHeader.centerX) / 2 : pointHeader.centerX + 45;
       pageRange.forEach(page => {
-        const nextSection = sectionStarts[sectionIndex + 1]?.line;
         const topMin = page.pageNumber === headerLine.pageNumber ? headerLine.top + 6 : 0;
-        const topMax = nextSection && page.pageNumber === nextSection.pageNumber ? nextSection.top - 5 : page.height - 24;
+        const topMax = sectionEndLine && page.pageNumber === sectionEndLine.pageNumber ? sectionEndLine.top - 5 : page.height - 24;
         const footnoteLine = page.lines.find(line => line.top > topMin && line.top < topMax && line.text.trim().startsWith("※"));
         const effectiveTopMax = footnoteLine ? footnoteLine.top - 4 : topMax;
         page.items.forEach(item => {
           if (item.top < topMin || item.top > effectiveTopMax) return;
           const value = bareNumberFromText(item.text);
-          if (value === null) return;
+          if (value === null || !isScoreWithinMax(value, sectionDomain.max)) return;
           const inScaleColumn = Math.abs(item.centerX - scaleHeader.centerX) <= 20
             || (item.centerX >= scaleLeft && item.centerX < scalePointMid);
           const inPointColumn = Math.abs(item.centerX - pointHeader.centerX) <= 20
@@ -1670,14 +1687,14 @@
         });
       });
 
-      const coordinateGroups = splitScaleTokensByPointTokens(scaleTokens, pointTokens);
-      const textGroups = extractScaleGroupsFromRubricLines(sectionLines, headerLine, sectionDomain.max);
+      const coordinateGroups = cleanRubricScaleGroups(splitScaleTokensByPointTokens(scaleTokens, pointTokens), sectionDomain.max);
+      const textGroups = cleanRubricScaleGroups(extractScaleGroupsFromRubricLines(sectionLines, headerLine, sectionDomain.max), sectionDomain.max);
       const coordinateValueCount = coordinateGroups.reduce((sum, group) => sum + group.length, 0);
       const textValueCount = textGroups.reduce((sum, group) => sum + group.length, 0);
       const groups = textGroups.length && (
         textGroups.length > coordinateGroups.length || textValueCount > coordinateValueCount
       ) ? textGroups : coordinateGroups;
-      const possibleScores = groups.length ? cartesianSumScores(groups) : [];
+      const possibleScores = groups.length ? includeExplicitZeroScore(cartesianSumScores(groups, sectionDomain.max), sectionLines, headerLine, sectionDomain.max) : [];
       domains.push({
         ...sectionDomain,
         possibleScores,
@@ -1699,7 +1716,7 @@
     });
 
     starts.forEach((section, sectionIndex) => {
-      const nextIndex = starts[sectionIndex + 1]?.index ?? allLines.length;
+      const nextIndex = getPerformanceSectionEndIndex(allLines, starts, sectionIndex);
       const sectionText = allLines.slice(section.index, nextIndex).map(line => line.text).join(" ");
       const compact = normalizeText(sectionText);
 
@@ -1723,6 +1740,25 @@
     });
 
     return starts.filter(section => section.title && section.max !== null && !Number.isNaN(section.max));
+  }
+
+  function getPerformanceSectionEndIndex(allLines, sectionStarts, sectionIndex) {
+    const nextPerformanceSection = sectionStarts[sectionIndex + 1]?.index;
+    if (nextPerformanceSection !== undefined) return nextPerformanceSection;
+
+    for (let index = sectionStarts[sectionIndex].index + 1; index < allLines.length; index += 1) {
+      if (isAfterPerformanceRubricSection(allLines[index].text)) return index;
+    }
+    return allLines.length;
+  }
+
+  function isAfterPerformanceRubricSection(text) {
+    const key = headerKey(text);
+    return key.includes("교수학습운영계획")
+      || key.includes("교수학습평가운영계획")
+      || key.includes("평가결과활용")
+      || key.includes("평가결과의활용")
+      || key.includes("학기단위성취수준");
   }
 
   function bareNumberFromText(text) {
@@ -1793,16 +1829,37 @@
     return groups.filter(group => group.length);
   }
 
-  function cartesianSumScores(groups) {
+  function cartesianSumScores(groups, maxScore = null) {
     let sums = [0];
     groups.forEach(group => {
       const next = [];
       sums.forEach(sum => {
         group.forEach(value => next.push(Number((sum + value).toFixed(6))));
       });
-      sums = normalizePossibleScores(next);
+      sums = maxScore === null ? normalizePossibleScores(next) : filterPossibleScoresForMax(next, maxScore);
     });
     return sums;
+  }
+
+  function includeExplicitZeroScore(scores, sectionLines, headerLine, maxScore) {
+    const values = filterPossibleScoresForMax(scores, maxScore);
+    if (!values.length || values.some(value => Math.abs(value) < 1e-7)) return values;
+    return rubricSectionMentionsZeroScore(sectionLines, headerLine)
+      ? normalizePossibleScores([...values, 0])
+      : values;
+  }
+
+  function rubricSectionMentionsZeroScore(sectionLines, headerLine) {
+    let afterHeader = false;
+    return sectionLines.some(line => {
+      if (!afterHeader) {
+        afterHeader = line === headerLine;
+        return false;
+      }
+      const text = normalizeText(line.text);
+      if (!text) return false;
+      return /(^|[^\d.])0\s*점($|[^\d.])/.test(text) || /(^|[^\d.])0($|[^\d.])/.test(text);
+    });
   }
 
   function mergeRubricDomains(baseDomains, rubricDomains) {
@@ -1889,15 +1946,21 @@
       ? percentLine.items.map(item => ({ ...item, value: percentValueFromText(item.text) })).filter(item => item.value !== null)
       : [];
 
-    let performanceScoreItems = inferPerformanceScoreItemsByHeader(page, scoreItems);
     const trailingCount = inferTrailingPerformanceCount(
       scoreItems.map(item => item.value),
       percentItems.map(item => item.value),
       performancePercent
     );
+    const headerScoreItems = inferPerformanceScoreItemsByHeader(page, scoreItems);
 
-    if (trailingCount && (!performanceScoreItems.length || performanceScoreItems.length !== trailingCount)) {
+    // 반영비율 합으로 맞춘 매칭이 정기시험/수행평가 병합 헤더의 x좌표 추정보다 더 정확하므로 우선 사용한다.
+    let performanceScoreItems = [];
+    let matchedByPercent = false;
+    if (trailingCount) {
       performanceScoreItems = scoreItems.slice(-trailingCount);
+      matchedByPercent = true;
+    } else if (headerScoreItems.length) {
+      performanceScoreItems = headerScoreItems;
     }
     if (!performanceScoreItems.length) performanceScoreItems = scoreItems;
 
@@ -1910,11 +1973,13 @@
 
     const notes = [];
     if (!performancePercent) notes.push("수행평가 반영비율을 찾지 못해 영역 만점 행을 기준으로 추출했습니다.");
-    if (!inferPerformanceScoreItemsByHeader(page, scoreItems).length) notes.push("수행평가 열 범위를 명확히 찾지 못해 점수 합계를 보조 기준으로 사용했습니다.");
+    if (!matchedByPercent && !headerScoreItems.length) notes.push("수행평가 열 범위를 명확히 찾지 못해 점수 합계를 보조 기준으로 사용했습니다.");
     return {
       domains,
       notes,
-      confidence: performanceScoreItems.length === scoreItems.length ? "낮음" : "높음"
+      confidence: matchedByPercent
+        ? "높음"
+        : (performanceScoreItems.length === scoreItems.length ? "낮음" : "보통")
     };
   }
 
@@ -2075,12 +2140,15 @@
   function dedupeExtractedDomains(domains) {
     const seen = new Map();
     return domains
-      .map((domain, index) => ({
-        name: normalizeText(domain.name) || `수행평가 ${index + 1}`,
-        max: parseScore(domain.max),
-        step: parseScore(domain.step ?? 1),
-        possibleScores: parsePossibleScores(domain.possibleScores)
-      }))
+      .map((domain, index) => {
+        const max = parseScore(domain.max);
+        return {
+          name: normalizeText(domain.name) || `수행평가 ${index + 1}`,
+          max,
+          step: parseScore(domain.step ?? 1),
+          possibleScores: filterPossibleScoresForMax(domain.possibleScores, max)
+        };
+      })
       .filter(domain => domain.name && domain.max !== null && !Number.isNaN(domain.max))
       .map(domain => {
         const key = headerKey(domain.name);
@@ -2089,7 +2157,7 @@
         const cleanDomain = {
           ...domain,
           step: domain.step === null || Number.isNaN(domain.step) || domain.step <= 0 ? 1 : domain.step,
-          possibleScores: parsePossibleScores(domain.possibleScores)
+          possibleScores: filterPossibleScoresForMax(domain.possibleScores, domain.max)
         };
         return count ? { ...cleanDomain, name: `${domain.name} ${count + 1}` } : cleanDomain;
       });
