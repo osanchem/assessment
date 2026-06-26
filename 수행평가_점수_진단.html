@@ -1,0 +1,3721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수행평가 점수 진단</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+  :root {
+    --ink: #172033;
+    --muted: #667085;
+    --line: #d6dde8;
+    --paper: #ffffff;
+    --soft: #f6f8fb;
+    --navy: #101828;
+    --blue: #2563eb;
+    --teal: #0f766e;
+    --green: #15803d;
+    --amber: #b45309;
+    --red: #b42318;
+    --red-soft: #fff1f0;
+    --blue-soft: #eff6ff;
+    --teal-soft: #ecfdf5;
+    --amber-soft: #fffbeb;
+    --shadow: 0 12px 28px rgba(16, 24, 40, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #f4f7fb;
+    color: var(--ink);
+    font-family: "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  .app-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 22px 24px 18px;
+  }
+
+  .header-inner,
+  .workspace {
+    max-width: 1380px;
+    margin: 0 auto;
+  }
+
+  .top-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .home-link,
+  .header-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 132px;
+    min-height: 34px;
+    padding: 12px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 6px;
+    background: #2563eb;
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .header-btn {
+    min-width: 148px;
+  }
+
+  .app-header h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+
+  .app-header p {
+    max-width: 860px;
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .workspace {
+    padding: 18px 18px 34px;
+  }
+
+  .security-notice {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: var(--teal-soft);
+    color: #14532d;
+    font-weight: 800;
+  }
+
+  .security-notice strong {
+    color: #0f5132;
+  }
+
+  .mode-tabs {
+    display: inline-flex;
+    gap: 6px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+
+  .mode-tab {
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #344054;
+    font-weight: 900;
+  }
+
+  .mode-tab.active {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .view {
+    display: none;
+    margin-top: 16px;
+  }
+
+  .view.active {
+    display: block;
+  }
+
+  .panel {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper);
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.05);
+    overflow: hidden;
+  }
+
+  .panel + .panel {
+    margin-top: 14px;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    background: #fbfcfe;
+  }
+
+  .panel-title {
+    margin: 0;
+    color: var(--navy);
+    font-size: 17px;
+    line-height: 1.25;
+  }
+
+  .panel-sub {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .panel-body {
+    padding: 16px;
+  }
+
+  .teacher-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 410px) minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .field-grid.one {
+    grid-template-columns: 1fr;
+  }
+
+  .field {
+    display: grid;
+    gap: 5px;
+  }
+
+  .field label {
+    color: #344054;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .input,
+  .select {
+    width: 100%;
+    min-height: 38px;
+    padding: 7px 9px;
+    border: 1px solid #cfd8e3;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .input:disabled,
+  .select:disabled {
+    background: #f2f4f7;
+    color: #667085;
+  }
+
+  .divider {
+    height: 1px;
+    margin: 14px 0;
+    background: var(--line);
+  }
+
+  .mini-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 7px 12px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: #fff;
+    color: #344054;
+    text-decoration: none;
+    font-weight: 900;
+  }
+
+  .btn.primary {
+    background: var(--blue);
+    color: #fff;
+  }
+
+  .btn.teal {
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .btn.danger {
+    background: var(--red);
+    color: #fff;
+  }
+
+  .btn.secondary {
+    border-color: var(--line);
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .plan-table-wrap,
+  .results-wrap {
+    width: 100%;
+    overflow: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: #eef2f7;
+    color: #263244;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .compact-table td,
+  .compact-table th {
+    padding: 7px 8px;
+  }
+
+  .domain-input {
+    min-width: 126px;
+  }
+
+  .max-input {
+    min-width: 76px;
+  }
+
+  .possible-input {
+    min-width: 190px;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: #475467;
+    font-weight: 900;
+  }
+
+  .drop-zone {
+    display: grid;
+    gap: 7px;
+    place-items: center;
+    min-height: 156px;
+    padding: 18px;
+    border: 2px dashed #aab7c8;
+    border-radius: 8px;
+    background: #fbfcfe;
+    text-align: center;
+    transition: border-color 0.18s ease, background 0.18s ease;
+  }
+
+  .drop-zone.is-dragging {
+    border-color: var(--blue);
+    background: var(--blue-soft);
+  }
+
+  .drop-title {
+    color: var(--navy);
+    font-weight: 900;
+  }
+
+  .drop-meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .hidden-file {
+    display: none;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .status-box {
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .status-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .status-value {
+    margin-top: 3px;
+    color: var(--navy);
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  .status-box.good {
+    border-color: #bbf7d0;
+    background: var(--teal-soft);
+  }
+
+  .status-box.bad {
+    border-color: #fecaca;
+    background: var(--red-soft);
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .file-name {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    word-break: break-all;
+  }
+
+  .domain-result-stack {
+    display: grid;
+    gap: 14px;
+  }
+
+  .domain-result {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .domain-result-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    background: #fbfcfe;
+  }
+
+  .domain-result-title {
+    color: var(--navy);
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .domain-result-meta,
+  .dataset-meta {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .domain-status {
+    padding: 4px 8px;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    background: var(--teal-soft);
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .domain-status.bad {
+    border-color: #fecaca;
+    background: var(--red-soft);
+    color: var(--red);
+  }
+
+  .dataset-block {
+    padding: 12px;
+  }
+
+  .dataset-block + .dataset-block {
+    border-top: 1px solid var(--line);
+  }
+
+  .dataset-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .dataset-title {
+    color: #263244;
+    font-weight: 900;
+    word-break: break-all;
+  }
+
+  .domain-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .domain-summary-item {
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .domain-summary-item.bad {
+    border-color: #fecaca;
+    background: var(--red-soft);
+  }
+
+  .domain-summary-name {
+    color: var(--navy);
+    font-weight: 900;
+  }
+
+  .domain-summary-meta {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .empty-state {
+    padding: 30px 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .row-error {
+    background: #fff8f7;
+  }
+
+  .cell-error {
+    background: var(--red-soft);
+    color: var(--red);
+    font-weight: 900;
+  }
+
+  .score-cell {
+    min-width: 88px;
+    text-align: center;
+  }
+
+  .score-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    line-height: 1.25;
+  }
+
+  .cell-flag {
+    display: inline;
+    padding: 0 2px;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .cell-flag.bad {
+    background: transparent;
+    color: var(--red);
+  }
+
+  .result-ok {
+    color: var(--green);
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .result-error {
+    color: var(--red);
+    font-weight: 900;
+  }
+
+  .admin-shell {
+    display: grid;
+    grid-template-columns: 270px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .subject-sidebar {
+    position: sticky;
+    top: 10px;
+  }
+
+  .subject-list {
+    display: grid;
+    gap: 7px;
+  }
+
+  .subject-item {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: #344054;
+    text-align: left;
+  }
+
+  .subject-item.active {
+    border-color: var(--blue);
+    background: var(--blue-soft);
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #98a2b3;
+  }
+
+  .status-dot.clear { background: var(--green); }
+  .status-dot.error { background: var(--red); }
+  .status-dot.pending { background: #98a2b3; }
+
+  .subject-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 900;
+  }
+
+  .subject-count {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .kpi {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .kpi:nth-child(1) { border-top: 4px solid var(--blue); }
+  .kpi:nth-child(2) { border-top: 4px solid var(--green); }
+  .kpi:nth-child(3) { border-top: 4px solid var(--red); }
+
+  .kpi-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .kpi-value {
+    margin-top: 5px;
+    color: var(--navy);
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .lock-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+    color: #344054;
+    font-weight: 900;
+  }
+
+  .message-bar {
+    display: none;
+    margin-top: 12px;
+    padding: 9px 11px;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    background: var(--blue-soft);
+    color: #1e3a8a;
+    font-weight: 800;
+  }
+
+  .message-bar.show {
+    display: block;
+  }
+
+  .message-bar.error {
+    border-color: #fecaca;
+    background: var(--red-soft);
+    color: var(--red);
+  }
+
+  .small-note {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .extract-preview {
+    display: none;
+    margin-top: 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #f8fbff;
+    overflow: hidden;
+  }
+
+  .extract-preview.show {
+    display: block;
+  }
+
+  .extract-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #dbeafe;
+  }
+
+  .extract-title {
+    color: #1e3a8a;
+    font-weight: 900;
+  }
+
+  .extract-meta {
+    margin-top: 2px;
+    color: #475467;
+    font-size: 12px;
+  }
+
+  .extract-body {
+    padding: 10px 12px;
+  }
+
+  .extract-body table {
+    background: #fff;
+  }
+
+  .confidence {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--teal-soft);
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .nowrap {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1120px) {
+    .teacher-layout,
+    .admin-shell,
+    .admin-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .subject-sidebar {
+      position: static;
+    }
+
+    .subject-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .top-line,
+    .panel-head,
+    .table-toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .field-grid,
+    .status-grid,
+    .kpi-grid,
+    .subject-list {
+      grid-template-columns: 1fr;
+    }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr;
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="top-line">
+      <div class="top-actions">
+        <a class="home-link" href="index.html">초기화면</a>
+        <button id="downloadHtmlFile" class="header-btn" type="button">HTML 내려받기</button>
+      </div>
+      <span class="drop-meta">업데이트: 2026.06.25.</span>
+    </div>
+    <h1>수행평가 점수 진단</h1>
+    <p>수행평가 점수 파일과 평가계획의 영역별 만점을 대조해 결측, 형식 오류, 초과 입력을 점검합니다.</p>
+  </div>
+</header>
+
+<main class="workspace">
+  <div class="security-notice">
+    <strong>안내:</strong> 해당 프로그램은 서버 기반이 아니므로 업로드한 성적 데이터가 서버에 저장될 일은 절대 없습니다. HTML 파일을 내려받아 브라우저에서 직접 열어 로컬에서도 실행할 수 있습니다.
+  </div>
+
+  <div id="messageBar" class="message-bar" role="status"></div>
+
+  <section id="teacherView" class="view active" aria-label="교과교사용 수행평가 점수 진단">
+    <div class="teacher-layout">
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">평가계획</h2>
+            <p class="panel-sub">업로드 파일의 열 이름과 같은 영역명을 입력합니다.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="mini-toolbar">
+            <button id="importTeacherPlan" class="btn secondary" type="button">평가계획서 업로드</button>
+            <input id="teacherPlanFile" class="hidden-file" type="file" accept=".pdf,.xlsx,.xls,.csv">
+          </div>
+          <div class="small-note">평가계획서 업로드에는 PDF 파일로 올려주세요.</div>
+          <div id="teacherPlanPreview" class="extract-preview"></div>
+          <div class="divider"></div>
+          <div class="plan-table-wrap">
+            <table class="compact-table" aria-label="교과교사용 영역별 만점">
+              <thead>
+                <tr>
+                  <th>영역명</th>
+                  <th>만점</th>
+                  <th>급간</th>
+                  <th>가능점수</th>
+                  <th class="nowrap">삭제</th>
+                </tr>
+              </thead>
+              <tbody id="teacherPlanBody"></tbody>
+            </table>
+          </div>
+          <div class="mini-toolbar">
+            <button id="addTeacherDomain" class="btn secondary" type="button">영역 추가</button>
+            <button id="resetTeacherPlan" class="btn secondary" type="button">예시 기준</button>
+            <button id="downloadTeacherTemplate" class="btn secondary" type="button">CSV 양식</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">파일 업로드</h2>
+            <p class="panel-sub">Excel 또는 CSV 점수 파일을 진단합니다.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="teacherDrop" class="drop-zone" tabindex="0" role="button">
+            <div class="drop-title">학생 점수 파일 업로드</div>
+            <div class="drop-meta">.xlsx, .xls, .csv, 다중 선택 가능</div>
+            <button class="btn primary" type="button">파일 선택</button>
+          </div>
+          <div class="small-note">교과담임 &gt; 수행평가조회/통계 &gt; 교과목별일람표조회 &gt; 전체학급 메뉴에서 영역별로 내려받은 파일을 업로드해 주세요. 여러 영역 파일을 동시에 선택해 한 번에 확인할 수 있습니다.</div>
+          <input id="teacherFile" class="hidden-file" type="file" accept=".xlsx,.xls,.csv" multiple>
+          <div class="field-grid one" style="margin-top:10px">
+            <div class="field">
+              <label for="teacherHeaderRow">제목/머리글 행</label>
+              <input id="teacherHeaderRow" class="input" type="number" min="1" step="1" value="8">
+            </div>
+          </div>
+          <div id="teacherFileName" class="small-note"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2 class="panel-title">진단 결과</h2>
+          <p class="panel-sub">오류 셀에 마우스를 올리면 상세 사유가 표시됩니다.</p>
+        </div>
+        <div class="mini-toolbar" style="margin-top:0">
+          <button id="exportTeacherReport" class="btn teal" type="button">오류 보고서</button>
+          <button id="clearTeacherData" class="btn secondary" type="button">초기화</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="status-grid">
+          <div class="status-box">
+            <div class="status-label">업로드 행</div>
+            <div id="teacherRowsCount" class="status-value">0</div>
+          </div>
+          <div class="status-box good">
+            <div class="status-label">정상 행</div>
+            <div id="teacherClearCount" class="status-value">0</div>
+          </div>
+          <div class="status-box bad">
+            <div class="status-label">활성 오류</div>
+            <div id="teacherErrorCount" class="status-value">0</div>
+          </div>
+          <div class="status-box">
+            <div class="status-label">검사 영역</div>
+            <div id="teacherDomainCount" class="status-value">0</div>
+          </div>
+        </div>
+        <div id="teacherResults" class="results-wrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="adminView" class="view" aria-label="평가업무 담당자용 수행평가 점수 진단">
+    <div class="admin-shell">
+      <aside class="panel subject-sidebar">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">과목 현황</h2>
+            <p class="panel-sub">초록 정상, 빨강 오류, 회색 대기</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="subjectList" class="subject-list"></div>
+        </div>
+      </aside>
+
+      <div>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">학교 전체 요약</h2>
+              <p class="panel-sub">업로드한 파일 기준으로 집계됩니다.</p>
+            </div>
+            <div class="mini-toolbar" style="margin-top:0">
+              <button id="exportAdminReport" class="btn teal" type="button">일괄 오류 보고서</button>
+              <button id="clearAdminData" class="btn secondary" type="button">업로드 초기화</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="kpi-grid">
+              <div class="kpi">
+                <div class="kpi-label">전체 반</div>
+                <div id="adminClassCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">검증 완료 반</div>
+                <div id="adminVerifiedCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">활성 오류</div>
+                <div id="adminErrorCount" class="kpi-value">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">공식 평가기준</h2>
+                <p class="panel-sub">평가계획서에서 인식한 영역, 만점, 가능점수를 관리합니다.</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="mini-toolbar">
+                <button id="importAdminPlan" class="btn secondary" type="button">평가계획서 묶음 업로드</button>
+                <input id="adminPlanFile" class="hidden-file" type="file" accept=".pdf,.xlsx,.xls,.csv" multiple>
+              </div>
+              <div id="adminPlanPreview" class="extract-preview"></div>
+              <label class="lock-row">
+                <input id="adminPlanLocked" type="checkbox">
+                공식 기준 잠금
+              </label>
+              <div class="divider"></div>
+              <div class="plan-table-wrap">
+                <table class="compact-table" aria-label="평가업무 담당자용 영역별 만점">
+                  <thead>
+                    <tr>
+                      <th>영역명</th>
+                      <th>만점</th>
+                      <th>급간</th>
+                      <th>가능점수</th>
+                      <th class="nowrap">삭제</th>
+                    </tr>
+                  </thead>
+                  <tbody id="adminPlanBody"></tbody>
+                </table>
+              </div>
+              <div class="mini-toolbar">
+                <button id="addAdminDomain" class="btn secondary" type="button">영역 추가</button>
+                <button id="applyAdminPlan" class="btn primary" type="button">기준 적용</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 class="panel-title">일괄 업로드</h2>
+                <p class="panel-sub">여러 반 또는 여러 과목 파일을 한 번에 처리합니다.</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div id="adminDrop" class="drop-zone" tabindex="0" role="button">
+                <div class="drop-title">수행평가 점수 파일 묶음 업로드</div>
+                <div class="drop-meta">.xlsx, .xls, .csv, 다중 선택 가능</div>
+                <button class="btn primary" type="button">파일 선택</button>
+              </div>
+              <input id="adminFile" class="hidden-file" type="file" accept=".xlsx,.xls,.csv" multiple>
+              <div class="field-grid one" style="margin-top:10px">
+                <div class="field">
+                  <label for="adminHeaderRow">제목/머리글 행</label>
+                  <input id="adminHeaderRow" class="input" type="number" min="1" step="1" value="8">
+                </div>
+              </div>
+              <div class="mini-toolbar">
+                <button id="downloadAdminTemplate" class="btn secondary" type="button">CSV 양식</button>
+              </div>
+              <div id="adminUploadList" class="small-note"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2 class="panel-title">오류 목록</h2>
+              <p id="adminIssueScope" class="panel-sub">선택 과목 기준으로 표시됩니다.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="adminIssueTable" class="results-wrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  }
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const initialHtmlSource = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
+
+  const defaultDomains = () => [
+    { id: makeId(), name: "영역 A", max: 30, step: 1 },
+    { id: makeId(), name: "영역 B", max: 20, step: 1 }
+  ];
+
+  const defaultSubjects = [
+    "공통국어1",
+    "공통수학1",
+    "공통영어1",
+    "과학탐구실험1",
+    "통합사회1",
+    "통합과학1",
+    "한국사1",
+    "음악",
+    "미술",
+    "언어생활과 한자"
+  ];
+
+  const aliases = {
+    subject: ["과목", "교과", "subject"],
+    className: ["반", "학급", "class", "classroom"],
+    studentName: ["이름", "성명", "학생명", "name"],
+    studentNo: ["학번", "번호", "학생번호", "id", "studentid", "studentno"],
+    grade: ["학년", "grade"]
+  };
+
+  const state = {
+    mode: "teacher",
+    teacher: {
+      subject: "",
+      plan: defaultDomains(),
+      planImport: null,
+      dataset: null,
+      datasets: [],
+      results: [],
+      issues: []
+    },
+    admin: {
+      subjects: [...defaultSubjects],
+      selectedSubject: defaultSubjects[0],
+      plans: {},
+      planImport: null,
+      uploads: [],
+      issues: []
+    }
+  };
+
+  defaultSubjects.forEach(subject => {
+    state.admin.plans[subject] = { locked: false, domains: defaultDomains() };
+  });
+
+  function makeId() {
+    return `id_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function normalizeText(value) {
+    return String(value ?? "").trim().replace(/\s+/g, " ");
+  }
+
+  function headerKey(value) {
+    return normalizeText(value).toLowerCase().replace(/[^0-9a-z가-힣ㄱ-ㅎㅏ-ㅣ]+/g, "");
+  }
+
+  function isBlank(value) {
+    return value === null || value === undefined || String(value).trim() === "";
+  }
+
+  function parseScore(value) {
+    if (typeof value === "number") return Number.isFinite(value) ? value : NaN;
+    const clean = String(value ?? "").trim().replace(/,/g, "");
+    if (clean === "") return null;
+    if (!/^-?\d+(\.\d+)?$/.test(clean)) return NaN;
+    return Number(clean);
+  }
+
+  function parsePossibleScores(value) {
+    if (Array.isArray(value)) {
+      return normalizePossibleScores(value.map(parseScore));
+    }
+    const text = String(value ?? "").trim();
+    if (!text) return [];
+    const scores = text.split(/[,\s/]+/).map(parseScore);
+    return normalizePossibleScores(scores);
+  }
+
+  function normalizePossibleScores(scores) {
+    const set = new Set();
+    scores.forEach(score => {
+      if (score !== null && !Number.isNaN(score)) set.add(Number(score.toFixed(6)));
+    });
+    return [...set].sort((a, b) => b - a);
+  }
+
+  function formatPossibleScores(scores) {
+    return parsePossibleScores(scores).join(", ");
+  }
+
+  function showMessage(text, type = "info") {
+    const bar = $("#messageBar");
+    bar.textContent = text;
+    bar.className = `message-bar show${type === "error" ? " error" : ""}`;
+    window.clearTimeout(showMessage.timer);
+    showMessage.timer = window.setTimeout(() => {
+      bar.className = "message-bar";
+    }, 4200);
+  }
+
+  function setMode(mode) {
+    if (mode !== "teacher") mode = "teacher";
+    state.mode = mode;
+    $$(".mode-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.mode === mode));
+    $("#teacherView").classList.toggle("active", mode === "teacher");
+    $("#adminView").classList.toggle("active", mode === "admin");
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("mode", mode);
+      window.history.replaceState({}, "", url);
+    } catch (error) {
+      // Some local-file viewers block history updates.
+    }
+  }
+
+  function renderTeacherPlan() {
+    const body = $("#teacherPlanBody");
+    body.innerHTML = state.teacher.plan.map((domain, index) => `
+      <tr data-index="${index}">
+        <td>
+          <input class="input domain-input teacher-domain-name" type="text" value="${escapeHtml(domain.name)}" aria-label="영역명">
+        </td>
+        <td>
+          <input class="input max-input teacher-domain-max" type="number" min="0" step="0.1" value="${escapeHtml(domain.max)}" aria-label="만점">
+        </td>
+        <td>
+          <input class="input max-input teacher-domain-step" type="number" min="0.1" step="0.1" value="${escapeHtml(domain.step ?? 1)}" aria-label="급간">
+        </td>
+        <td>
+          <input class="input possible-input teacher-domain-possible" type="text" value="${escapeHtml(formatPossibleScores(domain.possibleScores))}" placeholder="예: 20,18,17" aria-label="가능점수">
+        </td>
+        <td>
+          <button class="icon-btn teacher-domain-remove" type="button" title="영역 삭제">×</button>
+        </td>
+      </tr>
+    `).join("");
+    $("#teacherDomainCount").textContent = String(validPlanDomains(state.teacher.plan).length);
+  }
+
+  function renderAdminSubjectSelect() {
+    const select = $("#adminSubjectSelect");
+    if (!select) return;
+    select.innerHTML = state.admin.subjects.map(subject => (
+      `<option value="${escapeHtml(subject)}"${subject === state.admin.selectedSubject ? " selected" : ""}>${escapeHtml(subject)}</option>`
+    )).join("");
+  }
+
+  function renderAdminPlan() {
+    const plan = ensureAdminPlan(state.admin.selectedSubject);
+    $("#adminPlanLocked").checked = !!plan.locked;
+    const locked = !!plan.locked;
+    const body = $("#adminPlanBody");
+    body.innerHTML = plan.domains.map((domain, index) => `
+      <tr data-index="${index}">
+        <td>
+          <input class="input domain-input admin-domain-name" type="text" value="${escapeHtml(domain.name)}" ${locked ? "disabled" : ""} aria-label="영역명">
+        </td>
+        <td>
+          <input class="input max-input admin-domain-max" type="number" min="0" step="0.1" value="${escapeHtml(domain.max)}" ${locked ? "disabled" : ""} aria-label="만점">
+        </td>
+        <td>
+          <input class="input max-input admin-domain-step" type="number" min="0.1" step="0.1" value="${escapeHtml(domain.step ?? 1)}" ${locked ? "disabled" : ""} aria-label="급간">
+        </td>
+        <td>
+          <input class="input possible-input admin-domain-possible" type="text" value="${escapeHtml(formatPossibleScores(domain.possibleScores))}" placeholder="예: 20,18,17" ${locked ? "disabled" : ""} aria-label="가능점수">
+        </td>
+        <td>
+          <button class="icon-btn admin-domain-remove" type="button" title="영역 삭제" ${locked ? "disabled" : ""}>×</button>
+        </td>
+      </tr>
+    `).join("");
+    $("#addAdminDomain").disabled = locked;
+  }
+
+  function renderPlanImportPreview(kind) {
+    const preview = kind === "teacher" ? state.teacher.planImport : state.admin.planImport;
+    const container = kind === "teacher" ? $("#teacherPlanPreview") : $("#adminPlanPreview");
+    if (!preview) {
+      container.className = "extract-preview";
+      container.innerHTML = "";
+      return;
+    }
+    if (Array.isArray(preview.imports)) {
+      container.className = "extract-preview show";
+      const failedHtml = preview.failed && preview.failed.length
+        ? `<div class="message-bar show error" style="margin:10px 0 0">${escapeHtml(preview.failed.join(" / "))}</div>`
+        : "";
+      container.innerHTML = `
+        <div class="extract-head">
+          <div>
+            <div class="extract-title">과목별 평가계획 적용 결과</div>
+            <div class="extract-meta">${preview.imports.length}개 평가계획서가 과목별 기준표에 배정되었습니다.</div>
+          </div>
+          <span class="confidence">일괄 적용</span>
+        </div>
+        <div class="extract-body">
+          ${preview.imports.map(item => `
+            <div class="dataset-block" style="padding:0 0 12px">
+              <div class="dataset-head">
+                <div>
+                  <div class="dataset-title">${escapeHtml(item.subject)}</div>
+                  <div class="dataset-meta">${escapeHtml(item.sourceName)} · ${item.domains.length}개 영역</div>
+                </div>
+              </div>
+              <table class="compact-table">
+                <thead>
+                  <tr><th>영역명</th><th>만점</th><th>급간</th><th>가능점수</th></tr>
+                </thead>
+                <tbody>
+                  ${item.domains.map(domain => `
+                    <tr>
+                      <td>${escapeHtml(domain.name)}</td>
+                      <td>${escapeHtml(domain.max)}</td>
+                      <td>${escapeHtml(domain.step ?? 1)}</td>
+                      <td>${escapeHtml(formatPossibleScores(domain.possibleScores))}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `).join("")}
+          ${failedHtml}
+          <div class="mini-toolbar">
+            <button class="btn secondary" type="button" data-clear-plan-preview="${kind}">미리보기 닫기</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    const notes = preview.notes && preview.notes.length
+      ? `<div class="small-note">${escapeHtml(preview.notes.join(" "))}</div>`
+      : "";
+    container.className = "extract-preview show";
+    container.innerHTML = `
+      <div class="extract-head">
+        <div>
+          <div class="extract-title">인식된 평가계획</div>
+          <div class="extract-meta">
+            ${escapeHtml(preview.sourceName)}
+            ${preview.subject ? ` / ${escapeHtml(preview.subject)}` : ""}
+            ${preview.performancePercent ? ` / 수행평가 ${escapeHtml(preview.performancePercent)}%` : ""}
+          </div>
+        </div>
+        <span class="confidence">신뢰도 ${escapeHtml(preview.confidence || "보통")}</span>
+      </div>
+      <div class="extract-body">
+        <table class="compact-table">
+          <thead>
+            <tr><th>영역명</th><th>만점</th><th>급간</th><th>가능점수</th></tr>
+          </thead>
+          <tbody>
+            ${preview.domains.map(domain => `
+              <tr>
+                <td>${escapeHtml(domain.name)}</td>
+                <td>${escapeHtml(domain.max)}</td>
+                <td>${escapeHtml(domain.step ?? 1)}</td>
+                <td>${escapeHtml(formatPossibleScores(domain.possibleScores))}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        ${notes}
+        <div class="mini-toolbar">
+          <button class="btn primary" type="button" data-apply-plan="${kind}">추출 기준 적용</button>
+          <button class="btn secondary" type="button" data-clear-plan-preview="${kind}">미리보기 닫기</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function ensureAdminPlan(subject) {
+    if (!state.admin.plans[subject]) {
+      state.admin.plans[subject] = { locked: false, domains: defaultDomains() };
+    }
+    return state.admin.plans[subject];
+  }
+
+  function validPlanDomains(plan) {
+    return plan
+      .map(item => ({
+        id: item.id || makeId(),
+        name: normalizeText(item.name),
+        max: parseScore(item.max),
+        step: parseScore(item.step ?? 1),
+        possibleScores: parsePossibleScores(item.possibleScores)
+      }))
+      .filter(item => item.name && item.max !== null && !Number.isNaN(item.max));
+  }
+
+  function parseCsv(text) {
+    const rows = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
+    const input = text.replace(/^\uFEFF/, "");
+    for (let i = 0; i < input.length; i += 1) {
+      const ch = input[i];
+      const next = input[i + 1];
+      if (ch === "\"") {
+        if (inQuotes && next === "\"") {
+          cell += "\"";
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === "," && !inQuotes) {
+        row.push(cell);
+        cell = "";
+      } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
+        if (ch === "\r" && next === "\n") i += 1;
+        row.push(cell);
+        rows.push(row);
+        row = [];
+        cell = "";
+      } else {
+        cell += ch;
+      }
+    }
+    row.push(cell);
+    rows.push(row);
+    return rows.filter(r => r.some(v => !isBlank(v)));
+  }
+
+  async function readFileSheets(file) {
+    const lower = file.name.toLowerCase();
+    if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+      if (!window.XLSX) {
+        throw new Error("엑셀 처리 라이브러리를 불러오지 못했습니다. CSV 파일로 저장한 뒤 다시 업로드해 주세요.");
+      }
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      return workbook.SheetNames.map(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        normalizeSheetRef(sheet);
+        const rawAoa = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: "" });
+        const aoa = rawAoa.map(row => [...row]);
+        const merges = sheet["!merges"] || [];
+        fillMergedCells(aoa, merges);
+        return { sheetName, aoa, rawAoa, merges };
+      }).filter(sheet => sheet.aoa.some(row => row.some(value => !isBlank(value))));
+    }
+    const text = await file.text();
+    const aoa = parseCsv(text);
+    return [{ sheetName: "CSV", aoa, rawAoa: aoa.map(row => [...row]), merges: [] }];
+  }
+
+  function normalizeSheetRef(sheet) {
+    const refs = Object.keys(sheet).filter(key => /^[A-Z]+[0-9]+$/.test(key));
+    if (!refs.length) return;
+    let minRow = Infinity;
+    let minCol = Infinity;
+    let maxRow = -Infinity;
+    let maxCol = -Infinity;
+    refs.forEach(ref => {
+      const cell = XLSX.utils.decode_cell(ref);
+      minRow = Math.min(minRow, cell.r);
+      minCol = Math.min(minCol, cell.c);
+      maxRow = Math.max(maxRow, cell.r);
+      maxCol = Math.max(maxCol, cell.c);
+    });
+    sheet["!ref"] = XLSX.utils.encode_range({
+      s: { r: minRow, c: minCol },
+      e: { r: maxRow, c: maxCol }
+    });
+  }
+
+  function fillMergedCells(aoa, merges) {
+    merges.forEach(range => {
+      const sourceValue = aoa[range.s.r]?.[range.s.c];
+      if (isBlank(sourceValue)) return;
+      for (let row = range.s.r; row <= range.e.r; row += 1) {
+        if (!aoa[row]) aoa[row] = [];
+        for (let col = range.s.c; col <= range.e.c; col += 1) {
+          if (isBlank(aoa[row][col])) aoa[row][col] = sourceValue;
+        }
+      }
+    });
+  }
+
+  async function extractEvaluationPlan(file) {
+    const lower = file.name.toLowerCase();
+    if (lower.endsWith(".pdf")) return extractPlanFromPdfFile(file);
+    if (lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".csv")) {
+      return extractPlanFromSheetFile(file);
+    }
+    throw new Error("PDF, Excel, CSV 평가계획서만 인식할 수 있습니다.");
+  }
+
+  async function extractPlanFromPdfFile(file) {
+    if (!window.pdfjsLib) {
+      throw new Error("PDF 인식 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하거나 Excel/CSV 기준표를 업로드해 주세요.");
+    }
+    const buffer = await file.arrayBuffer();
+    const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+    const pages = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 1 });
+      const content = await page.getTextContent();
+      const items = content.items.map((item, index) => {
+        const text = normalizeText(item.str);
+        const x = item.transform[4] || 0;
+        const y = item.transform[5] || 0;
+        const width = item.width || Math.max(8, text.length * 5);
+        return {
+          index,
+          text,
+          x,
+          y,
+          width,
+          centerX: x + width / 2,
+          top: viewport.height - y
+        };
+      }).filter(item => item.text);
+      const lines = itemsToLines(items);
+      pages.push({ pageNumber, items, lines, height: viewport.height });
+    }
+    return extractPlanFromPdfPages(pages, file.name);
+  }
+
+  function itemsToLines(items) {
+    const sorted = [...items].sort((a, b) => a.top - b.top || a.x - b.x);
+    const lines = [];
+    sorted.forEach(item => {
+      let line = lines.find(candidate => Math.abs(candidate.top - item.top) <= 3.5);
+      if (!line) {
+        line = { top: item.top, items: [] };
+        lines.push(line);
+      }
+      line.items.push(item);
+      line.top = (line.top * (line.items.length - 1) + item.top) / line.items.length;
+    });
+    return lines.map(line => {
+      const lineItems = [...line.items].sort((a, b) => a.x - b.x);
+      return {
+        ...line,
+        items: lineItems,
+        text: lineItems.map(item => item.text).join(" ")
+      };
+    }).sort((a, b) => a.top - b.top);
+  }
+
+  function extractPlanFromPdfPages(pages, sourceName) {
+    const allLines = pages.flatMap(page => page.lines.map(line => ({ ...line, pageNumber: page.pageNumber })));
+    const allText = allLines.map(line => line.text).join("\n");
+    const subject = inferSubjectFromPlanText(allText, sourceName);
+    const performancePercent = inferPerformancePercent(allLines);
+    const rubricDomains = extractRubricDomainsFromPdfPages(pages, allLines);
+    const scoreRow = findPlanScoreRow(pages);
+    let domains = [];
+    let notes = [];
+    let confidence = "보통";
+
+    if (scoreRow) {
+      const extracted = extractDomainsFromScoreRow(scoreRow, performancePercent);
+      domains = extracted.domains;
+      notes = extracted.notes;
+      confidence = extracted.confidence;
+    }
+
+    if (rubricDomains.length) {
+      domains = mergeRubricDomains(domains, rubricDomains);
+      notes.push("세부 채점 기준의 척도 조합으로 가능한 총점을 계산했습니다.");
+      confidence = "높음";
+    }
+
+    if (!domains.length) {
+      const fallback = extractDomainsFromPlanText(allText, performancePercent);
+      domains = fallback.domains;
+      notes = [...notes, ...fallback.notes];
+      confidence = "낮음";
+    }
+
+    if (!domains.length) {
+      throw new Error("평가계획서에서 수행평가 영역 만점을 찾지 못했습니다.");
+    }
+
+    return {
+      sourceName,
+      sourceType: "PDF",
+      subject,
+      performancePercent,
+      domains: dedupeExtractedDomains(domains),
+      notes,
+      confidence
+    };
+  }
+
+  function extractRubricDomainsFromPdfPages(pages, allLines) {
+    const sectionStarts = findPerformanceSections(allLines);
+    const domains = [];
+
+    sectionStarts.forEach((section, sectionIndex) => {
+      const sectionDomain = {
+        name: section.title,
+        max: section.max,
+        step: 1,
+        possibleScores: [],
+        scaleGroups: []
+      };
+      const nextIndex = sectionStarts[sectionIndex + 1]?.index ?? allLines.length;
+      const sectionLines = allLines.slice(section.index, nextIndex);
+      const headerLine = sectionLines.find(line => headerKey(line.text).includes("채점요소") && headerKey(line.text).includes("척도"));
+      if (!headerLine) {
+        domains.push(sectionDomain);
+        return;
+      }
+
+      const pageRange = pages.filter(page => {
+        if (page.pageNumber < headerLine.pageNumber) return false;
+        if (sectionStarts[sectionIndex + 1] && page.pageNumber > sectionStarts[sectionIndex + 1].line.pageNumber) return false;
+        return true;
+      });
+      const headerPage = pages.find(page => page.pageNumber === headerLine.pageNumber);
+      if (!headerPage) {
+        domains.push(sectionDomain);
+        return;
+      }
+
+      const headerItems = headerPage.items.filter(item => Math.abs(item.top - headerLine.top) <= 8);
+      const scaleHeader = headerItems.find(item => headerKey(item.text) === "척도")
+        || headerItems.find(item => headerKey(item.text).includes("척도"));
+      const pointHeader = headerItems.find(item => headerKey(item.text) === "배점")
+        || headerItems.find(item => headerKey(item.text).includes("배점"));
+      if (!scaleHeader || !pointHeader) {
+        const textGroups = extractScaleGroupsFromRubricLines(sectionLines, headerLine, sectionDomain.max);
+        domains.push({
+          ...sectionDomain,
+          possibleScores: textGroups.length ? cartesianSumScores(textGroups) : [],
+          scaleGroups: textGroups
+        });
+        return;
+      }
+
+      const scaleTokens = [];
+      const pointTokens = [];
+      const sortedHeaders = [...headerItems].sort((a, b) => a.centerX - b.centerX);
+      const leftHeader = [...sortedHeaders].reverse().find(item => item.centerX < scaleHeader.centerX);
+      const rightHeader = sortedHeaders.find(item => item.centerX > pointHeader.centerX);
+      const scalePointMid = (scaleHeader.centerX + pointHeader.centerX) / 2;
+      const scaleLeft = leftHeader ? (leftHeader.centerX + scaleHeader.centerX) / 2 : scaleHeader.centerX - 45;
+      const pointRight = rightHeader ? (rightHeader.centerX + pointHeader.centerX) / 2 : pointHeader.centerX + 45;
+      pageRange.forEach(page => {
+        const nextSection = sectionStarts[sectionIndex + 1]?.line;
+        const topMin = page.pageNumber === headerLine.pageNumber ? headerLine.top + 6 : 0;
+        const topMax = nextSection && page.pageNumber === nextSection.pageNumber ? nextSection.top - 5 : page.height - 24;
+        const footnoteLine = page.lines.find(line => line.top > topMin && line.top < topMax && line.text.trim().startsWith("※"));
+        const effectiveTopMax = footnoteLine ? footnoteLine.top - 4 : topMax;
+        page.items.forEach(item => {
+          if (item.top < topMin || item.top > effectiveTopMax) return;
+          const value = bareNumberFromText(item.text);
+          if (value === null) return;
+          const inScaleColumn = Math.abs(item.centerX - scaleHeader.centerX) <= 20
+            || (item.centerX >= scaleLeft && item.centerX < scalePointMid);
+          const inPointColumn = Math.abs(item.centerX - pointHeader.centerX) <= 20
+            || (item.centerX >= scalePointMid && item.centerX <= pointRight);
+          if (inScaleColumn && !inPointColumn) {
+            scaleTokens.push({ value, pageNumber: page.pageNumber, top: item.top, x: item.x });
+          } else if (inPointColumn && !inScaleColumn) {
+            pointTokens.push({ value, pageNumber: page.pageNumber, top: item.top, x: item.x });
+          } else if (inScaleColumn && inPointColumn) {
+            const scaleDistance = Math.abs(item.centerX - scaleHeader.centerX);
+            const pointDistance = Math.abs(item.centerX - pointHeader.centerX);
+            const target = scaleDistance <= pointDistance ? scaleTokens : pointTokens;
+            target.push({ value, pageNumber: page.pageNumber, top: item.top, x: item.x });
+          }
+        });
+      });
+
+      const coordinateGroups = splitScaleTokensByPointTokens(scaleTokens, pointTokens);
+      const textGroups = extractScaleGroupsFromRubricLines(sectionLines, headerLine, sectionDomain.max);
+      const coordinateValueCount = coordinateGroups.reduce((sum, group) => sum + group.length, 0);
+      const textValueCount = textGroups.reduce((sum, group) => sum + group.length, 0);
+      const groups = textGroups.length && (
+        textGroups.length > coordinateGroups.length || textValueCount > coordinateValueCount
+      ) ? textGroups : coordinateGroups;
+      const possibleScores = groups.length ? cartesianSumScores(groups) : [];
+      domains.push({
+        ...sectionDomain,
+        possibleScores,
+        scaleGroups: groups
+      });
+    });
+
+    return domains;
+  }
+
+  function findPerformanceSections(allLines) {
+    const starts = [];
+    allLines.forEach((line, index) => {
+      const match = line.text.match(/^\s*\[\s*(\d+)\s*\]\s*(.+)$/);
+      if (!match) return;
+      const rawTitle = normalizeText(match[2].replace(/\(.+$/, ""));
+      if (!rawTitle) return;
+      starts.push({ line, index, number: Number(match[1]), title: rawTitle, percent: null, max: null });
+    });
+
+    starts.forEach((section, sectionIndex) => {
+      const nextIndex = starts[sectionIndex + 1]?.index ?? allLines.length;
+      const sectionText = allLines.slice(section.index, nextIndex).map(line => line.text).join(" ");
+      const compact = normalizeText(sectionText);
+
+      const direct = compact.match(/\[\s*\d+\s*\]\s*(.+?)\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*,\s*(\d+(?:\.\d+)?)\s*점\s*만점\s*\)/);
+      if (direct) {
+        section.title = normalizeText(direct[1]);
+        section.percent = Number(direct[2]);
+        section.max = Number(direct[3]);
+        return;
+      }
+
+      const schedule = compact.match(/반영\s*비율\s*\(?%\)?\s*(\d+(?:\.\d+)?)\s+만점\s*(\d+(?:\.\d+)?)/);
+      if (schedule) {
+        section.percent = Number(schedule[1]);
+        section.max = Number(schedule[2]);
+        return;
+      }
+
+      const maxOnly = compact.match(/만점\s*(\d+(?:\.\d+)?)/);
+      if (maxOnly) section.max = Number(maxOnly[1]);
+    });
+
+    return starts.filter(section => section.title && section.max !== null && !Number.isNaN(section.max));
+  }
+
+  function bareNumberFromText(text) {
+    const match = String(text ?? "").trim().match(/^(\d+(?:\.\d+)?)$/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function trailingNumbersFromText(text) {
+    const tokens = normalizeText(text).split(/\s+/).filter(Boolean);
+    const numbers = [];
+    for (let index = tokens.length - 1; index >= 0; index -= 1) {
+      const clean = tokens[index].replace(/[()]/g, "").replace(/점$/, "").replace(/%$/, "");
+      if (!/^\d+(?:\.\d+)?$/.test(clean)) break;
+      numbers.unshift(Number(clean));
+    }
+    return numbers;
+  }
+
+  function extractScaleGroupsFromRubricLines(sectionLines, headerLine, maxScore) {
+    const groups = [];
+    let currentGroup = null;
+    let afterHeader = false;
+    sectionLines.forEach(line => {
+      if (!afterHeader) {
+        afterHeader = line === headerLine;
+        return;
+      }
+      const text = normalizeText(line.text);
+      if (!text || text.startsWith("※")) return;
+      const numbers = trailingNumbersFromText(text)
+        .filter(value => value >= 0 && value <= Number(maxScore));
+      if (!numbers.length) return;
+      if (numbers.length >= 2) {
+        currentGroup = [numbers[numbers.length - 2]];
+        groups.push(currentGroup);
+      } else if (currentGroup) {
+        currentGroup.push(numbers[0]);
+      }
+    });
+    return groups.map(group => normalizePossibleScores(group)).filter(group => group.length);
+  }
+
+  function splitScaleTokensByPointTokens(scaleTokens, pointTokens) {
+    const scaleValues = scaleTokens
+      .sort((a, b) => a.pageNumber - b.pageNumber || a.top - b.top || a.x - b.x)
+      .map(token => token.value);
+    const pointValues = pointTokens
+      .sort((a, b) => a.pageNumber - b.pageNumber || a.top - b.top || a.x - b.x)
+      .map(token => token.value);
+    if (!scaleValues.length || !pointValues.length) return [];
+
+    const groups = [];
+    let cursor = 0;
+    pointValues.forEach((pointValue, pointIndex) => {
+      while (cursor < scaleValues.length && Math.abs(scaleValues[cursor] - pointValue) > 1e-7) cursor += 1;
+      if (cursor >= scaleValues.length) return;
+      const group = [scaleValues[cursor]];
+      cursor += 1;
+      const nextPoint = pointValues[pointIndex + 1];
+      while (cursor < scaleValues.length) {
+        if (nextPoint !== undefined && Math.abs(scaleValues[cursor] - nextPoint) < 1e-7) break;
+        group.push(scaleValues[cursor]);
+        cursor += 1;
+      }
+      groups.push(normalizePossibleScores(group));
+    });
+
+    return groups.filter(group => group.length);
+  }
+
+  function cartesianSumScores(groups) {
+    let sums = [0];
+    groups.forEach(group => {
+      const next = [];
+      sums.forEach(sum => {
+        group.forEach(value => next.push(Number((sum + value).toFixed(6))));
+      });
+      sums = normalizePossibleScores(next);
+    });
+    return sums;
+  }
+
+  function mergeRubricDomains(baseDomains, rubricDomains) {
+    if (!baseDomains.length) return rubricDomains;
+    const merged = rubricDomains.map(rubric => {
+      const match = baseDomains.find(domain => (
+        Math.abs(Number(domain.max) - Number(rubric.max)) < 1e-7 &&
+        (headerKey(rubric.name).includes(headerKey(domain.name)) || headerKey(domain.name).includes(headerKey(rubric.name)))
+      ));
+      return match
+        ? { ...match, ...rubric, possibleScores: rubric.possibleScores.length ? rubric.possibleScores : parsePossibleScores(match.possibleScores) }
+        : rubric;
+    });
+    return merged;
+  }
+
+  function inferSubjectFromPlanText(text, sourceName) {
+    const fromOverview = text.match(/과목명\s+(.+?)\s+과목\s*유형/);
+    if (fromOverview && normalizeText(fromOverview[1])) return normalizeText(fromOverview[1]);
+    const fromTitle = text.match(/\d{4}학년도\s+\d학기\s+(.+?)\s+교수학습\s*및\s*평가계획/);
+    if (fromTitle && normalizeText(fromTitle[1])) return normalizeText(fromTitle[1]);
+    const fromFile = sourceName.match(/\((?:\d학년,\s*)?(.+?)\)\.pdf$/i);
+    return fromFile ? normalizeText(fromFile[1]) : "";
+  }
+
+  function inferPerformancePercent(lines) {
+    const reflectionLineIndex = lines.findIndex(line => headerKey(line.text).includes("반영비율"));
+    if (reflectionLineIndex >= 0) {
+      const nearbyText = lines.slice(reflectionLineIndex, reflectionLineIndex + 2).map(line => line.text).join(" ");
+      const values = extractPercentValues(nearbyText);
+      if (values.length >= 3) return values[1];
+      if (values.length >= 2) return values[1];
+    }
+
+    const headerIndex = lines.findIndex(line => headerKey(line.text).includes("평가구분") && headerKey(line.text).includes("수행평가"));
+    if (headerIndex >= 0) {
+      const nearbyText = lines.slice(headerIndex, headerIndex + 3).map(line => line.text).join(" ");
+      const values = extractPercentValues(nearbyText);
+      if (values.length >= 3) return values[1];
+    }
+    return null;
+  }
+
+  function extractPercentValues(text) {
+    return [...String(text).matchAll(/(\d+(?:\.\d+)?)\s*%/g)].map(match => Number(match[1]));
+  }
+
+  function extractScoreValues(text) {
+    return [...String(text).matchAll(/(\d+(?:\.\d+)?)\s*점/g)].map(match => Number(match[1]));
+  }
+
+  function scoreValueFromText(text) {
+    const match = String(text).match(/^(\d+(?:\.\d+)?)\s*점$/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function percentValueFromText(text) {
+    const match = String(text).match(/^\(?(\d+(?:\.\d+)?)\s*%\)?$/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function findPlanScoreRow(pages) {
+    for (const page of pages) {
+      for (const line of page.lines) {
+        const key = headerKey(line.text);
+        if (!key.includes("영역만점")) continue;
+        const scoreItems = line.items
+          .map(item => ({ ...item, value: scoreValueFromText(item.text) }))
+          .filter(item => item.value !== null);
+        if (scoreItems.length) return { page, line, scoreItems };
+      }
+    }
+    return null;
+  }
+
+  function extractDomainsFromScoreRow(scoreRow, performancePercent) {
+    const { page, line, scoreItems } = scoreRow;
+    const percentLine = page.lines.find(candidate => (
+      candidate.top > line.top &&
+      candidate.top < line.top + 24 &&
+      headerKey(candidate.text).includes("반영비율")
+    ));
+    const percentItems = percentLine
+      ? percentLine.items.map(item => ({ ...item, value: percentValueFromText(item.text) })).filter(item => item.value !== null)
+      : [];
+
+    let performanceScoreItems = inferPerformanceScoreItemsByHeader(page, scoreItems);
+    const trailingCount = inferTrailingPerformanceCount(
+      scoreItems.map(item => item.value),
+      percentItems.map(item => item.value),
+      performancePercent
+    );
+
+    if (trailingCount && (!performanceScoreItems.length || performanceScoreItems.length !== trailingCount)) {
+      performanceScoreItems = scoreItems.slice(-trailingCount);
+    }
+    if (!performanceScoreItems.length) performanceScoreItems = scoreItems;
+
+    const domains = performanceScoreItems.map((item, index) => ({
+      name: inferDomainNameFromColumn(page, line, item, performanceScoreItems, index),
+      max: item.value,
+      step: 1,
+      possibleScores: []
+    }));
+
+    const notes = [];
+    if (!performancePercent) notes.push("수행평가 반영비율을 찾지 못해 영역 만점 행을 기준으로 추출했습니다.");
+    if (!inferPerformanceScoreItemsByHeader(page, scoreItems).length) notes.push("수행평가 열 범위를 명확히 찾지 못해 점수 합계를 보조 기준으로 사용했습니다.");
+    return {
+      domains,
+      notes,
+      confidence: performanceScoreItems.length === scoreItems.length ? "낮음" : "높음"
+    };
+  }
+
+  function inferPerformanceScoreItemsByHeader(page, scoreItems) {
+    const headerLine = page.lines.find(line => {
+      const key = headerKey(line.text);
+      return key.includes("평가구분") && key.includes("수행평가");
+    });
+    if (!headerLine) return [];
+    const findItem = keyword => headerLine.items.find(item => headerKey(item.text).includes(keyword));
+    const perfItem = findItem("수행평가");
+    if (!perfItem) return [];
+    const writtenItem = findItem("정기시험");
+    const totalItem = findItem("합계");
+    const perfCenter = perfItem.centerX;
+    const leftBoundary = writtenItem ? (writtenItem.centerX + perfCenter) / 2 : perfCenter - 140;
+    const rightBoundary = totalItem ? (totalItem.centerX + perfCenter) / 2 : Number.POSITIVE_INFINITY;
+    return scoreItems.filter(item => item.centerX > leftBoundary && item.centerX < rightBoundary);
+  }
+
+  function inferTrailingPerformanceCount(scores, percentages, performancePercent) {
+    if (!performancePercent) return null;
+    const values = percentages.length === scores.length ? percentages : scores;
+    let sum = 0;
+    for (let index = values.length - 1; index >= 0; index -= 1) {
+      sum += values[index];
+      if (Math.abs(sum - performancePercent) <= 0.2) return values.length - index;
+      if (sum > performancePercent + 1) break;
+    }
+    return null;
+  }
+
+  function inferDomainNameFromColumn(page, scoreLine, scoreItem, performanceScoreItems, index) {
+    const centers = performanceScoreItems.map(item => item.centerX);
+    const minX = Math.min(...centers) - 42;
+    const maxX = Math.max(...centers) + 42;
+    const taskWords = page.items.filter(item => (
+      item.top < scoreLine.top - 48 &&
+      item.top > scoreLine.top - 155 &&
+      item.centerX >= minX &&
+      item.centerX <= maxX &&
+      Math.abs(item.centerX - scoreItem.centerX) <= 46 &&
+      !isPlanNoiseWord(item.text)
+    ));
+    const subtypeWords = page.items.filter(item => (
+      item.top < scoreLine.top - 8 &&
+      item.top >= scoreLine.top - 48 &&
+      item.centerX >= minX &&
+      item.centerX <= maxX &&
+      Math.abs(item.centerX - scoreItem.centerX) <= 30 &&
+      !isPlanNoiseWord(item.text, { keepSubtype: true })
+    ));
+    const task = normalizeExtractedLabel(taskWords);
+    const subtype = normalizeExtractedLabel(subtypeWords);
+    const label = [task, subtype].filter(Boolean).join(" ");
+    return label || `수행평가 ${index + 1}`;
+  }
+
+  function isPlanNoiseWord(text, options = {}) {
+    const key = headerKey(text);
+    if (!key) return true;
+    const alwaysNoise = [
+      "평가", "영역", "과제명", "중간고사", "기말고사", "만점", "반영비율",
+      "선택형", "서답형", "단답형", "정기시험", "수행평가", "합계"
+    ];
+    if (alwaysNoise.includes(key)) return true;
+    if (!options.keepSubtype && ["서논", "술형", "서논술형", "기타"].includes(key)) return true;
+    if (/^\d/.test(key)) return true;
+    return false;
+  }
+
+  function normalizeExtractedLabel(words) {
+    const sorted = [...words].sort((a, b) => a.top - b.top || a.x - b.x);
+    const pieces = [];
+    sorted.forEach(item => {
+      const text = normalizeText(item.text).replace(/[()]/g, "");
+      if (text && pieces[pieces.length - 1] !== text) pieces.push(text);
+    });
+    return pieces.join(" ")
+      .replace(/서논\s+술형/g, "서논술형")
+      .replace(/서\s*·\s*논술형/g, "서·논술형")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function extractDomainsFromPlanText(text, performancePercent) {
+    const lines = String(text).split(/\r?\n/).map(normalizeText).filter(Boolean);
+    const scoreLineIndex = lines.findIndex(line => headerKey(line).includes("영역만점"));
+    if (scoreLineIndex < 0) return { domains: [], notes: ["영역 만점 행을 찾지 못했습니다."] };
+    const scores = extractScoreValues(lines[scoreLineIndex]);
+    if (!scores.length) return { domains: [], notes: ["영역 만점 행에서 점수를 찾지 못했습니다."] };
+    const percentLine = lines.slice(scoreLineIndex, scoreLineIndex + 3).find(line => headerKey(line).includes("반영비율")) || "";
+    const count = inferTrailingPerformanceCount(scores, extractPercentValues(percentLine), performancePercent) || scores.length;
+    return {
+      domains: scores.slice(-count).map((score, index) => ({ name: `수행평가 ${index + 1}`, max: score, step: 1, possibleScores: [] })),
+      notes: ["영역명은 표 구조상 자동 식별이 어려워 임시 이름으로 채웠습니다."]
+    };
+  }
+
+  async function extractPlanFromSheetFile(file) {
+    const sheets = await readFileSheets(file);
+    for (const sheet of sheets) {
+      const extracted = extractPlanFromAoa(sheet.aoa, file.name, sheet.sheetName);
+      if (extracted.domains.length) return extracted;
+    }
+    throw new Error("평가계획서 표에서 영역명/만점 정보를 찾지 못했습니다.");
+  }
+
+  function extractPlanFromAoa(aoa, sourceName, sheetName) {
+    const text = aoa.map(row => row.map(normalizeText).join(" ")).join("\n");
+    const subject = inferSubjectFromPlanText(text, sourceName);
+    const performancePercent = inferPerformancePercent(text.split(/\r?\n/).map(line => ({ text: line })));
+    const domains = [];
+
+    for (let rowIndex = 0; rowIndex < aoa.length; rowIndex += 1) {
+      const row = aoa[rowIndex].map(normalizeText);
+      const nameIndex = row.findIndex(value => ["영역명", "평가영역", "영역"].includes(headerKey(value)));
+      const maxIndex = row.findIndex(value => ["만점", "영역만점", "배점"].includes(headerKey(value)));
+      const stepIndex = row.findIndex(value => ["급간", "점수급간", "간격"].includes(headerKey(value)));
+      const possibleIndex = row.findIndex(value => ["가능점수", "허용점수", "가능총점"].includes(headerKey(value)));
+      if (nameIndex >= 0 && maxIndex >= 0) {
+        for (let next = rowIndex + 1; next < aoa.length; next += 1) {
+          const name = normalizeText(aoa[next][nameIndex]);
+          const max = parseScore(aoa[next][maxIndex]);
+          const step = stepIndex >= 0 ? parseScore(aoa[next][stepIndex]) : 1;
+          const possibleScores = possibleIndex >= 0 ? parsePossibleScores(aoa[next][possibleIndex]) : [];
+          if (!name && max === null) continue;
+          if (!name || max === null || Number.isNaN(max)) break;
+          domains.push({ name, max, step: step === null || Number.isNaN(step) ? 1 : step, possibleScores });
+        }
+        if (domains.length) break;
+      }
+    }
+
+    if (!domains.length) {
+      const scoreRowIndex = aoa.findIndex(row => headerKey(row.map(normalizeText).join(" ")).includes("영역만점"));
+      if (scoreRowIndex >= 0) {
+        const scoreRowText = aoa[scoreRowIndex].map(normalizeText).join(" ");
+        const scores = extractScoreValues(scoreRowText);
+        const percentRowText = aoa.slice(scoreRowIndex, scoreRowIndex + 3).map(row => row.map(normalizeText).join(" ")).join(" ");
+        const count = inferTrailingPerformanceCount(scores, extractPercentValues(percentRowText), performancePercent) || scores.length;
+        scores.slice(-count).forEach((score, index) => domains.push({ name: `수행평가 ${index + 1}`, max: score, step: 1, possibleScores: [] }));
+      }
+    }
+
+    return {
+      sourceName: `${sourceName} / ${sheetName}`,
+      sourceType: "표",
+      subject,
+      performancePercent,
+      domains: dedupeExtractedDomains(domains),
+      notes: domains.length ? ["표 파일에서 영역/만점 정보를 추출했습니다."] : [],
+      confidence: "보통"
+    };
+  }
+
+  function dedupeExtractedDomains(domains) {
+    const seen = new Map();
+    return domains
+      .map((domain, index) => ({
+        name: normalizeText(domain.name) || `수행평가 ${index + 1}`,
+        max: parseScore(domain.max),
+        step: parseScore(domain.step ?? 1),
+        possibleScores: parsePossibleScores(domain.possibleScores)
+      }))
+      .filter(domain => domain.name && domain.max !== null && !Number.isNaN(domain.max))
+      .map(domain => {
+        const key = headerKey(domain.name);
+        const count = seen.get(key) || 0;
+        seen.set(key, count + 1);
+        const cleanDomain = {
+          ...domain,
+          step: domain.step === null || Number.isNaN(domain.step) || domain.step <= 0 ? 1 : domain.step,
+          possibleScores: parsePossibleScores(domain.possibleScores)
+        };
+        return count ? { ...cleanDomain, name: `${domain.name} ${count + 1}` } : cleanDomain;
+      });
+  }
+
+  function getHeaderRowNumber(kind) {
+    const input = kind === "admin" ? $("#adminHeaderRow") : $("#teacherHeaderRow");
+    const rowNumber = Number(input?.value);
+    return Number.isInteger(rowNumber) && rowNumber > 0 ? rowNumber : null;
+  }
+
+  function aoaToDataset(aoa, fileName, sheetName, headerRowNumber = null) {
+    if (!aoa.length) throw new Error("읽을 수 있는 행이 없습니다.");
+    const meta = extractScoreSheetMeta(aoa);
+    const headerIndex = findHeaderRow(aoa, headerRowNumber, meta);
+    if (headerIndex < 0) throw new Error("머리글 행을 찾지 못했습니다.");
+    const width = Math.max(...aoa.slice(headerIndex).map(row => (row || []).length));
+    const headerRow = aoa[headerIndex] || [];
+    const rawHeaders = Array.from({ length: width }, (_, index) => normalizeText(headerRow[index]) || `열${index + 1}`);
+    const headers = dedupeHeaders(rawHeaders);
+    const records = [];
+    for (let rowIndex = headerIndex + 1; rowIndex < aoa.length; rowIndex += 1) {
+      const sourceRow = aoa[rowIndex] || [];
+      if (!sourceRow.some(value => !isBlank(value))) continue;
+      if (isScoreTableFooterRow(sourceRow)) break;
+      const values = {};
+      headers.forEach((header, colIndex) => {
+        values[header] = sourceRow[colIndex] ?? "";
+      });
+      records.push({
+        values,
+        rowNumber: rowIndex + 1,
+        fileName,
+        sheetName
+      });
+    }
+    return { fileName, sheetName, headers, records, ...meta };
+  }
+
+  function extractScoreSheetMeta(aoa) {
+    const meta = { subject: "", domainName: "", domainMax: null, titleRowIndex: null };
+    for (let rowIndex = 0; rowIndex < Math.min(30, aoa.length); rowIndex += 1) {
+      const rowText = (aoa[rowIndex] || []).map(normalizeText).filter(Boolean).join(" ");
+      if (!meta.subject) {
+        const subjectMatch = rowText.match(/교과목\s*:\s*(.+?)(?:\s{2,}|$)/);
+        if (subjectMatch) meta.subject = normalizeText(subjectMatch[1]);
+      }
+      const domainMatch = rowText.match(/영\s*역\s*:\s*(.+?)\s*영역\s*만점\s*:\s*(\d+(?:\.\d+)?)/);
+      if (domainMatch) {
+        meta.domainName = normalizeText(domainMatch[1]);
+        meta.domainMax = Number(domainMatch[2]);
+        meta.titleRowIndex = rowIndex;
+        break;
+      }
+    }
+    return meta;
+  }
+
+  function isScoreSheetTitleRow(row) {
+    const text = (row || []).map(normalizeText).filter(Boolean).join(" ");
+    return /영\s*역\s*:/.test(text) || /교과목\s*:/.test(text) || /수행평가\s+(교과목별|학급별)\s+일람표/.test(text);
+  }
+
+  function isScoreTableFooterRow(row) {
+    const cells = (row || []).map(normalizeText).filter(Boolean);
+    if (!cells.length) return false;
+    const compact = cells.join("").replace(/\s+/g, "");
+    return [
+      "응시생수",
+      "총점",
+      "평균",
+      "합계",
+      "성취기준",
+      "교과담당교사",
+      "평가담당",
+      "확인자",
+      "결재"
+    ].some(keyword => compact.includes(keyword));
+  }
+
+  function maxScoreFromCell(value) {
+    const text = normalizeText(value);
+    const match = text.match(/^만점\s*:\s*(\d+(?:\.\d+)?)/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function cleanAdminSubjectName(value) {
+    return normalizeText(value).replace(/\(\s*\d+(?:\.\d+)?\s*\)\s*$/, "");
+  }
+
+  function isAdminNonScoreHeader(value) {
+    const key = headerKey(value);
+    return !key || ["번호", "성명", "이름", "학번", "합계", "비고"].some(token => key === headerKey(token) || key.includes(headerKey(token)));
+  }
+
+  function inferNeisClassName(aoa) {
+    const text = aoa.slice(0, 12).map(row => (row || []).map(normalizeText).filter(Boolean).join(" ")).join(" ");
+    const gradeClass = text.match(/(\d+)\s*학년.*?(\d+)\s*반/);
+    if (gradeClass) return `${gradeClass[1]}학년 ${gradeClass[2]}반`;
+    const classOnly = text.match(/(\d+)\s*반/);
+    return classOnly ? `${classOnly[1]}반` : "";
+  }
+
+  function findAdminNeisBlocks(aoa, rawAoa = aoa) {
+    const blocks = [];
+    for (let maxRowIndex = 3; maxRowIndex < aoa.length; maxRowIndex += 1) {
+      const rawMaxRow = rawAoa[maxRowIndex] || [];
+      const scoreColumns = rawMaxRow
+        .map((value, colIndex) => ({ colIndex, max: maxScoreFromCell(value) }))
+        .filter(item => item.max !== null && !Number.isNaN(item.max));
+      if (!scoreColumns.length) continue;
+
+      const subjectRowIndex = maxRowIndex - 3;
+      const domainRowIndex = maxRowIndex - 1;
+      const subjectRow = aoa[subjectRowIndex] || [];
+      const domainRow = aoa[domainRowIndex] || [];
+      const headerText = subjectRow.map(normalizeText).join(" ");
+      if (!headerKey(headerText).includes("번호") || !headerKey(headerText).includes("성명")) continue;
+
+      const usableColumns = scoreColumns.filter(item => {
+        const subject = cleanAdminSubjectName(subjectRow[item.colIndex]);
+        const domain = normalizeText(domainRow[item.colIndex]);
+        return subject && domain && !isAdminNonScoreHeader(domain);
+      });
+      if (!usableColumns.length) continue;
+
+      let endRowIndex = maxRowIndex + 1;
+      while (endRowIndex < aoa.length) {
+        const row = aoa[endRowIndex] || [];
+        if (isScoreTableFooterRow(row)) break;
+        if (!row.some(value => !isBlank(value))) break;
+        endRowIndex += 1;
+      }
+      if (endRowIndex > maxRowIndex + 1) {
+        blocks.push({
+          subjectRowIndex,
+          domainRowIndex,
+          maxRowIndex,
+          firstDataRowIndex: maxRowIndex + 1,
+          endRowIndex,
+          scoreColumns: usableColumns
+        });
+      }
+    }
+    return blocks;
+  }
+
+  function findAdminIdentityColumns(headerRow) {
+    const keys = (headerRow || []).map(headerKey);
+    const nameCol = keys.findIndex(key => key.includes("성명") || key.includes("이름"));
+    const numberCol = keys.findIndex(key => key.includes("번호"));
+    const explicitStudentIdCol = keys.findIndex(key => key.includes("학번") || key.includes("학생번호"));
+    const studentIdCol = explicitStudentIdCol >= 0
+      ? explicitStudentIdCol
+      : (nameCol > 0 ? nameCol - 1 : -1);
+    return {
+      numberCol: numberCol >= 0 ? numberCol : null,
+      studentIdCol: studentIdCol >= 0 ? studentIdCol : null,
+      nameCol: nameCol >= 0 ? nameCol : null
+    };
+  }
+
+  function isAdminStudentRow(row, identity) {
+    if (!row || isScoreTableFooterRow(row)) return false;
+    const name = identity.nameCol !== null ? normalizeText(row[identity.nameCol]) : "";
+    const number = identity.numberCol !== null ? parseScore(row[identity.numberCol]) : null;
+    const studentId = identity.studentIdCol !== null ? parseScore(row[identity.studentIdCol]) : null;
+    return !!name && (
+      (number !== null && !Number.isNaN(number)) ||
+      (studentId !== null && !Number.isNaN(studentId))
+    );
+  }
+
+  function uniqueHeader(base, usedKeys) {
+    const cleanBase = normalizeText(base) || "수행평가";
+    let candidate = cleanBase;
+    let index = 2;
+    while (usedKeys.has(headerKey(candidate))) {
+      candidate = `${cleanBase} ${index}`;
+      index += 1;
+    }
+    usedKeys.add(headerKey(candidate));
+    return candidate;
+  }
+
+  function ensureAdminNeisGroup(groups, subject, fileName, sheetName, className) {
+    const key = headerKey(subject) || subject;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        subject,
+        fileName,
+        sheetName,
+        className,
+        headers: ["번호", "학번", "성명"],
+        usedHeaderKeys: new Set(["번호", "학번", "성명"].map(headerKey)),
+        planDomains: [],
+        records: new Map()
+      });
+    }
+    return groups.get(key);
+  }
+
+  function ensureAdminNeisRecord(group, sourceRow, rowIndex, identity) {
+    const number = identity.numberCol !== null ? sourceRow[identity.numberCol] : "";
+    const studentId = identity.studentIdCol !== null ? sourceRow[identity.studentIdCol] : "";
+    const name = identity.nameCol !== null ? sourceRow[identity.nameCol] : "";
+    const key = normalizeText(studentId) || `${normalizeText(number)}|${normalizeText(name)}`;
+    if (!group.records.has(key)) {
+      group.records.set(key, {
+        rowNumber: rowIndex + 1,
+        fileName: group.fileName,
+        sheetName: `${group.sheetName} / ${group.subject}`,
+        values: {
+          번호: number ?? "",
+          학번: studentId ?? "",
+          성명: name ?? ""
+        }
+      });
+    }
+    return group.records.get(key);
+  }
+
+  function extractAdminNeisDatasets(sheet, fileName) {
+    const aoa = sheet.aoa || [];
+    const rawAoa = sheet.rawAoa || aoa;
+    const blocks = findAdminNeisBlocks(aoa, rawAoa);
+    if (!blocks.length) return [];
+
+    const className = inferNeisClassName(aoa);
+    const groups = new Map();
+
+    blocks.forEach(block => {
+      const subjectRow = aoa[block.subjectRowIndex] || [];
+      const domainRow = aoa[block.domainRowIndex] || [];
+      const rawMaxRow = rawAoa[block.maxRowIndex] || [];
+      const identity = findAdminIdentityColumns(subjectRow);
+      const columnInfos = block.scoreColumns.map(item => {
+        const subject = cleanAdminSubjectName(subjectRow[item.colIndex]);
+        const group = ensureAdminNeisGroup(groups, subject, fileName, sheet.sheetName, className);
+        const domainName = uniqueHeader(domainRow[item.colIndex], group.usedHeaderKeys);
+        group.headers.push(domainName);
+        group.planDomains.push({
+          id: makeId(),
+          name: domainName,
+          max: item.max,
+          step: 1,
+          possibleScores: []
+        });
+        return {
+          subject,
+          group,
+          colIndex: item.colIndex,
+          header: domainName,
+          max: maxScoreFromCell(rawMaxRow[item.colIndex]) ?? item.max
+        };
+      });
+
+      for (let rowIndex = block.firstDataRowIndex; rowIndex < block.endRowIndex; rowIndex += 1) {
+        const row = aoa[rowIndex] || [];
+        if (!isAdminStudentRow(row, identity)) continue;
+        columnInfos.forEach(info => {
+          const record = ensureAdminNeisRecord(info.group, row, rowIndex, identity);
+          record.values[info.header] = row[info.colIndex] ?? "";
+        });
+      }
+    });
+
+    return [...groups.values()]
+      .filter(group => group.planDomains.length && group.records.size)
+      .map(group => ({
+        fileName: group.fileName,
+        sheetName: `${group.sheetName} / ${group.subject}`,
+        sourceSheetName: group.sheetName,
+        subject: group.subject,
+        className: group.className,
+        headers: group.headers,
+        records: [...group.records.values()].map(record => ({
+          ...record,
+          sheetName: `${group.sheetName} / ${group.subject}`
+        })),
+        planDomains: group.planDomains,
+        adminNeis: true
+      }));
+  }
+
+  function isClassScoreHeaderRow(row) {
+    const values = (row || []).map(normalizeText);
+    const hasClassNumber = values.some(value => headerKey(value).includes("반번호"));
+    const numericHeaders = values.filter(value => parseScore(value) !== null && !Number.isNaN(parseScore(value))).length;
+    return hasClassNumber && numericHeaders >= 2;
+  }
+
+  function headerRowQuality(row) {
+    const values = (row || []).map(normalizeText).filter(Boolean);
+    if (!values.length || isScoreSheetTitleRow(row)) return -999;
+    const numericCount = values.filter(value => parseScore(value) !== null && !Number.isNaN(parseScore(value))).length;
+    const maxOnlyCount = values.filter(value => /^만점\s*:/.test(value)).length;
+    const aliasKeys = Object.values(aliases).flat().map(headerKey);
+    const aliasHits = values.filter(value => {
+      const key = headerKey(value);
+      return aliasKeys.some(alias => key === alias || key.includes(alias));
+    }).length;
+    const areaLikeCount = values.filter(value => value.length >= 8 && !/^012/.test(value) && !/^만점\s*:/.test(value)).length;
+    const numericRatio = numericCount / values.length;
+    if (maxOnlyCount >= Math.max(2, values.length * 0.5)) return -200;
+    if (numericRatio > 0.65 && !isClassScoreHeaderRow(row)) return -150;
+    return values.length + aliasHits * 8 + areaLikeCount * 4 + (isClassScoreHeaderRow(row) ? 25 : 0) - numericCount * 1.5;
+  }
+
+  function findHeaderRow(aoa, headerRowNumber = null, meta = {}) {
+    if (headerRowNumber) {
+      const preferredIndex = headerRowNumber - 1;
+      const preferredRow = aoa[preferredIndex] || [];
+      if (isScoreSheetTitleRow(preferredRow)) {
+        for (let index = preferredIndex + 1; index < Math.min(aoa.length, preferredIndex + 8); index += 1) {
+          if (isClassScoreHeaderRow(aoa[index])) return index;
+        }
+      }
+      if (headerRowQuality(preferredRow) > 30) return preferredIndex;
+    }
+
+    if (Number.isInteger(meta.titleRowIndex)) {
+      for (let index = meta.titleRowIndex + 1; index < Math.min(aoa.length, meta.titleRowIndex + 8); index += 1) {
+        if (isClassScoreHeaderRow(aoa[index])) return index;
+      }
+    }
+
+    let bestIndex = -1;
+    let bestScore = -1;
+    const limit = Math.min(25, aoa.length);
+    for (let i = 0; i < limit; i += 1) {
+      const row = aoa[i] || [];
+      const filled = row.filter(value => !isBlank(value)).length;
+      if (filled < 2) continue;
+      const score = headerRowQuality(row);
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = i;
+      }
+    }
+    return bestIndex;
+  }
+
+  function dedupeHeaders(headers) {
+    const seen = new Map();
+    return headers.map((header, index) => {
+      const base = header || `열${index + 1}`;
+      const key = headerKey(base) || `col${index + 1}`;
+      const count = seen.get(key) || 0;
+      seen.set(key, count + 1);
+      return count ? `${base}_${count + 1}` : base;
+    });
+  }
+
+  function findColumn(headers, targetName) {
+    const target = headerKey(targetName);
+    if (!target) return null;
+    let found = headers.find(header => headerKey(header) === target);
+    if (found) return found;
+    found = headers.find(header => {
+      const key = headerKey(header);
+      return key.length > 1 && (key.includes(target) || target.includes(key));
+    });
+    return found || null;
+  }
+
+  function findAliasColumn(headers, group) {
+    const keys = aliases[group].map(headerKey);
+    return headers.find(header => {
+      const key = headerKey(header);
+      return keys.some(alias => key === alias || key.includes(alias));
+    }) || null;
+  }
+
+  function firstValue(records, headers, group) {
+    const column = findAliasColumn(headers, group);
+    if (!column) return "";
+    const record = records.find(row => !isBlank(row.values[column]));
+    return record ? normalizeText(record.values[column]) : "";
+  }
+
+  function isKnownNonScoreColumn(header) {
+    const key = headerKey(header);
+    const nonScoreKeys = [
+      ...aliases.subject,
+      ...aliases.className,
+      ...aliases.studentName,
+      ...aliases.studentNo,
+      ...aliases.grade,
+      "순번", "성별", "비고", "상태"
+    ].map(headerKey);
+    return nonScoreKeys.some(alias => key === alias || key.includes(alias));
+  }
+
+  function isScoreLikeText(value) {
+    const text = normalizeText(value);
+    if (!text) return false;
+    if (parseScore(text) !== null && !Number.isNaN(parseScore(text))) return true;
+    return isExemptScoreText(text);
+  }
+
+  function isExemptScoreText(value) {
+    return /(전출|전입|자퇴|결시|미응시|인정|공결|병결|미인정|미제출|불참|면제)/.test(normalizeText(value));
+  }
+
+  function inferScoreColumns(dataset, excludedColumns = []) {
+    const excluded = new Set(excludedColumns.filter(Boolean));
+    return dataset.headers.filter(header => {
+      if (excluded.has(header) || isKnownNonScoreColumn(header)) return false;
+      let filled = 0;
+      let scoreLike = 0;
+      dataset.records.forEach(record => {
+        const value = record.values[header];
+        if (isBlank(value)) return;
+        filled += 1;
+        if (isScoreLikeText(value)) scoreLike += 1;
+      });
+      return filled > 0 && scoreLike > 0 && scoreLike / filled >= 0.5;
+    });
+  }
+
+  function isPossibleByStep(score, max, step) {
+    if (step === null || Number.isNaN(step) || step <= 0) return true;
+    const diff = max - score;
+    const quotient = diff / step;
+    return Math.abs(quotient - Math.round(quotient)) < 1e-7;
+  }
+
+  function isPossibleScore(score, domain) {
+    if (domain.possibleScores && domain.possibleScores.length) {
+      return domain.possibleScores.some(possible => Math.abs(possible - score) < 1e-7);
+    }
+    return isPossibleByStep(score, domain.max, domain.step);
+  }
+
+  function possibleScoreHint(domain) {
+    if (domain.possibleScores && domain.possibleScores.length) {
+      const sample = domain.possibleScores.slice(0, 12).join(", ");
+      const suffix = domain.possibleScores.length > 12 ? " ..." : "";
+      return `가능 점수: ${sample}${suffix}`;
+    }
+    const { max, step } = domain;
+    if (step === null || Number.isNaN(step) || step <= 0) return "";
+    const sample = [];
+    for (let value = max; value >= 0 && sample.length < 6; value -= step) {
+      sample.push(Number(value.toFixed(6)));
+    }
+    const suffix = max - step * 6 >= 0 ? " ..." : "";
+    return `가능 점수 예: ${sample.join(", ")}${suffix}`;
+  }
+
+  function diagnoseDataset(dataset, plan, context = {}) {
+    const issues = [];
+    const normalizedPlan = plan.map(item => ({
+      id: item.id || makeId(),
+      name: normalizeText(item.name),
+      max: parseScore(item.max),
+      step: parseScore(item.step ?? 1),
+      possibleScores: parsePossibleScores(item.possibleScores)
+    })).filter(item => item.name);
+    let domains = normalizedPlan.filter(item => item.max !== null && !Number.isNaN(item.max));
+    if (Array.isArray(dataset.planDomains) && dataset.planDomains.length) {
+      domains = dataset.planDomains.map(datasetDomain => {
+        const sourceName = normalizeText(datasetDomain.name);
+        const sourceKey = headerKey(sourceName);
+        const match = domains.find(domain => {
+          const key = headerKey(domain.name);
+          return key && sourceKey && (key === sourceKey || key.includes(sourceKey) || sourceKey.includes(key));
+        });
+        const fallbackMax = parseScore(datasetDomain.max);
+        const fallbackStep = parseScore(datasetDomain.step ?? 1);
+        const matchPossibleScores = parsePossibleScores(match?.possibleScores);
+        const sourcePossibleScores = parsePossibleScores(datasetDomain.possibleScores);
+        return {
+          ...(match || {}),
+          id: match?.id || datasetDomain.id || makeId(),
+          name: sourceName,
+          max: match?.max ?? fallbackMax,
+          step: match?.step ?? (fallbackStep === null || Number.isNaN(fallbackStep) ? 1 : fallbackStep),
+          possibleScores: matchPossibleScores.length ? matchPossibleScores : sourcePossibleScores
+        };
+      }).filter(domain => domain.name && domain.max !== null && !Number.isNaN(domain.max));
+    }
+    if (dataset.domainName) {
+      const titleKey = headerKey(dataset.domainName);
+      const nameMatches = domains.filter(domain => {
+        const key = headerKey(domain.name);
+        return key && titleKey && (key.includes(titleKey) || titleKey.includes(key));
+      });
+      if (nameMatches.length) {
+        domains = nameMatches;
+      } else {
+        const sameMax = domains.find(domain => dataset.domainMax !== null && Math.abs(Number(domain.max) - Number(dataset.domainMax)) < 1e-7);
+        domains = [{
+          ...(sameMax || {}),
+          id: makeId(),
+          name: dataset.domainName,
+          max: dataset.domainMax ?? sameMax?.max ?? 100,
+          step: sameMax?.step ?? 1,
+          possibleScores: sameMax?.possibleScores ?? []
+        }];
+      }
+    }
+    const rowIssueMap = new Map();
+    const cellIssueMap = new Map();
+    const cellStatusMap = new Map();
+    const scoreColumnSet = new Set();
+    const addIssue = issue => {
+      const fullIssue = {
+        id: makeId(),
+        fileName: dataset.fileName,
+        sheetName: dataset.sheetName,
+        subject: context.subject || "",
+        className: context.className || "",
+        rowNumber: "",
+        rowIndex: null,
+        student: "",
+        domainName: "",
+        columnName: "",
+        value: "",
+        max: "",
+        step: "",
+        possibleScores: [],
+        label: "오류",
+        ...issue
+      };
+      issues.push(fullIssue);
+      if (Number.isInteger(fullIssue.rowIndex)) {
+        const rowKey = String(fullIssue.rowIndex);
+        if (!rowIssueMap.has(rowKey)) rowIssueMap.set(rowKey, []);
+        rowIssueMap.get(rowKey).push(fullIssue);
+        if (fullIssue.columnName) {
+          const cellKey = `${fullIssue.rowIndex}|${fullIssue.columnName}`;
+          if (!cellIssueMap.has(cellKey)) cellIssueMap.set(cellKey, []);
+          cellIssueMap.get(cellKey).push(fullIssue);
+          cellStatusMap.set(cellKey, {
+            ok: false,
+            label: fullIssue.label || "오류",
+            message: fullIssue.message
+          });
+        }
+      }
+    };
+
+    normalizedPlan.forEach(domain => {
+      if (domain.max === null || Number.isNaN(domain.max)) {
+        addIssue({
+          domainName: domain.name,
+          label: "기준",
+          message: `${domain.name}의 만점이 숫자로 입력되지 않았습니다.`
+        });
+      }
+      if (domain.max < 0) {
+        addIssue({
+          domainName: domain.name,
+          max: domain.max,
+          label: "기준",
+          message: `${domain.name}의 만점은 0 이상이어야 합니다.`
+        });
+      }
+      if (domain.step === null || Number.isNaN(domain.step) || domain.step <= 0) {
+        addIssue({
+          domainName: domain.name,
+          step: domain.step,
+          label: "기준",
+          message: `${domain.name}의 급간은 0보다 큰 숫자여야 합니다.`
+        });
+      }
+    });
+
+    if (!domains.length) {
+      addIssue({
+        domainName: "평가기준",
+        label: "기준",
+        message: "영역별 만점이 입력되지 않았습니다."
+      });
+      return { issues, rowIssueMap, cellIssueMap, cellStatusMap, scoreColumnSet, domains, diagnosticColumns: [] };
+    }
+
+    const nameColumn = findAliasColumn(dataset.headers, "studentName");
+    const noColumn = findAliasColumn(dataset.headers, "studentNo");
+    const scoreColumns = inferScoreColumns(dataset, [nameColumn, noColumn]);
+    const usedColumns = new Set();
+    const columnMap = domains.map(domain => {
+      const directColumn = findColumn(dataset.headers, domain.name);
+      if (directColumn) usedColumns.add(directColumn);
+      return { ...domain, column: directColumn };
+    });
+    const availableScoreColumns = scoreColumns.filter(column => !usedColumns.has(column));
+    let fallbackIndex = 0;
+
+    columnMap.forEach(domain => {
+      if (!domain.column && availableScoreColumns[fallbackIndex]) {
+        domain.column = availableScoreColumns[fallbackIndex];
+        fallbackIndex += 1;
+      }
+      if (domain.column) {
+        usedColumns.add(domain.column);
+        scoreColumnSet.add(domain.column);
+      } else {
+        addIssue({
+          domainName: domain.name,
+          max: domain.max,
+          step: domain.step,
+          label: "열없음",
+          message: `${domain.name} 영역과 일치하는 열을 찾지 못했습니다. 점수표 열을 확인해 주세요.`
+        });
+      }
+    });
+
+    const columnDomainMap = new Map();
+    columnMap.forEach(domain => {
+      if (domain.column) columnDomainMap.set(domain.column, domain);
+    });
+
+    scoreColumns.forEach((column, index) => {
+      scoreColumnSet.add(column);
+      if (!columnDomainMap.has(column) && domains.length) {
+        columnDomainMap.set(column, { ...domains[index % domains.length], column });
+      }
+    });
+
+    const diagnosticColumns = [...columnDomainMap.entries()].map(([column, domain]) => ({ ...domain, column }));
+
+    dataset.records.forEach((record, rowIndex) => {
+      const studentBits = [noColumn ? record.values[noColumn] : "", nameColumn ? record.values[nameColumn] : ""]
+        .map(normalizeText)
+        .filter(Boolean);
+      const student = studentBits.join(" ");
+
+      diagnosticColumns.forEach(domain => {
+        if (!domain.column) return;
+        const rawValue = record.values[domain.column];
+        const score = parseScore(rawValue);
+        if (score === null) {
+          addIssue({
+            rowNumber: record.rowNumber,
+            rowIndex,
+            student,
+            domainName: domain.name,
+            columnName: domain.column,
+            value: rawValue,
+            max: domain.max,
+            step: domain.step,
+            possibleScores: domain.possibleScores,
+            label: "결측",
+            message: `${domain.name} 점수가 비어 있습니다.`
+          });
+        } else if (Number.isNaN(score)) {
+          if (isExemptScoreText(rawValue)) {
+            cellStatusMap.set(`${rowIndex}|${domain.column}`, {
+              ok: true,
+              label: "제외",
+              message: `${domain.name} ${normalizeText(rawValue)}은 점수 판정에서 제외했습니다.`
+            });
+            return;
+          }
+          addIssue({
+            rowNumber: record.rowNumber,
+            rowIndex,
+            student,
+            domainName: domain.name,
+            columnName: domain.column,
+            value: rawValue,
+            max: domain.max,
+            step: domain.step,
+            possibleScores: domain.possibleScores,
+            label: "형식",
+            message: `${domain.name} 점수 형식이 숫자가 아닙니다.`
+          });
+        } else if (score > domain.max) {
+          addIssue({
+            rowNumber: record.rowNumber,
+            rowIndex,
+            student,
+            domainName: domain.name,
+            columnName: domain.column,
+            value: rawValue,
+            max: domain.max,
+            step: domain.step,
+            possibleScores: domain.possibleScores,
+            label: "초과",
+            message: `${domain.name} 점수 ${score}점이 만점 ${domain.max}점을 초과했습니다.`
+          });
+        } else if (score < 0) {
+          addIssue({
+            rowNumber: record.rowNumber,
+            rowIndex,
+            student,
+            domainName: domain.name,
+            columnName: domain.column,
+            value: rawValue,
+            max: domain.max,
+            step: domain.step,
+            possibleScores: domain.possibleScores,
+            label: "음수",
+            message: `${domain.name} 점수는 0점 이상이어야 합니다.`
+          });
+        } else if (!isPossibleScore(score, domain)) {
+          addIssue({
+            rowNumber: record.rowNumber,
+            rowIndex,
+            student,
+            domainName: domain.name,
+            columnName: domain.column,
+            value: rawValue,
+            max: domain.max,
+            step: domain.step,
+            possibleScores: domain.possibleScores,
+            label: "급간불가",
+            message: `${domain.name} ${score}점은 평가기준상 나올 수 없는 점수입니다. ${possibleScoreHint(domain)}`
+          });
+        } else {
+          cellStatusMap.set(`${rowIndex}|${domain.column}`, {
+            ok: true,
+            label: "가능",
+            message: `${domain.name} ${score}점은 평가기준상 가능한 점수입니다.`
+          });
+        }
+      });
+    });
+
+    return { issues, rowIssueMap, cellIssueMap, cellStatusMap, scoreColumnSet, domains, diagnosticColumns };
+  }
+
+  function statusLabelForCell(status) {
+    if (!status) return "";
+    if (status.ok) return status.label === "제외" ? "제외" : "가능";
+    const label = normalizeText(status.label);
+    if (label === "급간불가") return "불가";
+    if (label === "결측") return "";
+    if (label === "열없음") return "";
+    return label || "오류";
+  }
+
+  async function handleTeacherFiles(files) {
+    if (!files.length) return;
+    const added = [];
+    const failed = [];
+    for (const file of files) {
+      try {
+        const sheets = await readFileSheets(file);
+        if (!sheets.length) throw new Error("읽을 수 있는 시트가 없습니다.");
+        sheets.forEach(sheet => {
+          added.push(aoaToDataset(sheet.aoa, file.name, sheet.sheetName, getHeaderRowNumber("teacher")));
+        });
+      } catch (error) {
+        failed.push(`${file.name}: ${error.message || "읽기 실패"}`);
+      }
+    }
+
+    if (added.length) {
+      state.teacher.datasets = added;
+      state.teacher.dataset = added[0];
+      rerunTeacherDiagnostics();
+      const fileCount = new Set(added.map(dataset => dataset.fileName)).size;
+      $("#teacherFileName").textContent = `${fileCount}개 파일, ${added.length}개 시트 업로드됨`;
+      showMessage(`${added.length}개 시트를 영역별로 진단했습니다.`);
+    }
+    if (failed.length) {
+      showMessage(failed.join(" / "), "error");
+    }
+  }
+
+  async function handlePlanImport(kind, files) {
+    const file = files[0];
+    if (!file) return;
+    if (kind === "admin") {
+      await handleAdminPlanImports(files);
+      return;
+    }
+    try {
+      showMessage("평가계획서를 인식하는 중입니다.");
+      const extracted = await extractEvaluationPlan(file);
+      if (!extracted.domains.length) throw new Error("적용할 수 있는 영역/만점 정보가 없습니다.");
+      if (kind === "teacher") {
+        state.teacher.planImport = extracted;
+        state.teacher.plan = domainsFromPlanImport(extracted);
+        if (extracted.subject) state.teacher.subject = extracted.subject;
+        renderTeacherPlan();
+        rerunTeacherDiagnostics();
+      } else {
+        state.admin.planImport = extracted;
+        const subject = ensureSubject(extracted.subject || state.admin.selectedSubject || "미지정");
+        state.admin.selectedSubject = subject;
+        const plan = ensureAdminPlan(subject);
+        if (!plan.locked) {
+          plan.domains = domainsFromPlanImport(extracted);
+          rerunAdminDiagnostics();
+        }
+      }
+      renderPlanImportPreview(kind);
+      showMessage("평가계획서 인식 결과를 표에 적용했습니다. 필요하면 표에서 수정해 주세요.");
+    } catch (error) {
+      showMessage(error.message || "평가계획서를 인식하지 못했습니다.", "error");
+    }
+  }
+
+  async function handleAdminPlanImports(files) {
+    const imported = [];
+    const failed = [];
+    try {
+      showMessage("평가계획서 묶음을 인식하는 중입니다.");
+      for (const file of files) {
+        try {
+          const extracted = await extractEvaluationPlan(file);
+          if (!extracted.domains.length) throw new Error("수행평가 영역/만점 정보가 없습니다.");
+          const subject = ensureSubject(resolvePlanSubject(extracted));
+          const plan = ensureAdminPlan(subject);
+          const importedDomains = domainsFromPlanImport(extracted);
+          if (plan.locked) {
+            failed.push(`${file.name}: ${subject} 기준이 잠겨 있어 건너뜀`);
+            continue;
+          }
+          plan.domains = importedDomains;
+          imported.push({
+            ...extracted,
+            subject,
+            domains: importedDomains
+          });
+        } catch (error) {
+          failed.push(`${file.name}: ${error.message || "인식 실패"}`);
+        }
+      }
+
+      if (imported.length) {
+        state.admin.planImport = { imports: imported, failed };
+        state.admin.selectedSubject = imported[0].subject;
+        rerunAdminDiagnostics();
+        renderPlanImportPreview("admin");
+        showMessage(`${imported.length}개 평가계획서를 과목별 기준표에 적용했습니다.`);
+      } else {
+        state.admin.planImport = failed.length ? { imports: [], failed } : null;
+        renderPlanImportPreview("admin");
+        showMessage(failed.join(" / ") || "적용할 수 있는 평가계획서가 없습니다.", "error");
+      }
+    } catch (error) {
+      showMessage(error.message || "평가계획서 묶음을 인식하지 못했습니다.", "error");
+    }
+  }
+
+  function resolvePlanSubject(extracted) {
+    const direct = normalizeText(extracted.subject);
+    if (direct) return canonicalSubjectName(direct);
+    const source = normalizeText(extracted.sourceName);
+    const compactSource = headerKey(source);
+    const matched = state.admin.subjects.find(subject => compactSource.includes(headerKey(subject)))
+      || defaultSubjects.find(subject => compactSource.includes(headerKey(subject)));
+    return matched || state.admin.selectedSubject || "미지정";
+  }
+
+  function domainsFromPlanImport(extracted) {
+    return extracted.domains.map(domain => ({
+      id: makeId(),
+      name: domain.name,
+      max: domain.max,
+      step: domain.step ?? 1,
+      possibleScores: parsePossibleScores(domain.possibleScores)
+    }));
+  }
+
+  function applyPlanImport(kind) {
+    const extracted = kind === "teacher" ? state.teacher.planImport : state.admin.planImport;
+    if (!extracted || !extracted.domains.length) return;
+    const importedDomains = domainsFromPlanImport(extracted);
+
+    if (kind === "teacher") {
+      state.teacher.plan = importedDomains;
+      if (extracted.subject) state.teacher.subject = extracted.subject;
+      state.teacher.planImport = null;
+      renderTeacherPlan();
+      renderPlanImportPreview("teacher");
+      rerunTeacherDiagnostics();
+      showMessage("추출한 평가기준을 교과교사용 표에 적용했습니다.");
+      return;
+    }
+
+    const subject = ensureSubject(extracted.subject || state.admin.selectedSubject || "미지정");
+    state.admin.selectedSubject = subject;
+    const plan = ensureAdminPlan(subject);
+    if (plan.locked) {
+      showMessage("공식 기준이 잠겨 있습니다. 잠금을 해제한 뒤 적용해 주세요.", "error");
+      return;
+    }
+    plan.domains = importedDomains;
+    state.admin.planImport = null;
+    rerunAdminDiagnostics();
+    renderPlanImportPreview("admin");
+    showMessage("추출한 평가기준을 평가업무 담당자용 표에 적용했습니다.");
+  }
+
+  function rerunTeacherDiagnostics() {
+    const datasets = state.teacher.datasets.length
+      ? state.teacher.datasets
+      : (state.teacher.dataset ? [state.teacher.dataset] : []);
+    if (!datasets.length) {
+      state.teacher.issues = [];
+      state.teacher.results = [];
+      renderTeacherSummary([], []);
+      renderTeacherResults([]);
+      return;
+    }
+    const subject = state.teacher.subject || "";
+    const entries = datasets.map(dataset => ({
+      dataset,
+      result: diagnoseDataset(dataset, state.teacher.plan, { subject })
+    }));
+    state.teacher.results = entries;
+    state.teacher.issues = entries.flatMap(entry => entry.result.issues);
+    renderTeacherSummary(datasets, entries);
+    renderTeacherResults(entries);
+  }
+
+  function domainColumnsForResult(dataset, result) {
+    const groups = new Map();
+    const addGroup = (name, column = "") => {
+      const cleanName = normalizeText(name) || dataset.domainName || column || "영역 미지정";
+      const key = headerKey(cleanName) || cleanName;
+      if (!groups.has(key)) groups.set(key, { name: cleanName, columns: [] });
+      if (column && !groups.get(key).columns.includes(column)) groups.get(key).columns.push(column);
+    };
+
+    (result.diagnosticColumns || []).forEach(domain => {
+      if (domain.column && result.scoreColumnSet.has(domain.column)) {
+        addGroup(domain.name || dataset.domainName || domain.column, domain.column);
+      }
+    });
+
+    if (!groups.size) {
+      const scoreHeaders = dataset.headers.filter(header => result.scoreColumnSet.has(header));
+      const fallbackName = dataset.domainName
+        || (result.domains && result.domains.length === 1 ? result.domains[0].name : "")
+        || dataset.sheetName
+        || dataset.fileName;
+      scoreHeaders.forEach(header => addGroup(fallbackName || header, header));
+    }
+
+    (result.issues || []).forEach(issue => {
+      if (!Number.isInteger(issue.rowIndex) && issue.domainName) addGroup(issue.domainName);
+    });
+
+    return [...groups.values()];
+  }
+
+  function issueMatchesDomain(issue, domainName, columns) {
+    if (issue.columnName) return columns.includes(issue.columnName);
+    const issueKey = headerKey(issue.domainName);
+    const domainKey = headerKey(domainName);
+    return !!issueKey && !!domainKey && (
+      issueKey === domainKey || issueKey.includes(domainKey) || domainKey.includes(issueKey)
+    );
+  }
+
+  function buildTeacherDomainGroups(entries) {
+    const groups = new Map();
+    entries.forEach(entry => {
+      const domainGroups = domainColumnsForResult(entry.dataset, entry.result);
+      domainGroups.forEach(domain => {
+        const key = headerKey(domain.name) || domain.name;
+        if (!groups.has(key)) groups.set(key, { name: domain.name, items: [] });
+        groups.get(key).items.push({ ...entry, scoreHeaders: domain.columns });
+      });
+    });
+    return [...groups.values()];
+  }
+
+  function summarizeTeacherDomainGroups(groups) {
+    return groups.map(group => {
+      const sheetKeys = new Set(group.items.map(item => `${item.dataset.fileName}|${item.dataset.sheetName}`));
+      return {
+        name: group.name,
+        fileCount: sheetKeys.size,
+        rows: group.items.reduce((sum, item) => sum + item.dataset.records.length, 0),
+        issues: group.items.reduce((sum, item) => (
+          sum + countDomainIssues(item.result, group.name, item.scoreHeaders)
+        ), 0)
+      };
+    });
+  }
+
+  function countDomainIssues(result, domainName, columns) {
+    return result.issues.filter(issue => isVisibleIssue(issue) && issueMatchesDomain(issue, domainName, columns)).length;
+  }
+
+  function isVisibleIssue(issue) {
+    return normalizeText(issue && issue.label) !== "결측";
+  }
+
+  function renderTeacherSummary(datasets, entries) {
+    const rows = datasets.reduce((sum, dataset) => sum + dataset.records.length, 0);
+    const rowErrorKeys = new Set();
+    entries.forEach((entry, entryIndex) => {
+      entry.result.rowIssueMap.forEach((issues, rowKey) => {
+        if (issues.some(isVisibleIssue)) rowErrorKeys.add(`${entryIndex}|${rowKey}`);
+      });
+    });
+    const groups = buildTeacherDomainGroups(entries);
+    $("#teacherRowsCount").textContent = String(rows);
+    $("#teacherClearCount").textContent = String(Math.max(0, rows - rowErrorKeys.size));
+    $("#teacherErrorCount").textContent = String(entries.reduce((sum, entry) => (
+      sum + entry.result.issues.filter(isVisibleIssue).length
+    ), 0));
+    $("#teacherDomainCount").textContent = String(groups.length || validPlanDomains(state.teacher.plan).length);
+  }
+
+  function renderTeacherResults(entries) {
+    const container = $("#teacherResults");
+    if (!entries.length) {
+      container.innerHTML = `<div class="empty-state">업로드된 점수 파일이 없습니다.</div>`;
+      return;
+    }
+    const groups = buildTeacherDomainGroups(entries);
+    if (!groups.length) {
+      container.innerHTML = `<div class="empty-state">점수가 들어있는 열을 찾지 못했습니다. 제목/머리글 행을 확인해 주세요.</div>`;
+      return;
+    }
+    const summaryHtml = renderDomainSummaryGrid(summarizeTeacherDomainGroups(groups));
+    container.innerHTML = `
+      ${summaryHtml}
+      <div class="domain-result-stack">
+        ${groups.map(group => renderTeacherDomainGroup(group)).join("")}
+      </div>
+    `;
+  }
+
+  function renderTeacherDomainGroup(group) {
+    const fileKeys = new Set(group.items.map(item => `${item.dataset.fileName}|${item.dataset.sheetName}`));
+    const rows = group.items.reduce((sum, item) => sum + item.dataset.records.length, 0);
+    const issueCount = group.items.reduce((sum, item) => (
+      sum + countDomainIssues(item.result, group.name, item.scoreHeaders)
+    ), 0);
+    return `
+      <section class="domain-result">
+        <div class="domain-result-head">
+          <div>
+            <div class="domain-result-title">${escapeHtml(group.name)}</div>
+            <div class="domain-result-meta">${fileKeys.size}개 시트, ${rows}행 점검</div>
+          </div>
+          <span class="domain-status ${issueCount ? "bad" : ""}">${issueCount ? `오류 ${issueCount}` : "정상"}</span>
+        </div>
+        ${group.items.map(item => renderTeacherDatasetBlock(item, group.name)).join("")}
+      </section>
+    `;
+  }
+
+  function renderTeacherDatasetBlock(item, domainName) {
+    const { dataset, result, scoreHeaders } = item;
+    const domainIssues = result.issues.filter(issue => isVisibleIssue(issue) && issueMatchesDomain(issue, domainName, scoreHeaders));
+    const globalIssues = domainIssues.filter(issue => !Number.isInteger(issue.rowIndex));
+    const datasetTitle = `${dataset.fileName} / ${dataset.sheetName}`;
+    const tableHtml = scoreHeaders.length ? renderTeacherScoreTable(dataset, result, scoreHeaders) : "";
+    const globalHtml = globalIssues.length
+      ? `<div class="message-bar show error" style="margin:0 0 10px">${escapeHtml(globalIssues.map(issue => issue.message).join(" / "))}</div>`
+      : "";
+    return `
+      <div class="dataset-block">
+        <div class="dataset-head">
+          <div class="dataset-title">${escapeHtml(datasetTitle)}</div>
+          <div class="dataset-meta">${dataset.records.length}행 · ${domainIssues.length}건</div>
+        </div>
+        ${globalHtml}
+        ${tableHtml || `<div class="empty-state">이 영역에서 점수 열을 찾지 못했습니다.</div>`}
+      </div>
+    `;
+  }
+
+  function renderTeacherScoreTable(dataset, result, scoreHeaders) {
+    const body = dataset.records.map((record, rowIndex) => {
+      const rowIssues = scoreHeaders
+        .flatMap(header => result.cellIssueMap.get(`${rowIndex}|${header}`) || [])
+        .filter(isVisibleIssue);
+      const cells = scoreHeaders.map(header => renderScoreCell(record, rowIndex, header, result)).join("");
+      return `<tr class="${rowIssues.length ? "row-error" : ""}">${cells}</tr>`;
+    }).join("");
+    return `
+      <table>
+        <thead>
+          <tr>${scoreHeaders.map(header => `<th>${escapeHtml(header)}</th>`).join("")}</tr>
+        </thead>
+        <tbody>${body || `<tr><td colspan="${scoreHeaders.length}" class="empty-state">표시할 점수 행이 없습니다.</td></tr>`}</tbody>
+      </table>
+    `;
+  }
+
+  function renderScoreCell(record, rowIndex, header, result) {
+    const cellIssues = (result.cellIssueMap.get(`${rowIndex}|${header}`) || []).filter(isVisibleIssue);
+    const status = result.cellStatusMap.get(`${rowIndex}|${header}`);
+    const displayLabel = statusLabelForCell(status);
+    const title = cellIssues.length
+      ? cellIssues.map(issue => issue.message).join(" / ")
+      : (displayLabel && status ? status.message : "");
+    const flag = status && displayLabel
+      ? `<span class="cell-flag ${status.ok ? "" : "bad"}">${escapeHtml(displayLabel)}</span>`
+      : "";
+    const classes = [
+      "score-cell",
+      cellIssues.length ? "cell-error" : ""
+    ].filter(Boolean).join(" ");
+    return `<td class="${classes}" title="${escapeHtml(title)}"><span class="score-value">${escapeHtml(record.values[header])}${flag}</span></td>`;
+  }
+
+  async function handleAdminFiles(files) {
+    if (!files.length) return;
+    const added = [];
+    const failed = [];
+    for (const file of files) {
+      try {
+        const sheets = await readFileSheets(file);
+        if (!sheets.length) throw new Error("읽을 수 있는 시트가 없습니다.");
+        sheets.forEach(sheet => {
+          const parsedDatasets = extractAdminNeisDatasets(sheet, file.name);
+          const datasets = parsedDatasets.length
+            ? parsedDatasets
+            : [aoaToDataset(sheet.aoa, file.name, sheet.sheetName, getHeaderRowNumber("admin"))];
+          datasets.forEach(dataset => {
+            const subject = ensureSubject(dataset.subject || inferSubject(dataset, file.name));
+            const className = dataset.className || inferClassName(dataset, file.name);
+            mergeAdminPlanDomains(subject, dataset.planDomains);
+            added.push({ ...dataset, subject, className, uploadedAt: new Date().toISOString(), issueCount: 0 });
+          });
+        });
+      } catch (error) {
+        failed.push(`${file.name}: ${error.message || "읽기 실패"}`);
+      }
+    }
+    state.admin.uploads.push(...added);
+    rerunAdminDiagnostics();
+    if (added.length) showMessage(`${added.length}개 시트의 진단을 완료했습니다.`);
+    if (failed.length) showMessage(failed.join(" / "), "error");
+  }
+
+  function isDefaultAdminPlan(domains) {
+    const keys = (domains || []).map(domain => headerKey(domain.name));
+    return keys.length === 2 && keys.includes(headerKey("영역 A")) && keys.includes(headerKey("영역 B"));
+  }
+
+  function mergeAdminPlanDomains(subject, domains) {
+    if (!Array.isArray(domains) || !domains.length) return;
+    const plan = ensureAdminPlan(subject);
+    if (plan.locked) return;
+    if (isDefaultAdminPlan(plan.domains)) plan.domains = [];
+    domains.forEach(domain => {
+      const name = normalizeText(domain.name);
+      const max = parseScore(domain.max);
+      if (!name || max === null || Number.isNaN(max)) return;
+      const key = headerKey(name);
+      const existing = plan.domains.find(item => headerKey(item.name) === key);
+      if (existing) {
+        if (parseScore(existing.max) === null || Number.isNaN(parseScore(existing.max))) existing.max = max;
+        return;
+      }
+      plan.domains.push({
+        id: makeId(),
+        name,
+        max,
+        step: domain.step ?? 1,
+        possibleScores: parsePossibleScores(domain.possibleScores)
+      });
+    });
+  }
+
+  function ensureSubject(subject) {
+    const cleanSubject = canonicalSubjectName(subject || state.admin.selectedSubject || "미지정");
+    if (!state.admin.subjects.includes(cleanSubject)) {
+      state.admin.subjects.push(cleanSubject);
+    }
+    ensureAdminPlan(cleanSubject);
+    return cleanSubject;
+  }
+
+  function canonicalSubjectName(subject) {
+    const clean = normalizeText(subject);
+    const key = headerKey(clean);
+    if (!key) return "미지정";
+    return state.admin.subjects.find(item => headerKey(item) === key)
+      || defaultSubjects.find(item => headerKey(item) === key)
+      || clean;
+  }
+
+  function inferSubject(dataset, fileName) {
+    const inColumn = firstValue(dataset.records, dataset.headers, "subject");
+    if (inColumn) return inColumn;
+    const byFile = state.admin.subjects.find(subject => fileName.includes(subject));
+    return byFile || state.admin.selectedSubject;
+  }
+
+  function inferClassName(dataset, fileName) {
+    const inColumn = firstValue(dataset.records, dataset.headers, "className");
+    if (inColumn) return inColumn;
+    const match = fileName.match(/(\d+)\s*반|class\s*(\d+)/i);
+    if (match) return `${match[1] || match[2]}반`;
+    return dataset.sheetName && dataset.sheetName !== "CSV" ? dataset.sheetName : "미지정";
+  }
+
+  function rerunAdminDiagnostics() {
+    const issues = [];
+    state.admin.uploads.forEach(upload => {
+      const plan = ensureAdminPlan(upload.subject);
+      const result = diagnoseDataset(upload, plan.domains, {
+        subject: upload.subject,
+        className: upload.className
+      });
+      upload.diagnosticResult = result;
+      upload.issueCount = result.issues.length;
+      upload.rowCount = upload.records.length;
+      issues.push(...result.issues);
+    });
+    state.admin.issues = issues;
+    renderAdminAll();
+  }
+
+  function renderAdminAll() {
+    renderAdminSubjectSelect();
+    renderAdminPlan();
+    renderSubjectList();
+    renderAdminKpis();
+    renderAdminUploadList();
+    renderAdminIssues();
+  }
+
+  function subjectStatus(subject) {
+    const uploads = state.admin.uploads.filter(upload => upload.subject === subject);
+    if (!uploads.length) return { status: "pending", count: "대기" };
+    const errors = state.admin.issues.filter(issue => issue.subject === subject).length;
+    return errors ? { status: "error", count: `${errors}` } : { status: "clear", count: "정상" };
+  }
+
+  function renderSubjectList() {
+    const container = $("#subjectList");
+    container.innerHTML = state.admin.subjects.map(subject => {
+      const info = subjectStatus(subject);
+      return `
+        <button class="subject-item ${subject === state.admin.selectedSubject ? "active" : ""}" type="button" data-subject="${escapeHtml(subject)}">
+          <span class="status-dot ${info.status}"></span>
+          <span class="subject-name">${escapeHtml(subject)}</span>
+          <span class="subject-count">${escapeHtml(info.count)}</span>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function renderAdminKpis() {
+    const classKeys = new Set(state.admin.uploads.map(upload => `${upload.subject}|${upload.className}`));
+    const issueClassKeys = new Set(state.admin.issues.map(issue => `${issue.subject}|${issue.className}`));
+    $("#adminClassCount").textContent = String(classKeys.size);
+    $("#adminVerifiedCount").textContent = String([...classKeys].filter(key => !issueClassKeys.has(key)).length);
+    $("#adminErrorCount").textContent = String(state.admin.issues.length);
+  }
+
+  function renderAdminUploadList() {
+    const container = $("#adminUploadList");
+    if (!state.admin.uploads.length) {
+      container.textContent = "";
+      return;
+    }
+    const totalRows = state.admin.uploads.reduce((sum, upload) => sum + (upload.rowCount || upload.records.length), 0);
+    container.textContent = `${state.admin.uploads.length}개 시트, ${totalRows}행 업로드됨`;
+  }
+
+  function summarizeAdminDomains(uploads) {
+    const groups = new Map();
+    uploads.forEach(upload => {
+      const result = upload.diagnosticResult;
+      if (!result) return;
+      domainColumnsForResult(upload, result).forEach(domain => {
+        const key = headerKey(domain.name) || domain.name;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            name: domain.name,
+            files: new Set(),
+            rows: 0,
+            issues: 0
+          });
+        }
+        const group = groups.get(key);
+        group.files.add(`${upload.fileName}|${upload.sheetName}`);
+        group.rows += upload.records.length;
+        group.issues += countDomainIssues(result, domain.name, domain.columns);
+      });
+    });
+    return [...groups.values()].map(group => ({
+      ...group,
+      fileCount: group.files.size
+    }));
+  }
+
+  function renderDomainSummaryGrid(summaries) {
+    if (!summaries.length) return "";
+    return `
+      <div class="domain-summary-grid">
+        ${summaries.map(summary => `
+          <div class="domain-summary-item ${summary.issues ? "bad" : ""}">
+            <div class="domain-summary-name">${escapeHtml(summary.name)}</div>
+            <div class="domain-summary-meta">${summary.fileCount}개 시트 · ${summary.rows}행 · ${summary.issues ? `오류 ${summary.issues}` : "정상"}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function renderAdminIssues() {
+    const selected = state.admin.selectedSubject;
+    const issues = state.admin.issues.filter(issue => issue.subject === selected);
+    const selectedUploads = state.admin.uploads.filter(upload => upload.subject === selected);
+    const summaryHtml = renderDomainSummaryGrid(summarizeAdminDomains(selectedUploads));
+    $("#adminIssueScope").textContent = `${selected} 기준, 영역별 요약과 오류 목록입니다.`;
+    const container = $("#adminIssueTable");
+    if (!selectedUploads.length) {
+      container.innerHTML = `<div class="empty-state">선택 과목의 업로드 파일이 없습니다.</div>`;
+      return;
+    }
+    if (!issues.length) {
+      container.innerHTML = `${summaryHtml}<div class="empty-state">선택 과목의 활성 오류가 없습니다.</div>`;
+      return;
+    }
+    container.innerHTML = `
+      ${summaryHtml}
+      <table>
+        <thead>
+          <tr>
+            <th>과목</th>
+            <th>반</th>
+            <th>파일</th>
+            <th>시트</th>
+            <th>행</th>
+            <th>학생</th>
+            <th>영역</th>
+            <th>값</th>
+            <th>급간</th>
+            <th>가능점수</th>
+            <th>구분</th>
+            <th>사유</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${issues.map(issue => `
+            <tr class="row-error">
+              <td>${escapeHtml(issue.subject)}</td>
+              <td>${escapeHtml(issue.className)}</td>
+              <td>${escapeHtml(issue.fileName)}</td>
+              <td>${escapeHtml(issue.sheetName)}</td>
+              <td>${escapeHtml(issue.rowNumber)}</td>
+              <td>${escapeHtml(issue.student)}</td>
+              <td>${escapeHtml(issue.domainName)}</td>
+              <td>${escapeHtml(issue.value)}</td>
+              <td>${escapeHtml(issue.step)}</td>
+              <td>${escapeHtml(formatPossibleScores(issue.possibleScores))}</td>
+              <td>${escapeHtml(issue.label)}</td>
+              <td class="result-error">${escapeHtml(issue.message)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function exportIssues(issues, fileName) {
+    const rows = issues.length ? issues.map(issue => ({
+      과목: issue.subject,
+      반: issue.className,
+      파일명: issue.fileName,
+      시트: issue.sheetName,
+      행: issue.rowNumber,
+      학생: issue.student,
+      영역: issue.domainName,
+      입력값: issue.value,
+      만점: issue.max,
+      급간: issue.step,
+      가능점수: formatPossibleScores(issue.possibleScores),
+      구분: issue.label,
+      오류내용: issue.message
+    })) : [{ 진단결과: "활성 오류가 없습니다." }];
+
+    if (window.XLSX) {
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "오류보고서");
+      XLSX.writeFile(workbook, `${fileName}.xlsx`);
+      return;
+    }
+
+    const headers = Object.keys(rows[0]);
+    const csvRows = [headers, ...rows.map(row => headers.map(header => row[header] ?? ""))];
+    const csv = csvRows.map(row => row.map(csvCell).join(",")).join("\r\n");
+    downloadBlob(`\uFEFF${csv}`, `${fileName}.csv`, "text/csv;charset=utf-8");
+  }
+
+  function csvCell(value) {
+    const text = String(value ?? "");
+    if (/[",\r\n]/.test(text)) return `"${text.replace(/"/g, "\"\"")}"`;
+    return text;
+  }
+
+  function downloadBlob(content, fileName, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadCurrentHtml() {
+    downloadBlob(initialHtmlSource, "수행평가_점수_진단.html", "text/html;charset=utf-8");
+  }
+
+  function downloadTemplate(kind) {
+    const subject = kind === "admin" ? state.admin.selectedSubject : (state.teacher.subject || "수행평가");
+    const plan = kind === "admin" ? ensureAdminPlan(state.admin.selectedSubject).domains : state.teacher.plan;
+    const domains = validPlanDomains(plan);
+    const headers = kind === "admin"
+      ? ["과목", "반", "학번", "이름", ...domains.map(domain => domain.name)]
+      : ["학번", "이름", ...domains.map(domain => domain.name)];
+    const example = kind === "admin"
+      ? [subject, "1반", "10101", "홍길동", ...domains.map(domain => Math.max(0, domain.max - 1))]
+      : ["10101", "홍길동", ...domains.map(domain => Math.max(0, domain.max - 1))];
+    const csv = [headers, example].map(row => row.map(csvCell).join(",")).join("\r\n");
+    downloadBlob(`\uFEFF${csv}`, `${kind === "admin" ? "수행평가_일괄업로드_양식" : "수행평가_점수_양식"}.csv`, "text/csv;charset=utf-8");
+  }
+
+  function bindDropZone(zoneSelector, inputSelector, handler) {
+    const zone = $(zoneSelector);
+    const input = $(inputSelector);
+    zone.addEventListener("click", event => {
+      if (event.target.tagName !== "BUTTON" && event.target.closest("button")) return;
+      input.click();
+    });
+    zone.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        input.click();
+      }
+    });
+    ["dragenter", "dragover"].forEach(type => {
+      zone.addEventListener(type, event => {
+        event.preventDefault();
+        zone.classList.add("is-dragging");
+      });
+    });
+    ["dragleave", "drop"].forEach(type => {
+      zone.addEventListener(type, event => {
+        event.preventDefault();
+        zone.classList.remove("is-dragging");
+      });
+    });
+    zone.addEventListener("drop", event => handler(Array.from(event.dataTransfer.files || [])));
+    input.addEventListener("change", event => {
+      handler(Array.from(event.target.files || []));
+      input.value = "";
+    });
+  }
+
+  function wireEvents() {
+    $("#downloadHtmlFile").addEventListener("click", downloadCurrentHtml);
+
+    $$(".mode-tab").forEach(btn => {
+      btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    });
+
+    $("#teacherPlanBody").addEventListener("input", event => {
+      const row = event.target.closest("tr");
+      if (!row) return;
+      const index = Number(row.dataset.index);
+      if (event.target.classList.contains("teacher-domain-name")) {
+        state.teacher.plan[index].name = event.target.value;
+      }
+      if (event.target.classList.contains("teacher-domain-max")) {
+        state.teacher.plan[index].max = event.target.value;
+      }
+      if (event.target.classList.contains("teacher-domain-step")) {
+        state.teacher.plan[index].step = event.target.value;
+      }
+      if (event.target.classList.contains("teacher-domain-possible")) {
+        state.teacher.plan[index].possibleScores = event.target.value;
+      }
+      rerunTeacherDiagnostics();
+    });
+
+    $("#teacherPlanBody").addEventListener("click", event => {
+      if (!event.target.classList.contains("teacher-domain-remove")) return;
+      const index = Number(event.target.closest("tr").dataset.index);
+      state.teacher.plan.splice(index, 1);
+      renderTeacherPlan();
+      rerunTeacherDiagnostics();
+    });
+
+    $("#addTeacherDomain").addEventListener("click", () => {
+      state.teacher.plan.push({ id: makeId(), name: `영역 ${state.teacher.plan.length + 1}`, max: 10, step: 1 });
+      renderTeacherPlan();
+      rerunTeacherDiagnostics();
+    });
+
+    $("#resetTeacherPlan").addEventListener("click", () => {
+      state.teacher.plan = defaultDomains();
+      renderTeacherPlan();
+      rerunTeacherDiagnostics();
+    });
+
+    $("#importTeacherPlan").addEventListener("click", () => $("#teacherPlanFile").click());
+    $("#teacherPlanFile").addEventListener("change", event => {
+      handlePlanImport("teacher", Array.from(event.target.files || []));
+      event.target.value = "";
+    });
+
+    $("#exportTeacherReport").addEventListener("click", () => exportIssues(state.teacher.issues, "수행평가_교과교사_오류보고서"));
+    $("#clearTeacherData").addEventListener("click", () => {
+      state.teacher.dataset = null;
+      state.teacher.datasets = [];
+      state.teacher.results = [];
+      state.teacher.issues = [];
+      $("#teacherFileName").textContent = "";
+      rerunTeacherDiagnostics();
+    });
+    $("#downloadTeacherTemplate").addEventListener("click", () => downloadTemplate("teacher"));
+
+    $("#importAdminPlan").addEventListener("click", () => $("#adminPlanFile").click());
+    $("#adminPlanFile").addEventListener("change", event => {
+      handlePlanImport("admin", Array.from(event.target.files || []));
+      event.target.value = "";
+    });
+
+    $("#adminPlanLocked").addEventListener("change", event => {
+      ensureAdminPlan(state.admin.selectedSubject).locked = event.target.checked;
+      renderAdminPlan();
+    });
+
+    $("#adminPlanBody").addEventListener("input", event => {
+      const plan = ensureAdminPlan(state.admin.selectedSubject);
+      if (plan.locked) return;
+      const row = event.target.closest("tr");
+      if (!row) return;
+      const index = Number(row.dataset.index);
+      if (event.target.classList.contains("admin-domain-name")) {
+        plan.domains[index].name = event.target.value;
+      }
+      if (event.target.classList.contains("admin-domain-max")) {
+        plan.domains[index].max = event.target.value;
+      }
+      if (event.target.classList.contains("admin-domain-step")) {
+        plan.domains[index].step = event.target.value;
+      }
+      if (event.target.classList.contains("admin-domain-possible")) {
+        plan.domains[index].possibleScores = event.target.value;
+      }
+    });
+
+    $("#adminPlanBody").addEventListener("click", event => {
+      if (!event.target.classList.contains("admin-domain-remove")) return;
+      const plan = ensureAdminPlan(state.admin.selectedSubject);
+      if (plan.locked) return;
+      const index = Number(event.target.closest("tr").dataset.index);
+      plan.domains.splice(index, 1);
+      renderAdminPlan();
+    });
+
+    $("#addAdminDomain").addEventListener("click", () => {
+      const plan = ensureAdminPlan(state.admin.selectedSubject);
+      if (plan.locked) return;
+      plan.domains.push({ id: makeId(), name: `영역 ${plan.domains.length + 1}`, max: 10, step: 1 });
+      renderAdminPlan();
+    });
+
+    $("#applyAdminPlan").addEventListener("click", () => {
+      rerunAdminDiagnostics();
+      showMessage("공식 평가기준을 다시 적용했습니다.");
+    });
+
+    $("#subjectList").addEventListener("click", event => {
+      const item = event.target.closest(".subject-item");
+      if (!item) return;
+      state.admin.selectedSubject = item.dataset.subject;
+      renderAdminAll();
+    });
+
+    $("#exportAdminReport").addEventListener("click", () => exportIssues(state.admin.issues, "수행평가_일괄_오류보고서"));
+    $("#clearAdminData").addEventListener("click", () => {
+      state.admin.uploads = [];
+      state.admin.issues = [];
+      renderAdminAll();
+    });
+    $("#downloadAdminTemplate").addEventListener("click", () => downloadTemplate("admin"));
+
+    document.addEventListener("click", event => {
+      const applyButton = event.target.closest("[data-apply-plan]");
+      if (applyButton) {
+        applyPlanImport(applyButton.dataset.applyPlan);
+        return;
+      }
+      const clearButton = event.target.closest("[data-clear-plan-preview]");
+      if (clearButton) {
+        const kind = clearButton.dataset.clearPlanPreview;
+        if (kind === "teacher") state.teacher.planImport = null;
+        if (kind === "admin") state.admin.planImport = null;
+        renderPlanImportPreview(kind);
+      }
+    });
+
+    bindDropZone("#teacherDrop", "#teacherFile", handleTeacherFiles);
+    bindDropZone("#adminDrop", "#adminFile", handleAdminFiles);
+  }
+
+  function init() {
+    wireEvents();
+    renderTeacherPlan();
+    renderTeacherSummary([], []);
+    renderTeacherResults([]);
+    renderAdminAll();
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get("mode");
+    if (mode === "admin" || mode === "teacher") setMode(mode);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

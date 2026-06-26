@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>분할점수 시뮬레이터 선택</title>
+<title>평가도움 도구 모음</title>
 <style>
   :root {
     --ink: #1f2933;
@@ -1083,6 +1083,19 @@
     background: var(--ui-teal);
   }
 
+  .card-actions {
+    gap: 12px;
+  }
+
+  .card-actions .btn {
+    min-width: 128px;
+    min-height: 52px;
+    padding: 13px 22px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 900;
+  }
+
   .manual-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1121,55 +1134,56 @@
 </head>
 <body>
 <header class="app-header">
-  <h1>분할점수 시뮬레이터 선택</h1>
-  <p>작업 방식에 맞는 도구를 선택해 성취평가제 분할점수를 시뮬레이션합니다. <span class="update-date">업데이트: 2026.06.19.</span></p>
+  <h1>평가도움 도구 모음</h1>
+  <p>분할점수 시뮬레이션과 수행평가 점수 진단을 한 곳에서 시작합니다. <span class="update-date">업데이트: 2026.06.25.</span></p>
 </header>
 
 <main class="workspace">
   <div class="notice">
-    기존 방식으로 바로 추정할 수도 있고, 문항별 목표 성취수준을 먼저 입력한 뒤 정답률을 추정하는 새 방식으로 진행할 수도 있습니다.
+    필요한 작업을 선택하세요. 분할점수 산출은 기존 도구를 그대로 사용하고, 수행평가 진단은 점수 파일과 영역별 만점을 대조합니다.
   </div>
 
-  <section class="chooser-grid" aria-label="시뮬레이터 선택">
+  <section class="chooser-grid" aria-label="도구 선택">
     <article class="sim-card">
       <div class="card-head">
         <div>
-          <div class="card-kicker">기존 방식</div>
-          <h2>추정분할점수 시뮬레이터</h2>
+          <div class="card-kicker">Cut-off Score Simulation</div>
+          <h2>분할점수 시뮬레이션</h2>
         </div>
-        <span class="badge">기존</span>
+        <span class="badge">계산</span>
       </div>
       <p class="card-desc">
-        기존에 사용하던 입력표 방식으로 평가별 예상 정답률과 점수를 직접 입력해 분할점수를 산출합니다.
+        평가별 예상 정답률과 목표 성취수준을 바탕으로 성취평가제 경계 점수를 추정합니다.
       </p>
       <ul class="feature-list">
-        <li><span class="check">✓</span><span>익숙한 기존 화면과 입력 흐름을 그대로 사용합니다.</span></li>
-        <li><span class="check">✓</span><span>라운드별 입력과 기존 엑셀·표 중심 작업에 적합합니다.</span></li>
-        <li><span class="check">✓</span><span>문항 목표 성취수준을 따로 설계하지 않아도 바로 계산할 수 있습니다.</span></li>
+        <li><span class="check">✓</span><span>추정분할점수 입력표 방식으로 빠르게 산출합니다.</span></li>
+        <li><span class="check">✓</span><span>문항별 목표 성취수준 기반으로 정답률을 조정합니다.</span></li>
+        <li><span class="check">✓</span><span>JSON, 엑셀, HTML 저장 흐름을 유지합니다.</span></li>
       </ul>
       <div class="card-actions">
-        <a class="btn violet" href="추정분할점수_시뮬레이터(260421).html">기존 시뮬레이터 열기</a>
+        <a class="btn violet" href="추정분할점수_시뮬레이터(260421).html">추정분할점수</a>
+        <a class="btn primary" href="목표성취수준_분할점수_시뮬레이터.html">목표성취수준</a>
       </div>
     </article>
 
     <article class="sim-card">
       <div class="card-head">
         <div>
-          <div class="card-kicker">새 방식</div>
-          <h2>목표 성취수준 기반 시뮬레이터</h2>
+          <div class="card-kicker">Performance Assessment Diagnosis</div>
+          <h2>수행평가 점수 진단</h2>
         </div>
-        <span class="badge new">추천</span>
+        <span class="badge new">점검</span>
       </div>
       <p class="card-desc">
-        문항별 배점, 난이도, 목표 성취수준을 먼저 입력하고 범주별 정답률을 자동·수동으로 조정해 경계 점수를 추정합니다.
+        수행평가 점수 파일을 평가계획의 영역별 만점과 대조해 초과 점수, 결측, 잘못된 형식을 찾아냅니다.
       </p>
       <ul class="feature-list">
-        <li><span class="check">✓</span><span>문항별 입력, 정답률 입력, 결과 확인을 단계별로 진행합니다.</span></li>
-        <li><span class="check">✓</span><span>공통과목과 선택과목 경계를 구분해 예상 정답률을 계산합니다.</span></li>
-        <li><span class="check">✓</span><span>여러 교사 JSON 취합과 학기말 합산 점수 검토까지 이어집니다.</span></li>
+        <li><span class="check">✓</span><span>교과교사용 단일 파일 즉시 검증을 지원합니다.</span></li>
+        <li><span class="check">✓</span><span>평가계획서 업로드로 영역별 만점 입력을 보조합니다.</span></li>
+        <li><span class="check">✓</span><span>오류 셀 표시와 보고서 다운로드로 재확인을 돕습니다.</span></li>
       </ul>
       <div class="card-actions">
-        <a class="btn primary" href="목표성취수준_분할점수_시뮬레이터.html">목표 성취수준 방식 열기</a>
+        <a class="btn primary" href="수행평가_점수_진단.html?mode=teacher">교과교사용</a>
       </div>
     </article>
   </section>
@@ -1177,27 +1191,27 @@
   <section class="manual-panel" aria-label="사용법 매뉴얼">
     <div class="manual-head">
       <div>
-        <span class="manual-eyebrow">처음 사용하는 경우</span>
-        <h2>이 순서로 진행하세요</h2>
-        <p>도구를 연 뒤 입력, 검토, 저장까지 필요한 흐름만 간단히 확인합니다.</p>
+        <span class="manual-eyebrow">업무 흐름</span>
+        <h2>작업에 맞는 도구를 여세요</h2>
+        <p>산출, 점검, 공유까지 필요한 화면으로 바로 이동합니다.</p>
       </div>
     </div>
     <div class="manual-grid">
       <div class="manual-card">
         <span class="manual-num">1</span>
-        <span><strong>도구 선택</strong>기존 입력표 방식 또는 목표 성취수준 방식을 선택합니다.</span>
+        <span><strong>분할점수</strong>기존 방식 또는 목표 성취수준 방식을 선택합니다.</span>
       </div>
       <div class="manual-card">
         <span class="manual-num">2</span>
-        <span><strong>자료 확인</strong>과목 유형, 지필·수행 반영 비율, 나이스 파일 여부를 확인합니다.</span>
+        <span><strong>평가기준</strong>수행평가 영역명과 만점을 입력합니다.</span>
       </div>
       <div class="manual-card">
         <span class="manual-num">3</span>
-        <span><strong>입력·조정</strong>배점, 난이도, 목표 성취수준 또는 예상 정답률을 입력하고 필요한 칸만 조정합니다.</span>
+        <span><strong>파일 검증</strong>학생 점수 파일을 업로드해 오류를 확인합니다.</span>
       </div>
       <div class="manual-card">
         <span class="manual-num">4</span>
-        <span><strong>저장·공유</strong>JSON, 엑셀, HTML 다운로드 기능으로 결과와 입력값을 보관합니다.</span>
+        <span><strong>저장·공유</strong>엑셀, CSV, JSON, HTML 결과물을 보관합니다.</span>
       </div>
     </div>
   </section>
