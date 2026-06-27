@@ -863,7 +863,7 @@
         <div class="panel-head">
           <div>
             <h2 class="panel-title">평가계획</h2>
-            <p class="panel-sub">업로드 파일의 열 이름과 같은 영역명을 입력합니다.</p>
+            <p class="panel-sub">엑셀 영역명에 나이스에 입력된 영역명을 작성해주세요.</p>
           </div>
         </div>
         <div class="panel-body">
@@ -2092,6 +2092,18 @@
     const text = aoa.map(row => row.map(normalizeText).join(" ")).join("\n");
     const subject = inferSubjectFromPlanText(text, sourceName);
     const performancePercent = inferPerformancePercent(text.split(/\r?\n/).map(line => ({ text: line })));
+    const itemTableDomains = extractPerformanceItemTableDomains(aoa);
+    if (itemTableDomains.length) {
+      return {
+        sourceName: `${sourceName} / ${sheetName}`,
+        sourceType: "표",
+        subject,
+        performancePercent,
+        domains: dedupeExtractedDomains(itemTableDomains),
+        notes: ["항목별 가능 배점표에서 항목 조합으로 가능한 총점을 계산했습니다."],
+        confidence: "높음"
+      };
+    }
     const domains = [];
 
     for (let rowIndex = 0; rowIndex < aoa.length; rowIndex += 1) {
@@ -2135,6 +2147,47 @@
       notes: domains.length ? ["표 파일에서 영역/만점 정보를 추출했습니다."] : [],
       confidence: "보통"
     };
+  }
+
+  function extractPerformanceItemTableDomains(aoa) {
+    const domains = [];
+    let domainIndex = 0;
+    for (let rowIndex = 0; rowIndex < aoa.length; rowIndex += 1) {
+      const headerRow = (aoa[rowIndex] || []).map(normalizeText);
+      const itemCols = headerRow.reduce((acc, value, colIndex) => {
+        if (/^항목\d+배점$/.test(headerKey(value))) acc.push(colIndex);
+        return acc;
+      }, []);
+      if (itemCols.length < 2) continue;
+
+      const titleRow = (aoa[rowIndex - 1] || []).map(normalizeText);
+      const titleCell = titleRow.find(value => value && !/^항목\d+배점$/.test(headerKey(value)));
+      domainIndex += 1;
+      const name = titleCell || `수행평가 ${domainIndex}`;
+
+      const groups = itemCols.map(colIndex => {
+        const values = [];
+        for (let r = rowIndex + 1; r < aoa.length; r += 1) {
+          const dataRow = aoa[r] || [];
+          if (!dataRow.some(value => !isBlank(value))) break;
+          const score = parseScore(dataRow[colIndex]);
+          if (score !== null && !Number.isNaN(score)) values.push(score);
+        }
+        return normalizePossibleScores(values);
+      }).filter(group => group.length);
+
+      if (!groups.length) continue;
+      const possibleScores = cartesianSumScores(groups);
+      if (!possibleScores.length) continue;
+      domains.push({
+        name,
+        max: Math.max(...possibleScores),
+        step: 1,
+        possibleScores,
+        scaleGroups: groups
+      });
+    }
+    return domains;
   }
 
   function dedupeExtractedDomains(domains) {
@@ -3580,9 +3633,12 @@
 
   function downloadPlanTemplate() {
     const rows = [
-      ["영역명", "만점", "가능점수"],
-      ["길이 측정 및 오차 분석을 통한 SI 단위의 필요성 탐구", 20, "20, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5"],
-      ["지구시스템의 물질 순환과 에너지 순환 탐구", 20, "20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0"]
+      ["수행1", "아래에 항목별로 가능한 배점을 붙여넣으세요!", "항목이 없다면 0을 그대로 두세요!", "", "", "", ""],
+      ["항목1 배점", "항목2 배점", "항목3 배점", "항목4 배점", "항목5 배점", "항목6 배점", "항목7 배점"],
+      [4, 4, 5, 4, 3, 0, 0],
+      [3, 3, 4, 3, 2, "", ""],
+      [2, 2, 3, 2, 1, "", ""],
+      [1, "", 2, "", "", "", ""]
     ];
     const csv = rows.map(row => row.map(csvCell).join(",")).join("\r\n");
     downloadBlob(`\uFEFF${csv}`, "수행평가_평가기준_양식.csv", "text/csv;charset=utf-8");
