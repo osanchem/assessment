@@ -2428,9 +2428,79 @@
     background: var(--ui-violet);
   }
 
+  .app-header-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .app-header-text {
+    min-width: 0;
+  }
+
+  .home-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 132px;
+    min-height: 50px;
+    padding: 12px 20px;
+    border: 1px solid rgba(255,255,255,0.32);
+    border-radius: 6px;
+    background: var(--ui-blue);
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .home-link:hover {
+    filter: brightness(0.96);
+  }
+
+  .top-nav-home {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid var(--ui-blue);
+    border-radius: 6px;
+    background: var(--ui-blue);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .top-nav-home:hover {
+    color: #fff;
+    filter: brightness(0.96);
+  }
+
+  @media (max-width: 760px) {
+    .app-header-inner {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .home-link {
+      width: 100%;
+    }
+
+    .top-nav-home {
+      margin-left: 0;
+    }
+  }
+
   @media print {
     body { background: #fff; }
-    .top-nav, .toolbar, .btn, .footer-actions { display: none !important; }
+    .top-nav, .toolbar, .btn, .footer-actions, .home-link { display: none !important; }
     .workspace { max-width: none; padding: 0; }
     .layout { grid-template-columns: 1fr; }
     .panel { break-inside: avoid; margin-bottom: 10px; }
@@ -2439,8 +2509,13 @@
 </head>
 <body>
 <header class="app-header">
-  <h1>목표 성취수준 기반 분할점수 시뮬레이터</h1>
-  <div class="sub">문항 목표 성취수준과 일부 예상 정답률을 연결해 성취수준 경계 점수를 추정합니다. <span class="update-date">업데이트: 2026.06.19.</span></div>
+  <div class="app-header-inner">
+    <div class="app-header-text">
+      <h1>목표 성취수준 기반 분할점수 시뮬레이터</h1>
+      <div class="sub">문항 목표 성취수준과 일부 예상 정답률을 연결해 성취수준 경계 점수를 추정합니다. <span class="update-date">업데이트: 2026.06.19.</span></div>
+    </div>
+    <a class="home-link" href="index.html">처음페이지</a>
+  </div>
 </header>
 
 <nav class="top-nav" aria-label="상단 내비게이션">
@@ -2451,6 +2526,7 @@
     <button class="top-nav-btn" id="nav-rates" type="button">정답률 입력</button>
     <button class="top-nav-btn" id="nav-results" type="button">결과 확인</button>
     <button class="top-nav-btn" id="nav-target-guide" type="button">목표 성취수준 안내</button>
+    <a class="top-nav-home" href="index.html">처음페이지</a>
   </div>
 </nav>
 

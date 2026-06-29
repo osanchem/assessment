@@ -10,8 +10,18 @@
   body { font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; background: #f0eeff; color: #333; font-size: 14px; }
 
   .header { background: #0f172a; color: white; padding: 18px 30px; }
+  .header-inner { max-width: 1150px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .header-text { min-width: 0; }
   .header h1 { font-size: 20px; font-weight: bold; }
   .header p  { font-size: 12px; color: #c4b5fd; margin-top: 4px; }
+  .home-link {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 132px; min-height: 50px; padding: 12px 20px;
+    border: 1px solid rgba(255,255,255,0.32); border-radius: 6px;
+    background: #2563eb; color: #fff; text-decoration: none;
+    font-size: 15px; font-weight: 900; white-space: nowrap;
+  }
+  .home-link:hover { filter: brightness(0.96); }
 
   .container { max-width: 1150px; margin: 0 auto; padding: 20px; }
 
@@ -1617,10 +1627,19 @@
     .header p {
       font-size: 16px;
     }
+
+    .header-inner {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .home-link {
+      width: 100%;
+    }
   }
 
   @media print {
-    .main-tabs, .round-tab-bar, .btn-row, .perf-add-row, .subject-type-bar { display: none; }
+    .main-tabs, .round-tab-bar, .btn-row, .perf-add-row, .subject-type-bar, .home-link { display: none; }
     .main-tab-content { display: block !important; box-shadow: none; margin-bottom: 20px; }
     body { background: white; }
     .header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
@@ -1630,8 +1649,13 @@
 <body>
 
 <div class="header">
-  <h1>성취평가제 추정분할점수 시뮬레이터</h1>
-  <p>지필(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산 <span class="update-date">업데이트: 2026.06.19.</span></p>
+  <div class="header-inner">
+    <div class="header-text">
+      <h1>성취평가제 추정분할점수 시뮬레이터</h1>
+      <p>지필(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산 <span class="update-date">업데이트: 2026.06.19.</span></p>
+    </div>
+    <a class="home-link" href="index.html">초기화면</a>
+  </div>
 </div>
 
 <div class="container">
@@ -1677,7 +1701,7 @@
         </div>
 
         <div class="manual-section">
-          <h3>② 지필평가(중간·기말) 입력</h3>
+          <h3>② 정기시험(중간·기말) 입력</h3>
           <h4>배점합 입력</h4>
           <ul>
             <li>선택형(쉬움·보통·어려움), 서답형(쉬움·보통·어려움) 6개 범주의 배점 합계를 입력합니다.</li>
@@ -1771,7 +1795,7 @@
 
   <!-- ===== 중간고사 ===== -->
   <div id="tab-mid" class="main-tab-content active">
-    <div class="section-title">중간고사 추정분할점수 <span class="badge">지필평가</span></div>
+    <div class="section-title">중간고사 추정분할점수 <span class="badge">정기시험</span></div>
     <div class="info-box">
       각 범주의 <b>배점합</b>과 성취수준 경계별 <b>예상 정답률(%)</b>을 입력하세요.<br>
       분할점수 = Σ(배점합 × 예상정답률/100) | <b>E/I</b> = 이수·미이수 기준(고교학점제, 공통과목)<br>
@@ -1792,7 +1816,7 @@
 
   <!-- ===== 기말고사 ===== -->
   <div id="tab-fin" class="main-tab-content">
-    <div class="section-title">기말고사 추정분할점수 <span class="badge">지필평가</span></div>
+    <div class="section-title">기말고사 추정분할점수 <span class="badge">정기시험</span></div>
     <div class="info-box">각 범주의 <b>배점합</b>과 성취수준 경계별 <b>예상 정답률(%)</b>을 입력하세요.<br>
       <span style="color:#e65100;">주의: 예상 정답률은 <b>A~D 경계 5% 단위</b> (5, 10, …, 100), <b>E/I 경계 1% 단위</b>로 입력하세요</span>
     </div>
@@ -2018,7 +2042,7 @@ function highlightRates(assessId, rIdx) {
     return errors;
   }
 
-  // ── 지필평가: 수평 + 수직 체크 + 5%급간 체크 ──
+  // ── 정기시험: 수평 + 수직 체크 + 5%급간 체크 ──
   const rowLabels = ['선택형 쉬움','선택형 보통','선택형 어려움','서답형 쉬움','서답형 보통','서답형 어려움'];
   // errFlags[rowIdx][bi]: true이면 해당 칸을 빨갛게 표시
   const errFlags  = Array.from({length: 6}, () => new Array(bLen).fill(false));
@@ -2181,7 +2205,7 @@ function updateRowConstraints(id, bi, rowIdx, assessId) {
 }
 
 /**
- * 지필평가 한 라운드 전체의 행 제약을 일괄 재적용한다.
+ * 정기시험 한 라운드 전체의 행 제약을 일괄 재적용한다.
  * (라운드 전환/JSON 복원 후 호출)
  */
 function updateAllConstraints(assessId, rIdx) {
@@ -2688,7 +2712,7 @@ function renderRoundTabs(assessId) {
 }
 
 // ============================================================
-// 지필평가 테이블 렌더링
+// 정기시험 테이블 렌더링
 // ============================================================
 function renderRoundTable(assessId, rIdx) {
   if (assessId === 'perf') { renderPerfRoundTable(rIdx); return; }
