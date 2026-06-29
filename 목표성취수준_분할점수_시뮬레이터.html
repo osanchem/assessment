@@ -3024,6 +3024,7 @@
 
 <script>
 const LEVELS = ["A", "B", "C", "D", "E"];
+const TARGET_BAR_LEVELS = ["E", "D", "C", "B", "A"];
 const ALL_BOUNDARIES = [
   { label: "A/B", level: "A" },
   { label: "B/C", level: "B" },
@@ -4395,7 +4396,7 @@ function renderSummary() {
   }
 
   container.innerHTML = list.map(item => {
-    const bars = LEVELS.map(level => {
+    const bars = TARGET_BAR_LEVELS.map(level => {
       const width = item.score > 0 ? (item.targets[level] / item.score) * 100 : 0;
       if (width <= 0) return "";
       return `<span class="level-${level.toLowerCase()}" style="width:${width}%">${level}</span>`;
