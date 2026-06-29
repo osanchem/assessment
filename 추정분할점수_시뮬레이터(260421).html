@@ -3120,13 +3120,13 @@ function renderVizBar(total, scores) {
     const from = (i === numSegs - 1) ? 0 : scores[i];
     const to   = (i === 0) ? total : scores[i - 1];
     const w = (to - from) / total * 100;
-    const l = from / total * 100;
+    const l = (total - to) / total * 100;
     if (w < 0.1) continue;
     html += `<div class="viz-seg ${segCls[i]}" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%;">${segLabels[i]}</div>`;
   }
   html += '</div><div class="viz-markers">';
   scores.forEach(s => {
-    const pct = s / total * 100;
+    const pct = (total - s) / total * 100;
     html += `<div class="viz-marker" style="left:${pct.toFixed(2)}%;">${s}</div>`;
   });
   html += '</div></div>';
