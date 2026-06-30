@@ -12,6 +12,7 @@
   .header { background: #0f172a; color: white; padding: 18px 30px; }
   .header-inner { max-width: 1150px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .header-text { min-width: 0; }
+  .header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
   .header h1 { font-size: 20px; font-weight: bold; }
   .header p  { font-size: 12px; color: #c4b5fd; margin-top: 4px; }
   .home-link {
@@ -21,6 +22,7 @@
     background: #2563eb; color: #fff; text-decoration: none;
     font-size: 15px; font-weight: 900; white-space: nowrap;
   }
+  .html-download-link { background: #fff; color: #0f172a; }
   .home-link:hover { filter: brightness(0.96); }
 
   .container { max-width: 1150px; margin: 0 auto; padding: 20px; }
@@ -1633,6 +1635,10 @@
       flex-direction: column;
     }
 
+    .header-actions {
+      justify-content: stretch;
+    }
+
     .home-link {
       width: 100%;
     }
@@ -1654,7 +1660,10 @@
       <h1>추정 분할점수 시뮬레이터</h1>
       <p>정기시험(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산 <span class="update-date">업데이트: 2026.06.29.</span></p>
     </div>
-    <a class="home-link" href="index.html">초기화면</a>
+    <div class="header-actions">
+      <a class="home-link" href="index.html">초기화면</a>
+      <button class="home-link html-download-link" type="button" onclick="downloadHtmlFile()">HTML 내려받기</button>
+    </div>
   </div>
 </div>
 
@@ -1665,7 +1674,6 @@
     <strong>데이터:</strong>
     <button class="btn-json-save" onclick="exportJSON()">JSON 저장</button>
     <button class="btn-json-load" onclick="importJSON()">JSON 불러오기</button>
-    <button class="btn-json-load" onclick="downloadHtmlFile()">HTML 다운로드</button>
     <span class="data-io-hint">※ 현재 입력 내용을 파일로 저장하거나, 이전에 저장한 JSON 파일을 불러와 복원합니다</span>
     <button class="btn-manual" onclick="document.getElementById('manual-modal').classList.add('open')" style="margin-left:auto;">매뉴얼</button>
   </div>
