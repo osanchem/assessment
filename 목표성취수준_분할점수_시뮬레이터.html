@@ -2441,6 +2441,14 @@
     min-width: 0;
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   .home-link {
     display: inline-flex;
     align-items: center;
@@ -2456,6 +2464,11 @@
     font-size: 15px;
     font-weight: 900;
     white-space: nowrap;
+  }
+
+  .html-download-link {
+    background: #fff;
+    color: var(--ui-navy);
   }
 
   .home-link:hover {
@@ -2489,6 +2502,10 @@
       flex-direction: column;
     }
 
+    .header-actions {
+      justify-content: stretch;
+    }
+
     .home-link {
       width: 100%;
     }
@@ -2514,7 +2531,10 @@
       <h1>목표 성취수준 기반 분할점수 시뮬레이터</h1>
       <div class="sub">문항 목표 성취수준과 일부 예상 정답률을 연결해 성취수준 경계 점수를 추정합니다. <span class="update-date">업데이트: 2026.06.29.</span></div>
     </div>
-    <a class="home-link" href="index.html">처음페이지</a>
+    <div class="header-actions">
+      <button class="home-link html-download-link" id="btn-html-download" type="button">HTML 다운로드</button>
+      <a class="home-link" href="index.html">처음페이지</a>
+    </div>
   </div>
 </header>
 
@@ -5491,6 +5511,35 @@ function exportJSON() {
   URL.revokeObjectURL(url);
 }
 
+async function downloadHtmlFile() {
+  let html = "";
+
+  try {
+    if (location.protocol !== "file:") {
+      const res = await fetch(location.href, { cache: "no-store" });
+      if (res.ok) html = await res.text();
+    }
+  } catch (error) {
+    html = "";
+  }
+
+  if (!html) {
+    const cloned = document.documentElement.cloneNode(true);
+    html = "<!DOCTYPE html>\n" + cloned.outerHTML;
+  }
+
+  const dateKey = "20260629";
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `목표성취수준_분할점수_시뮬레이터_${dateKey}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function importJSON(file) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -5775,6 +5824,7 @@ document.getElementById("btn-calc").addEventListener("click", () => showGuide("c
 document.getElementById("btn-print").addEventListener("click", () => window.print());
 document.getElementById("btn-save").addEventListener("click", exportJSON);
 document.getElementById("btn-load").addEventListener("click", () => document.getElementById("file-input").click());
+document.getElementById("btn-html-download").addEventListener("click", downloadHtmlFile);
 document.getElementById("teacher-name").addEventListener("input", event => {
   state.teacherName = event.target.value.trim();
   const { teacher } = activeTeacherRound();

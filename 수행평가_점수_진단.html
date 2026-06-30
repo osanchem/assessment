@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>수행평가 점수 진단</title>
+<title>수행평가 루브릭 기반 점수 입력 검증</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
@@ -73,6 +73,7 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+    justify-content: flex-end;
   }
 
   .home-link,
@@ -839,13 +840,13 @@
 <header class="app-header">
   <div class="header-inner">
     <div class="top-line">
+      <span class="drop-meta">업데이트: 2026.06.29.</span>
       <div class="top-actions">
         <a class="home-link" href="index.html">초기화면</a>
         <button id="downloadHtmlFile" class="header-btn" type="button">HTML 내려받기</button>
       </div>
-      <span class="drop-meta">업데이트: 2026.06.29.</span>
     </div>
-    <h1>수행평가 점수 진단</h1>
+    <h1>수행평가 루브릭 기반 점수 입력 검증</h1>
     <p>수행평가 점수 파일과 평가계획의 영역별 만점을 대조해 결측, 형식 오류, 초과 입력을 점검합니다.</p>
   </div>
 </header>
@@ -857,7 +858,7 @@
 
   <div id="messageBar" class="message-bar" role="status"></div>
 
-  <section id="teacherView" class="view active" aria-label="교과교사용 수행평가 점수 진단">
+  <section id="teacherView" class="view active" aria-label="교과교사용 수행평가 루브릭 기반 점수 입력 검증">
     <div class="teacher-layout">
       <div class="panel">
         <div class="panel-head">
@@ -956,7 +957,7 @@
     </div>
   </section>
 
-  <section id="adminView" class="view" aria-label="평가업무 담당자용 수행평가 점수 진단">
+  <section id="adminView" class="view" aria-label="평가업무 담당자용 수행평가 루브릭 기반 점수 입력 검증">
     <div class="admin-shell">
       <aside class="panel subject-sidebar">
         <div class="panel-head">

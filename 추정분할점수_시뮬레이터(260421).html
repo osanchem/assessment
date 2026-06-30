@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>성취평가제 추정분할점수 시뮬레이터</title>
+<title>추정 분할점수 시뮬레이터</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1651,8 +1651,8 @@
 <div class="header">
   <div class="header-inner">
     <div class="header-text">
-      <h1>성취평가제 추정분할점수 시뮬레이터</h1>
-      <p>지필(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산 <span class="update-date">업데이트: 2026.06.29.</span></p>
+      <h1>추정 분할점수 시뮬레이터</h1>
+      <p>정기시험(중간·기말) + 수행평가 → 학기말 최종 분할점수 자동 계산 <span class="update-date">업데이트: 2026.06.29.</span></p>
     </div>
     <a class="home-link" href="index.html">초기화면</a>
   </div>
@@ -1679,14 +1679,14 @@
   <div id="manual-modal" class="modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
     <div class="modal-box">
       <div class="modal-header">
-        추정분할점수 시뮬레이터 사용 매뉴얼
+        추정 분할점수 시뮬레이터 사용 매뉴얼
         <button class="modal-close" onclick="document.getElementById('manual-modal').classList.remove('open')">×</button>
       </div>
       <div class="modal-body">
 
         <div class="manual-section">
           <h3>개요</h3>
-          <p>이 시뮬레이터는 성취평가제 추정분할점수를 산출합니다.<br>
+          <p>이 시뮬레이터는 성취평가제 추정 분할점수를 산출합니다.<br>
           각 문항 범주(배점합)에 대해 성취수준 경계별 <b>예상 정답률</b>을 입력하면,<br>
           <b>분할점수 = Σ(배점합 × 예상정답률 / 100)</b> 공식으로 자동 계산됩니다.</p>
         </div>
@@ -1726,7 +1726,7 @@
             <li>교사별로 각 라운드에 입력값을 넣으면 개인별 추정 분할점수를 확인할 수 있습니다.</li>
             <li><b>+ 라운드 추가</b> 버튼으로 라운드를 늘리고, 라운드 탭을 클릭해 전환합니다.</li>
             <li>각 라운드의 저장 버튼으로 해당 라운드만 엑셀로 저장할 수 있습니다.</li>
-            <li>모든 라운드의 <b>평균값</b>이 최종 추정분할점수가 됩니다.</li>
+            <li>모든 라운드의 <b>평균값</b>이 최종 추정 분할점수가 됩니다.</li>
           </ul>
         </div>
 
@@ -1795,7 +1795,7 @@
 
   <!-- ===== 중간고사 ===== -->
   <div id="tab-mid" class="main-tab-content active">
-    <div class="section-title">중간고사 추정분할점수 <span class="badge">정기시험</span></div>
+    <div class="section-title">중간고사 추정 분할점수 <span class="badge">정기시험</span></div>
     <div class="info-box">
       각 범주의 <b>배점합</b>과 성취수준 경계별 <b>예상 정답률(%)</b>을 입력하세요.<br>
       분할점수 = Σ(배점합 × 예상정답률/100) | <b>E/I</b> = 이수·미이수 기준(고교학점제, 공통과목)<br>
@@ -1806,8 +1806,8 @@
     <div id="rounds-mid"></div>
     <div id="result-mid" class="result-section"></div>
     <div class="btn-row">
-      <button class="btn-json-load" type="button" onclick="importNeisMidBoundaries()" aria-describedby="mid-neis-file-help" title="나이스 > 교과담임 > 분할점수 > 학기말 추정분할점수산출 > 과목별출력에서 내려받은 엑셀 파일을 선택합니다.">나이스 분할점수 불러오기</button>
-      <span class="data-io-hint" id="mid-neis-file-help">버튼 설명: 나이스 &gt; 교과담임 &gt; 분할점수 &gt; 학기말 추정분할점수산출 &gt; 과목별출력에서 내려받은 엑셀 파일을 선택합니다.</span>
+      <button class="btn-json-load" type="button" onclick="importNeisMidBoundaries()" aria-describedby="mid-neis-file-help" title="나이스 > 교과담임 > 분할점수 > 학기말 추정 분할점수 산출 > 과목별출력에서 내려받은 엑셀 파일을 선택합니다.">나이스 분할점수 불러오기</button>
+      <span class="data-io-hint" id="mid-neis-file-help">버튼 설명: 나이스 &gt; 교과담임 &gt; 분할점수 &gt; 학기말 추정 분할점수 산출 &gt; 과목별출력에서 내려받은 엑셀 파일을 선택합니다.</span>
       <button class="btn-calc" onclick="calcAssessment('mid')">계산하기</button>
       <button class="btn-excel" onclick="downloadAssessment('mid')">엑셀 저장</button>
       <button class="btn-reset" onclick="resetAssessment('mid')">초기화</button>
@@ -1816,7 +1816,7 @@
 
   <!-- ===== 기말고사 ===== -->
   <div id="tab-fin" class="main-tab-content">
-    <div class="section-title">기말고사 추정분할점수 <span class="badge">정기시험</span></div>
+    <div class="section-title">기말고사 추정 분할점수 <span class="badge">정기시험</span></div>
     <div class="info-box">각 범주의 <b>배점합</b>과 성취수준 경계별 <b>예상 정답률(%)</b>을 입력하세요.<br>
       <span style="color:#e65100;">주의: 예상 정답률은 <b>A~D 경계 5% 단위</b> (5, 10, …, 100), <b>E/I 경계 1% 단위</b>로 입력하세요</span>
     </div>
@@ -1847,7 +1847,7 @@
 
   <!-- ===== 수행평가 ===== -->
   <div id="tab-perf" class="main-tab-content">
-    <div class="section-title">수행평가 추정분할점수 <span class="badge">수행평가</span></div>
+    <div class="section-title">수행평가 추정 분할점수 <span class="badge">수행평가</span></div>
     <div class="info-box">수행평가 영역을 추가하고 <b>영역명</b>과 <b>배점합</b>을 입력한 후, 각 경계별로 <b>성취수준별 예상 득점(점)</b>을 직접 입력하세요.</div>
     <div id="rounds-perf"></div>
     <div id="result-perf" class="result-section"></div>
@@ -1860,7 +1860,7 @@
 
   <!-- ===== 학기말 합산 ===== -->
   <div id="tab-semester" class="main-tab-content">
-    <div class="section-title">학기말 최종 추정분할점수 <span class="badge">합산</span></div>
+    <div class="section-title">학기말 최종 추정 분할점수 <span class="badge">합산</span></div>
     <div class="info-box">
       각 평가의 <b>반영 가중치(%)</b>를 입력하세요. 합계가 100%가 되어야 합니다.<br>
       학기말 분할점수 = 중간 × 가중치 + 기말 × 가중치 + 수행 × 가중치
@@ -2704,7 +2704,7 @@ function renderRoundTabs(assessId) {
     html += `</button>`;
   });
   html += `<button class="btn-add-round" onclick="addRound('${assessId}')">+ 라운드 추가</button>`;
-  html += `<span class="round-label">※ 각 라운드 결과의 평균이 최종 추정분할점수가 됩니다</span>`;
+  html += `<span class="round-label">※ 각 라운드 결과의 평균이 최종 추정 분할점수가 됩니다</span>`;
   html += '</div>';
   html += `<div id="round-table-${assessId}"></div>`;
   container.innerHTML = html;
@@ -3043,7 +3043,7 @@ function renderResultCards(assessId, res, containerId, showRounds, allErrors) {
   if (res.source === 'NEIS') {
     html += `<div class="result-title">나이스 분할점수 결과 (총점 기준: ${total}점)</div>`;
   } else {
-    html += `<div class="result-title">추정분할점수 결과 (${rounds.length}개 라운드 평균, 총점 기준: ${total}점)</div>`;
+    html += `<div class="result-title">추정 분할점수 결과 (${rounds.length}개 라운드 평균, 총점 기준: ${total}점)</div>`;
   }
   html += '<div class="result-cards">';
   bounds.forEach((b, bi) => {
@@ -3058,7 +3058,7 @@ function renderResultCards(assessId, res, containerId, showRounds, allErrors) {
 
   if (showRounds && rounds.length >= 2) {
     html += `<div class="round-compare">
-      <div class="result-title" style="margin-top:16px">라운드별 추정분할점수 비교</div>
+      <div class="result-title" style="margin-top:16px">라운드별 추정 분할점수 비교</div>
       <table class="compare-table"><thead><tr>
         <th>라운드</th>
         ${bounds.map(b=>`<th>${b}</th>`).join('')}
@@ -3083,7 +3083,7 @@ function renderSemesterResult(res) {
   const { total, scores } = res;
   const bounds = getBoundaries();
 
-  let html = `<div class="result-title">학기말 최종 추정분할점수 (환산 총점: ${total}점 기준)</div>`;
+  let html = `<div class="result-title">학기말 최종 추정 분할점수 (환산 총점: ${total}점 기준)</div>`;
   html += '<div class="result-cards">';
   bounds.forEach((b, bi) => {
     html += `<div class="result-card ${CARD_CLS[bi]}">
@@ -3156,7 +3156,7 @@ function xlsCheckLib() {
   return true;
 }
 
-// 저장된 데이터 + calcRoundFromSaved로 단일 라운드 행(row array) 생성 — 지필
+// 저장된 데이터 + calcRoundFromSaved로 단일 라운드 행(row array) 생성 — 정기시험
 function xlsWrittenRoundRows(assessId, rIdx, title) {
   const bounds = getBoundaries();
   const saved  = state[assessId].roundData[rIdx];
@@ -3209,7 +3209,7 @@ function xlsPerfRoundRows(rIdx, title) {
   return rows;
 }
 
-// 평가 전체 시트 (모든 라운드 + 결과 비교) — 지필
+// 평가 전체 시트 (모든 라운드 + 결과 비교) — 정기시험
 function xlsWrittenSheet(assessId, title) {
   const bounds    = getBoundaries();
   const s         = state[assessId];
@@ -3224,7 +3224,7 @@ function xlsWrittenSheet(assessId, title) {
   });
 
   if (s.results) {
-    rows.push(['▶ 라운드별 추정분할점수 비교']);
+    rows.push(['▶ 라운드별 추정 분할점수 비교']);
     rows.push(['라운드', '총점', ...scoreHdrs]);
     s.results.rounds.forEach(r => rows.push([`${r.rIdx+1}라운드`, r.total, ...r.scores]));
     rows.push(['★ 평균(최종)', s.results.total, ...s.results.scores]);
@@ -3252,7 +3252,7 @@ function xlsPerfSheet() {
   });
 
   if (s.results) {
-    rows.push(['▶ 라운드별 추정분할점수 비교']);
+    rows.push(['▶ 라운드별 추정 분할점수 비교']);
     rows.push(['라운드', '총점', ...scoreHdrs]);
     s.results.rounds.forEach(r => rows.push([`${r.rIdx+1}라운드`, r.total, ...r.scores]));
     rows.push(['★ 평균(최종)', s.results.total, ...s.results.scores]);
@@ -3277,7 +3277,7 @@ function xlsSemSheet() {
   const rPerf = state.perf.results;
   const rows  = [];
 
-  rows.push(['학기말 최종 추정분할점수', '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
+  rows.push(['학기말 최종 추정 분할점수', '', '', ...Array(bounds.length - 1).fill(''), xlsToday()], []);
   rows.push(['구분', '가중치(%)', '총점', ...scoreHdrs]);
   if (rMid)  rows.push(['중간고사', wMid,  rMid.total,  ...rMid.scores]);
   if (rFin)  rows.push(['기말고사', wFin,  rFin.total,  ...rFin.scores]);
@@ -3335,7 +3335,7 @@ function downloadAssessment(assessId) {
   const wb = XLSX.utils.book_new();
   const ws = (assessId === 'perf') ? xlsPerfSheet() : xlsWrittenSheet(assessId, titles[assessId]);
   XLSX.utils.book_append_sheet(wb, ws, titles[assessId]);
-  XLSX.writeFile(wb, xlsFileName([titles[assessId], '추정분할점수', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
+  XLSX.writeFile(wb, xlsFileName([titles[assessId], '추정 분할점수', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
 }
 
 // 전체(학기말) 다운로드
@@ -3348,7 +3348,7 @@ function exportToExcel() {
   XLSX.utils.book_append_sheet(wb, xlsWrittenSheet('fin', '기말고사'), '기말고사');
   XLSX.utils.book_append_sheet(wb, xlsPerfSheet(), '수행평가');
   XLSX.utils.book_append_sheet(wb, xlsSemSheet(), '학기말합산');
-  XLSX.writeFile(wb, xlsFileName(['추정분할점수_전체', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
+  XLSX.writeFile(wb, xlsFileName(['추정 분할점수_전체', xlsToday().replace(/\./g,'').replace(/ /g,'')]));
 }
 
 async function downloadHtmlFile() {
@@ -3374,7 +3374,7 @@ async function downloadHtmlFile() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `추정분할점수_시뮬레이터_${dateKey}.html`;
+  a.download = `추정 분할점수_시뮬레이터_${dateKey}.html`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -3415,7 +3415,7 @@ function exportJSON() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `추정분할점수_${today}.json`;
+  a.download = `추정 분할점수_${today}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -3551,3 +3551,4 @@ function setV(id, val) {
 </script>
 </body>
 </html>
+
